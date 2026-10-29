@@ -26,6 +26,8 @@ This puts the skills in `.agents/skills/` (Codex) and `.claude/skills/` (Claude 
 - Name the three skills explicitly. `--skill '*'` would also pick up the repository's own development skills.
 - `--copy` writes real files. Without it, `.claude/skills/` holds symlinks with absolute paths, and those break when the project is committed and cloned elsewhere.
 
+The flags (`-a`, `--skill`, `--copy`, `-y`) and the install paths per agent were verified on 2026-10-29 against the `vercel-labs/skills` CLI docs (`docs/commands.md`, `docs/agents.md`).
+
 ### Fallback without Node
 
 ```bash

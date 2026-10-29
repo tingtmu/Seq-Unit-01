@@ -6,7 +6,7 @@ Protects immutable raw data in `data/raw/` from silent modification or deletion 
 
 ## Requirements
 
-### Requirement: Allow new raw files with provenance nudge
+### Requirement: Allow new raw files with provenance reminder
 The guard SHALL allow an agent to create a new file under `data/raw/`. After any agent file-edit or shell tool call that leaves a new file under `data/raw/`, the guard SHALL remind the agent to record the file's source and checksum in `data/README.md`, whatever tool or command created it.
 
 #### Scenario: Download new batch

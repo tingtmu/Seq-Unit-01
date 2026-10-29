@@ -2,7 +2,7 @@
 
 ## Purpose
 
-Keeps per-folder README files in sync with the code and data they describe by detecting major changes without a matching README update and nudging the agent to apply the Boy Scout Rule.
+Keeps per-folder README files in sync with the code and data they describe by detecting major changes without a matching README update and reminding the agent to apply the Boy Scout Rule.
 
 ## Requirements
 
@@ -21,7 +21,7 @@ The doc-sync check SHALL use git to find which top-level documented folders have
 - **WHEN** a folder has major changes and its README was also modified
 - **THEN** the check does not report that folder
 
-### Requirement: Non-blocking nudge at end of turn
+### Requirement: Non-blocking sync reminder at end of turn
 When an agent finishes a turn, the doc-sync hook SHALL show the agent a short reminder listing each out-of-sync folder and its README path. It SHALL NOT keep the agent from finishing: it MAY ask for at most one extra turn per unchanged out-of-sync state, and the agent decides whether to update the READMEs.
 
 #### Scenario: Out-of-sync folder at stop

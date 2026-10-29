@@ -75,7 +75,7 @@
 
 - [x] 7.1 Write the repo `README.md`:
   - what each skill does, with the EVA name explained;
-  - `npx skills add tingtmu/<repo>` install;
+  - `npx skills add tingtmu/Seq-Unit-01` install;
   - degit/manual fallback;
   - supported agents and hook limitations, with raw_guard marked as best-effort.
 

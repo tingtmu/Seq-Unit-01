@@ -7,7 +7,7 @@ Defines how the skill set is packaged, installed into a single project, and made
 ## ADDED Requirements
 
 ### Requirement: Project-level installation
-The skill set SHALL be installable into one project with a single `npx skills add tingtmu/<repo>` command. The repo README SHALL document a fallback that copies the files without Node. Installation SHALL NOT require a global install.
+The skill set SHALL be installable into one project with a single `npx skills add tingtmu/Seq-Unit-01` command. The repo README SHALL document a fallback that copies the files without Node. Installation SHALL NOT require a global install.
 
 #### Scenario: Install via skills CLI
 - **WHEN** a user runs the documented install command in an empty project directory

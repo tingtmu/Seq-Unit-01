@@ -25,7 +25,7 @@ Starting a bioinformatics project with an AI agent today means re-typing the sam
     A 2/3 majority decides, and BALTHASAR alone can veto on hard-rule violations.
   - **Raw-data guard hook**: new files in `data/raw/` are allowed, with a reminder to record their provenance. Changes to or deletion of existing raw files need human approval. Agents that can't ask the user get a denial with instructions instead.
 - Rules have two levels. Hard rules are a short list in AGENTS.md and are enforced where possible. Soft principles (the user's AI-assisted and classic SE principles) are built into the skill instructions and templates rather than listed in full.
-- Install per project with `npx skills add tingtmu/<repo>`. Copying with degit is the documented fallback. Nothing is installed globally on this machine.
+- Install per project with `npx skills add tingtmu/Seq-Unit-01`. Copying with degit is the documented fallback. Nothing is installed globally on this machine.
 
 ## Capabilities
 

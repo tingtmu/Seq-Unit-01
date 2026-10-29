@@ -19,7 +19,7 @@ Works with **Claude Code** and **Codex**. Hook logic is Python 3 standard librar
 Run in the project directory. Nothing is installed globally (no `-g`).
 
 ```bash
-npx skills add tingtmu/<repo> -a claude-code -a codex --skill nerv-init sync-ratio magi-review --copy -y
+npx skills add tingtmu/Seq-Unit-01 -a claude-code -a codex --skill nerv-init sync-ratio magi-review --copy -y
 ```
 
 This puts the skills in `.agents/skills/` (Codex) and `.claude/skills/` (Claude Code). Then ask the agent to set up the project, or invoke `/nerv-init` in Claude Code.
@@ -29,7 +29,7 @@ This puts the skills in `.agents/skills/` (Codex) and `.claude/skills/` (Claude 
 ### Fallback without Node
 
 ```bash
-git clone --depth 1 https://github.com/tingtmu/<repo> /tmp/nerv-skills
+git clone --depth 1 https://github.com/tingtmu/Seq-Unit-01 /tmp/nerv-skills
 mkdir -p .claude/skills .agents/skills
 cp -r /tmp/nerv-skills/skills/* .claude/skills/
 cp -r /tmp/nerv-skills/skills/* .agents/skills/
@@ -39,7 +39,7 @@ rm -rf /tmp/nerv-skills
 PowerShell:
 
 ```powershell
-git clone --depth 1 https://github.com/tingtmu/<repo> $env:TEMP\nerv-skills
+git clone --depth 1 https://github.com/tingtmu/Seq-Unit-01 $env:TEMP\nerv-skills
 New-Item -ItemType Directory -Force .claude\skills, .agents\skills | Out-Null
 Copy-Item -Recurse $env:TEMP\nerv-skills\skills\* .claude\skills\
 Copy-Item -Recurse $env:TEMP\nerv-skills\skills\* .agents\skills\

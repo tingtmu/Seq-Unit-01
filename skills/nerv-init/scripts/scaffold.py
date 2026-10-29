@@ -78,6 +78,15 @@ identifiers, or file contents into prompts, issues, commits, or external service
 aggregate results. Keep data only under `data/` and `results/` (both git-ignored).
 6. Follow the data use agreement; record it (not the data) in `docs/`.
 """
+NEXT_STEPS = (
+    "Codex: project hooks are skipped until you trust them, so the raw-data guard and the sync "
+    "reminder are off in Codex until you do. Start `codex` in the project root, run `/hooks`, and "
+    "trust the nerv hooks (`.nerv/hooks/raw_guard.py` and `.nerv/hooks/sync_ratio.py`). Trust them "
+    "again after any change to `.codex/hooks.json`.",
+    "Fill `config/samples.tsv` and the reference pins in `config/config.yaml`.",
+    "Optional: make `data/raw/` read-only at the OS level (`chmod -R a-w data/raw` on macOS or Linux, "
+    "`attrib +R /S data\\raw\\*` on Windows), because the raw-data guard is best-effort.",
+)
 
 
 class AnswersError(ValueError):
@@ -205,7 +214,8 @@ def scaffold(answers, target, dry_run=False):
             fh.write(text)
         if rel.endswith(".sh") or rel.startswith(".nerv/hooks/"):
             path.chmod(path.stat().st_mode | 0o111)
-    return 0, {"status": "created", "files": sorted(files), "git": git_init(target)}
+    return 0, {"status": "created", "files": sorted(files), "git": git_init(target),
+               "next_steps": list(NEXT_STEPS)}
 
 
 def main(argv=None):

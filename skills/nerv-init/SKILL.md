@@ -28,10 +28,7 @@ NERV builds the base the Evas launch from; this skill builds the base an analysi
    - `README.md`: what the project answers and its status.
    - Each folder README: fill "Conventions" and "Current state" for this assay, engine, and language. Keep all four sections.
    - Do not copy folder details into `AGENTS.md`; it only points to them.
-6. **Summarize.** Report the created tree, the hooks installed, and next steps:
-   - fill `config/samples.tsv` and the reference pins in `config/config.yaml`;
-   - optionally make `data/raw/` read-only at the OS level (`chmod -R a-w data/raw`) since the hook is best-effort;
-   - Codex users: Codex silently skips project hooks until they are trusted. Open `codex` in the project root, run `/hooks`, and trust the nerv hooks; until then raw-data protection is off in Codex.
+6. **Summarize.** Report the created tree and the hooks installed. Then show the user every entry of `next_steps` from the scaffold result, in order and word for word. Do not drop or shorten any of them: the first one says which safety hooks stay off in Codex until the user trusts them.
 
 ## "Other" assay
 

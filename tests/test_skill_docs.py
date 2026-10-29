@@ -50,3 +50,9 @@ def test_skill_frontmatter_states_function_first(skill):
     assert front and front.group(1) == skill
     first_sentence = front.group(2).split(". ")[0]
     assert not any(w in first_sentence for w in ("NERV", "MAGI", "Eva", "sync ratio"))
+
+
+def test_nerv_init_relays_every_next_step():
+    text = (SKILLS / "nerv-init" / "SKILL.md").read_text(encoding="utf-8")
+    assert "every entry of `next_steps`" in text and "word for word" in text
+    assert "`/hooks`" not in text  # the steps live only in scaffold.py

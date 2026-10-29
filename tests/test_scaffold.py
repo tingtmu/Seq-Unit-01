@@ -91,6 +91,27 @@ def test_dry_run_writes_nothing(tmp_path):
     assert list(tmp_path.iterdir()) == []
 
 
+def test_created_result_lists_next_steps(tmp_path):
+    code, result = scaffold.scaffold(answers(), tmp_path)
+    assert code == 0 and result["status"] == "created"
+    steps = result["next_steps"]
+    assert isinstance(steps, list) and steps and all(isinstance(s, str) and s for s in steps)
+    trust = steps[0]
+    assert "/hooks" in trust and "Codex" in trust
+    assert "raw-data guard" in trust and "sync reminder" in trust and "off in Codex until" in trust
+    assert "again after any change to `.codex/hooks.json`" in trust
+    rest = " ".join(steps[1:])
+    assert "config/samples.tsv" in rest and "data/raw/" in rest and "read-only" in rest
+
+
+def test_no_next_steps_when_nothing_created(tmp_path):
+    _, planned = scaffold.scaffold(answers(), tmp_path, dry_run=True)
+    assert "next_steps" not in planned
+    (tmp_path / "README.md").write_text("mine\n")
+    _, clash = scaffold.scaffold(answers(), tmp_path)
+    assert clash["status"] == "conflict" and "next_steps" not in clash
+
+
 def test_git_works_and_data_ignored(tmp_path):
     project = build(tmp_path)
     git(project, "status")

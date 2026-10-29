@@ -46,6 +46,10 @@ _Avoid_: guardrail, constraint, policy
 A flexible best-practice guideline, such as KISS or Fail Fast. Principles shape the skills and templates but are not listed one by one in AGENTS.md.
 _Avoid_: soft rule, convention, best practice
 
+**Next steps**:
+The follow-up actions the scaffold reports to the user after it creates a project, such as trusting the Codex hooks. The list lives in one place, `NEXT_STEPS` in `scaffold.py`, and the agent shows it in full.
+_Avoid_: todo list, checklist, post-install steps
+
 ### Keeping documents current (`sync-ratio`)
 
 **Sync ratio**:

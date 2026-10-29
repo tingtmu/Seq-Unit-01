@@ -67,12 +67,12 @@ Each skill folder is self-contained, so you can copy just one, for example only 
 Limitations:
 - **The raw-data guard is best-effort, not a security boundary.** Shell detection is a heuristic for `rm`, `mv`, `cp` onto existing files, `sed -i`/`perl -i`, `truncate`, `tee`, `>`/`>>`, and PowerShell `Remove-Item`/`Move-Item`/`Set-Content`/`Out-File`. Indirect writes, such as a script that writes into `data/raw/`, are not caught. For real protection, make `data/raw/` read-only at the OS level and keep checksums.
 - If the guard itself fails (for example, on malformed input), it allows the action and writes the error to stderr, so a broken hook never breaks a session.
-- **Codex silently skips project hooks until you trust them.** After `nerv-init`, open `codex` in the project, run `/hooks`, and trust the nerv hooks. Until you do, the raw-data guard and sync reminder are **off** in Codex, and nothing warns you. Re-trust after any change to `.codex/hooks.json`.
+- **Codex silently skips project hooks until you trust them.** Open `codex` in the project root, run `/hooks`, and trust the nerv hooks. Until you do, the raw-data guard and sync reminder are **off** in Codex, and Codex itself does not warn you. `nerv-init` prints this step in its next steps after scaffolding. Re-trust after any change to `.codex/hooks.json`.
 - Codex runs hook commands with relative paths, so start Codex from the project root.
 - Claude Code hook commands use `python` on Windows and `python3` elsewhere, chosen when the project is scaffolded.
 - In Codex, files written through the shell (not `apply_patch`) get no provenance reminder.
 
-Hook schemas were verified on 2026-10-29 against the Claude Code hooks reference (code.claude.com/docs/en/hooks) and the Codex source (`openai/codex`: `codex-rs/hooks/src/schema.rs`, `output_parser.rs`, `config/src/hook_config.rs`). Codex rejects `permissionDecision: "ask"` in `PreToolUse`, so the guard denies there instead.
+Hook schemas were verified on 2026-10-29 against the Claude Code hooks reference (code.claude.com/docs/en/hooks) and the Codex source (`openai/codex`: `codex-rs/hooks/src/schema.rs`, `output_parser.rs`, `config/src/hook_config.rs`). The Codex trust behavior (untrusted or modified project hooks are skipped; `/hooks` trusts them) was checked on 2026-10-29 against `codex-rs/hooks/src/engine/discovery.rs`. Codex rejects `permissionDecision: "ask"` in `PreToolUse`, so the guard denies there instead.
 
 ## Repository layout
 

@@ -11,7 +11,7 @@
     ],
     "PostToolUse": [
       {
-        "matcher": "^apply_patch$",
+        "matcher": "^(apply_patch|Bash)$",
         "hooks": [
           { "type": "command", "command": "python3 .nerv/hooks/raw_guard.py --agent codex", "commandWindows": "python .nerv/hooks/raw_guard.py --agent codex", "timeout": 10 }
         ]

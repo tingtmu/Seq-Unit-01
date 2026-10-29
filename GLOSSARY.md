@@ -118,6 +118,10 @@ The entry in `data/README.md` giving where a raw file came from and its checksum
 _Avoid_: metadata, data log, manifest
 
 **Raw-data guard**:
-The hook that lets agents add new raw files but requires a person's approval to change or delete an existing one. It is a best-effort safeguard, not a security boundary.
+The hook that lets agents add new raw files but requires a person's approval to change or delete an existing one, and reports raw files changed some other way after the fact. It is a best-effort safeguard, not a security boundary.
 _Avoid_: lock, firewall, protection
 _Codename_: AT Field (the barrier around raw data; strong, but not absolute)
+
+**Raw snapshot**:
+The raw-data guard's saved record of each raw file's size and modification time. Comparing raw data with it shows which raw files are new, modified, or removed since the last check.
+_Avoid_: manifest, checksum list, index, baseline

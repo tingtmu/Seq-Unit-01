@@ -113,20 +113,98 @@ def test_malformed_input_fails_open(project, stdin):
         assert "nerv raw_guard" in err
 
 
-def test_post_tool_use_provenance_reminder(project):
-    event = {"hook_event_name": "PostToolUse", "tool_name": "Write",
-             "tool_input": {"file_path": "data/raw/batch2/S1_R1.fastq.gz"},
-             "tool_response": {"type": "create", "filePath": "data/raw/batch2/S1_R1.fastq.gz"}}
-    out, _ = run(project, event)
-    context = out["hookSpecificOutput"]["additionalContext"]
-    assert "data/README.md" in context and "data/raw/batch2/S1_R1.fastq.gz" in context
+def post(tool, **tool_input):
+    return {"hook_event_name": "PostToolUse", "tool_name": tool, "tool_input": tool_input, "tool_response": {}}
 
 
-def test_post_tool_use_codex_patch_and_non_raw(project):
+def context(output):
+    return output["hookSpecificOutput"]["additionalContext"]
+
+
+@pytest.fixture
+def settled(project):
+    """A project whose raw snapshot already matches data/raw/."""
+    run(project, post("Bash", command="ls"))
+    return project
+
+
+def test_post_tool_use_provenance_reminder(settled):
+    new = settled / "data/raw/batch2/S1_R1.fastq.gz"
+    new.parent.mkdir()
+    new.write_bytes(b"x")
+    out, _ = run(settled, {**post("Write", file_path="data/raw/batch2/S1_R1.fastq.gz"),
+                           "tool_response": {"type": "create", "filePath": "data/raw/batch2/S1_R1.fastq.gz"}})
+    assert "data/README.md" in context(out) and "data/raw/batch2/S1_R1.fastq.gz" in context(out)
+    assert "data/raw/S1_R1.fastq.gz" not in context(out)
+
+
+def test_post_tool_use_codex_patch_and_non_raw(settled):
+    (settled / "data/raw/new.txt").write_text("x")
     add = "*** Begin Patch\n*** Add File: data/raw/new.txt\n+x\n*** End Patch\n"
-    out, _ = run(project, {"hook_event_name": "PostToolUse", "tool_name": "apply_patch",
-                           "tool_input": {"command": add}, "tool_response": {}}, agent="codex")
-    assert "data/README.md" in out["hookSpecificOutput"]["additionalContext"]
-    out, _ = run(project, {"hook_event_name": "PostToolUse", "tool_name": "Write",
-                           "tool_input": {"file_path": "scripts/a.py"}, "tool_response": {"type": "create"}})
-    assert out is None
+    out, _ = run(settled, post("apply_patch", command=add), agent="codex")
+    assert "data/README.md" in context(out)
+    (settled / "scripts").mkdir()
+    (settled / "scripts/a.py").write_text("x")
+    assert run(settled, post("Write", file_path="scripts/a.py"))[0] is None
+
+
+@pytest.mark.parametrize("agent", ["claude", "codex"])
+def test_new_raw_file_from_shell_reminds_once(settled, agent):
+    new = settled / "data/raw/batch3/S5_R1.fastq.gz"
+    new.parent.mkdir()
+    new.write_bytes(b"x")
+    out, _ = run(settled, post("Bash", command="python scripts/download.py"), agent=agent)
+    assert "data/README.md" in context(out) and "data/raw/batch3/S5_R1.fastq.gz" in context(out)
+    assert run(settled, post("Bash", command="ls"), agent=agent)[0] is None
+
+
+def test_script_modifying_raw_file_reported(settled):
+    (settled / "data/raw/S1_R1.fastq.gz").write_bytes(b"rewritten by a script")
+    out, _ = run(settled, post("Bash", command="python scripts/fix_headers.py"))
+    assert "data/raw/S1_R1.fastq.gz" in context(out) and "modified" in context(out)
+    assert "stop" in context(out).lower() and "data/README.md" not in context(out)
+
+
+def test_raw_file_removed_indirectly_reported(settled):
+    (settled / "data/raw/S1_R1.fastq.gz").unlink()
+    out, _ = run(settled, post("Bash", command="make clean"))
+    assert "data/raw/S1_R1.fastq.gz" in context(out) and "removed" in context(out)
+
+
+def test_read_only_command_gives_no_message(settled):
+    (settled / "data/processed/count.txt").write_text("1")
+    assert run(settled, post("Bash", command="wc -l data/raw/S1_R1.fastq.gz > data/processed/count.txt"))[0] is None
+
+
+def test_corrupt_snapshot_fails_open(settled):
+    (settled / ".nerv/raw-snapshot.json").write_text("{not json")
+    (settled / "data/raw/S1_R1.fastq.gz").write_bytes(b"changed")
+    out, err = run(settled, post("Bash", command="ls"))
+    assert out is None and "nerv raw_guard" in err
+    assert run(settled, post("Bash", command="ls"))[0] is None  # snapshot replaced with current state
+
+
+def test_gitkeep_ignored(project):
+    (project / "data/raw/S1_R1.fastq.gz").unlink()
+    (project / "data/raw/.gitkeep").write_text("")
+    assert run(project, post("Bash", command="ls"))[0] is None
+
+
+def test_missing_raw_folder_gives_no_message(tmp_path):
+    out, err = run(tmp_path, post("Bash", command="ls"))
+    assert out is None and err == ""
+
+
+def test_long_file_lists_are_capped(settled):
+    for i in range(30):
+        (settled / f"data/raw/S{i:02d}_R2.fastq.gz").write_bytes(b"x")
+    out, _ = run(settled, post("Bash", command="python scripts/download.py"))
+    assert "and 10 more" in context(out) and "S29_R2" not in context(out)
+
+
+def test_symlink_loop_does_not_hang(settled):
+    try:
+        os.symlink(settled / "data/raw", settled / "data/raw/loop", target_is_directory=True)
+    except OSError:
+        pytest.skip("symlinks not permitted here")
+    assert run(settled, post("Bash", command="ls"))[0] is None

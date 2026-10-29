@@ -40,6 +40,7 @@ data/reference/*
 !data/reference/.gitkeep
 data/processed/*
 !data/processed/.gitkeep
+.nerv/*raw-snapshot*
 *.fastq
 *.fastq.gz
 *.fq

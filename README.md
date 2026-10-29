@@ -12,7 +12,7 @@ Works with **Claude Code** and **Codex**. Hook logic is Python 3 standard librar
 | `sync-ratio` | Lists folders that changed significantly without a README update and drafts the updates (only "Current state" and "Last major change"). A Stop hook gives the agent the same reminder once, and never blocks. | The sync ratio measures how well pilot and Eva move as one; here, how well a README matches its folder. |
 | `magi-review` | Risk-scaled review. TRIVIAL changes are skipped. STANDARD changes get one reviewer applying three lenses. CRITICAL changes get three independent seats that vote: MELCHIOR-1 (science), BALTHASAR-2 (safety), CASPER-3 (craft). A 2/3 majority wins; BALTHASAR can veto on hard-rule violations. | The MAGI are three supercomputers that decide by majority vote. |
 
-`nerv-init` also installs the **raw-data guard**. New files in `data/raw/` are allowed, with a reminder to record their provenance in `data/README.md`. Changing, moving, or deleting an existing raw file needs your approval.
+`nerv-init` also installs the **raw-data guard**. New files in `data/raw/` are allowed, with a reminder to record their provenance in `data/README.md`. Changing, moving, or deleting an existing raw file needs your approval. If a raw file changes some other way, such as through a script, the agent is told after the fact.
 
 ## Install (per project)
 
@@ -61,18 +61,17 @@ Each skill folder is self-contained, so you can copy just one, for example only 
 | Hook | Claude Code (`.claude/settings.json`) | Codex (`.codex/hooks.json`) |
 |------|---------------------------------------|-----------------------------|
 | Raw-data guard, before a write | `PreToolUse` on Write/Edit/MultiEdit/NotebookEdit/Bash/PowerShell; existing raw file → **ask** you | `PreToolUse` on `apply_patch`/`Bash`; existing raw file → **deny** with instructions (Codex hooks have no "ask") |
-| Provenance reminder | `PostToolUse` on Write (new files in `data/raw/`) | `PostToolUse` on `apply_patch` (added files) |
+| Raw-data guard, after a write | `PostToolUse` on the same tools: compares `data/raw/` with the raw snapshot (`.nerv/raw-snapshot.json`, git-ignored); new raw files → provenance reminder, modified or removed raw files → reported after the fact | `PostToolUse` on `apply_patch`/`Bash`: same |
 | README sync reminder | `Stop`: one `decision: block` per out-of-sync state; honors `stop_hook_active` | `Stop`: same output and `stop_hook_active` handling |
 
 Limitations:
-- **The raw-data guard is best-effort, not a security boundary.** Shell detection is a heuristic for `rm`, `mv`, `cp` onto existing files, `sed -i`/`perl -i`, `truncate`, `tee`, `>`/`>>`, and PowerShell `Remove-Item`/`Move-Item`/`Set-Content`/`Out-File`. Indirect writes, such as a script that writes into `data/raw/`, are not caught. For real protection, make `data/raw/` read-only at the OS level and keep checksums.
+- **The raw-data guard is best-effort, not a security boundary.** Shell detection is a heuristic for `rm`, `mv`, `cp` onto existing files, `sed -i`/`perl -i`, `truncate`, `tee`, `>`/`>>`, and PowerShell `Remove-Item`/`Move-Item`/`Set-Content`/`Out-File`. Indirect writes, such as a script that writes into `data/raw/`, are not prevented: after each covered tool call, the guard compares each raw file's size and modification time with the raw snapshot and reports new, modified, or removed files. Rewrites that keep both size and modification time are missed, and a raw change from a failed command is reported at the next covered tool call. For real protection, make `data/raw/` read-only at the OS level and keep checksums.
 - If the guard itself fails (for example, on malformed input), it allows the action and writes the error to stderr, so a broken hook never breaks a session.
 - **Codex silently skips project hooks until you trust them.** Open `codex` in the project root, run `/hooks`, and trust the nerv hooks. Until you do, the raw-data guard and sync reminder are **off** in Codex, and Codex itself does not warn you. `nerv-init` prints this step in its next steps after scaffolding. Re-trust after any change to `.codex/hooks.json`.
 - Codex runs hook commands with relative paths, so start Codex from the project root.
 - Claude Code hook commands use `python` on Windows and `python3` elsewhere, chosen when the project is scaffolded.
-- In Codex, files written through the shell (not `apply_patch`) get no provenance reminder.
 
-Hook schemas were verified on 2026-10-29 against the Claude Code hooks reference (code.claude.com/docs/en/hooks) and the Codex source (`openai/codex`: `codex-rs/hooks/src/schema.rs`, `output_parser.rs`, `config/src/hook_config.rs`). The Codex trust behavior (untrusted or modified project hooks are skipped; `/hooks` trusts them) was checked on 2026-10-29 against `codex-rs/hooks/src/engine/discovery.rs`. Codex rejects `permissionDecision: "ask"` in `PreToolUse`, so the guard denies there instead.
+Hook schemas were verified on 2026-10-29 against the Claude Code hooks reference (code.claude.com/docs/en/hooks) and the Codex source (`openai/codex`: `codex-rs/hooks/src/schema.rs`, `output_parser.rs`, `config/src/hook_config.rs`). The `PostToolUse` matchers for shell tools and `additionalContext` output were re-checked on 2026-10-29; Codex reports shell tools as `Bash` (`core/src/tools/hook_names.rs`), and both agents run `PostToolUse` only after a tool succeeds. The Codex trust behavior (untrusted or modified project hooks are skipped; `/hooks` trusts them) was checked on 2026-10-29 against `codex-rs/hooks/src/engine/discovery.rs`. Codex rejects `permissionDecision: "ask"` in `PreToolUse`, so the guard denies there instead.
 
 ## Repository layout
 

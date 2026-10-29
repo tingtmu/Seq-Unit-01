@@ -4,11 +4,15 @@
 PreToolUse: creating a new raw file is allowed; modifying, overwriting, moving or deleting
 an existing one needs human approval ("ask" in Claude Code; "deny" with instructions in
 agents without an ask decision, e.g. Codex).
-PostToolUse: after a new raw file is written, remind the agent to record provenance.
+PostToolUse: compare data/raw/ with the raw snapshot (.nerv/raw-snapshot.json: each file's
+size and modification time), then save the new one. New raw files get a provenance reminder,
+whatever tool or command wrote them. Existing raw files that were modified or removed are
+reported after the fact; nothing is blocked or undone.
 
 Usage: raw_guard.py --agent claude|codex   (hook JSON on stdin)
 
-Best-effort, not a security boundary: shell detection is a heuristic. On any internal
+Best-effort, not a security boundary: shell detection is a heuristic, and writes that keep
+a file's size and modification time are missed. On any internal
 error the guard writes to stderr and allows the action (fail open).
 Standard library only.
 """
@@ -17,9 +21,13 @@ import os
 import re
 import shlex
 import sys
+import tempfile
+from contextlib import suppress
 from pathlib import Path
 
 RAW_PARTS = ("data", "raw")
+SNAPSHOT_PARTS = (".nerv", "raw-snapshot.json")
+MAX_LISTED = 20  # keep the message short when many raw files change at once
 SEPARATORS = {";", "&&", "||", "|", "&", "\n"}
 REDIRECTS = {">", ">>", ">|", "&>", "&>>"}
 DELETE_CMDS = {"rm", "unlink", "shred", "truncate", "remove-item", "del", "erase", "ri", "clear-content"}
@@ -32,6 +40,8 @@ PATCH_LINE = re.compile(r"^\*\*\* (Add|Update|Delete) File: (.+)$", re.MULTILINE
 RULE = "Hard rule: raw data in data/raw/ is never modified in place; corrections are a workflow step writing to data/processed/."
 PROVENANCE = ("New raw file(s) added: {files}. Record each file's source (URL/accession or instrument run), "
               "download date, and checksum (e.g. sha256sum) in data/README.md.")
+CHANGED = ("Raw files changed since the last raw snapshot: {files}. If the user did not approve this, "
+           "stop and tell them now. " + RULE)
 
 
 def project_root():
@@ -125,19 +135,6 @@ class Guard:
             hits += [p for p in map(self.existing_raw, operands) if p]
         return hits
 
-    # --- PostToolUse ----------------------------------------------------------------
-    def new_raw_files(self, tool, tool_input, tool_response):
-        tool_input = tool_input if isinstance(tool_input, dict) else {}
-        if tool == "Write":
-            if isinstance(tool_response, dict) and tool_response.get("type") == "update":
-                return []
-            path = self.raw_path(tool_input.get("file_path"))
-            return [path] if path else []
-        command = tool_input.get("command")
-        if tool == "apply_patch" and isinstance(command, str):
-            return [p for a, f in PATCH_LINE.findall(command) if a == "Add" for p in [self.raw_path(f.strip())] if p]
-        return []
-
 
 def split_commands(command):
     """Split a shell command line into simple commands (lists of words). Heuristic."""
@@ -159,24 +156,103 @@ def split_commands(command):
     return [w for w in result if w]
 
 
+def raw_snapshot(root):
+    """Map each file under data/raw/ (relative posix path) to [size, mtime_ns].
+
+    A folder that cannot be listed raises instead of reading as "all files removed"
+    (e.g. a stale network mount), so the last good raw snapshot is kept.
+    """
+    raw = Path(root, *RAW_PARTS)
+    if not os.path.lexists(raw):
+        return {}
+    snapshot, seen = {}, set()
+
+    def fail(exc):
+        raise exc
+
+    for folder, dirs, names in os.walk(raw, followlinks=True, onerror=fail):
+        seen.add(os.path.realpath(folder))
+        dirs[:] = [d for d in dirs if os.path.realpath(os.path.join(folder, d)) not in seen]  # symlink loops
+        for name in names:
+            if name == ".gitkeep":
+                continue
+            path = os.path.join(folder, name)
+            with suppress(FileNotFoundError):  # removed mid-walk, or a broken symlink
+                st = os.stat(path)
+                snapshot[Path(os.path.relpath(path, root)).as_posix()] = [st.st_size, st.st_mtime_ns]
+    return snapshot
+
+
+def load_snapshot(path):
+    """Return the saved raw snapshot, {} if there is none yet. Raise ValueError if it is corrupt.
+
+    Other OSErrors (e.g. Windows locking it during a parallel save) propagate, so the run
+    fails open without overwriting it.
+    """
+    try:
+        saved = json.loads(path.read_text(encoding="utf-8"))
+    except FileNotFoundError:
+        return {}
+    if not isinstance(saved, dict):
+        raise ValueError("raw snapshot is not a JSON object")
+    return saved
+
+
+def save_snapshot(path, snapshot):
+    """Write atomically, so a parallel hook run never reads a half-written file."""
+    path.parent.mkdir(parents=True, exist_ok=True)
+    fd, tmp = tempfile.mkstemp(dir=path.parent, prefix=".raw-snapshot-", suffix=".tmp")
+    try:
+        with os.fdopen(fd, "w", encoding="utf-8") as f:
+            json.dump(snapshot, f)
+        os.replace(tmp, path)
+    except BaseException:
+        with suppress(OSError):
+            os.unlink(tmp)
+        raise
+
+
+def raw_changes(root):
+    """Diff data/raw/ against the raw snapshot and save the new one. Return the hook message or None."""
+    path = Path(root, *SNAPSHOT_PARTS)
+    try:  # load before walking, so a parallel run's newer save never makes a file look removed
+        saved = load_snapshot(path)
+    except ValueError as exc:
+        print(f"nerv raw_guard: replacing corrupt raw snapshot: {exc!r}", file=sys.stderr)
+        saved = None
+    current = raw_snapshot(root)
+    save_snapshot(path, current)
+    if saved is None:
+        return None
+    added = sorted(current.keys() - saved.keys())
+    changed = sorted([f"{p} (modified)" for p in current.keys() & saved.keys() if current[p] != saved[p]]
+                     + [f"{p} (removed)" for p in saved.keys() - current.keys()])
+    messages = []
+    if added:
+        messages.append(PROVENANCE.format(files=listing(added)))
+    if changed:
+        messages.append(CHANGED.format(files=listing(changed)))
+    return " ".join(messages) or None
+
+
+def listing(items):
+    extra = len(items) - MAX_LISTED
+    return ", ".join(items[:MAX_LISTED]) + (f", and {extra} more" if extra > 0 else "")
+
+
 def relative(paths, root):
     return ", ".join(sorted({Path(os.path.relpath(p, root)).as_posix() for p in paths}))
 
 
 def decide(event, agent, root):
     """Return the JSON-serialisable hook output, or None to allow silently."""
-    guard = Guard(root, event.get("cwd"))
     name = event.get("hook_event_name")
-    tool = event.get("tool_name", "")
     if name == "PostToolUse":
-        new = guard.new_raw_files(tool, event.get("tool_input"), event.get("tool_response"))
-        if not new:
-            return None
-        return {"hookSpecificOutput": {"hookEventName": "PostToolUse",
-                                       "additionalContext": PROVENANCE.format(files=relative(new, root))}}
+        message = raw_changes(root)
+        return message and {"hookSpecificOutput": {"hookEventName": "PostToolUse", "additionalContext": message}}
     if name != "PreToolUse":
         return None
-    hits = guard.check_tool(tool, event.get("tool_input"))
+    hits = Guard(root, event.get("cwd")).check_tool(event.get("tool_name", ""), event.get("tool_input"))
     if not hits:
         return None
     files = relative(hits, root)

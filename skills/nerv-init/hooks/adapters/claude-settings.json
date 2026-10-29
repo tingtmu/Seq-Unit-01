@@ -11,7 +11,7 @@
     ],
     "PostToolUse": [
       {
-        "matcher": "Write",
+        "matcher": "Write|Edit|MultiEdit|NotebookEdit|Bash|PowerShell",
         "hooks": [
           { "type": "command", "command": "{{PYTHON}} \"$CLAUDE_PROJECT_DIR/.nerv/hooks/raw_guard.py\" --agent claude", "timeout": 10 }
         ]

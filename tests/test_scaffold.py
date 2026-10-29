@@ -122,6 +122,7 @@ def test_git_works_and_data_ignored(tmp_path):
     assert "data/raw/S1.fastq.gz" not in tracked and "data/processed/x.tsv" not in tracked
     assert "results/de.h5ad" not in tracked
     assert {"data/README.md", "data/raw/.gitkeep", "AGENTS.md", ".nerv/hooks/raw_guard.py"} <= tracked
+    git(project, "check-ignore", ".nerv/raw-snapshot.json")  # exits non-zero if not ignored
 
 
 def test_sensitive_adds_rules_and_ignores(tmp_path):
@@ -147,6 +148,14 @@ def test_adapters_point_to_project_hooks(tmp_path):
     codex = json.loads((project / ".codex/hooks.json").read_text())
     commands = [h["command"] for groups in codex["hooks"].values() for g in groups for h in g["hooks"]]
     assert all(c.split()[1].startswith(".nerv/hooks/") for c in commands)
+
+
+@pytest.mark.parametrize("adapter", ["claude-settings.json", "codex-hooks.json"])
+def test_guard_pre_and_post_matchers_cover_same_tools(adapter):
+    hooks = json.loads((NERV_INIT / "hooks/adapters" / adapter).read_text())["hooks"]
+    matchers = {event: [g["matcher"] for g in hooks[event] if "raw_guard.py" in g["hooks"][0]["command"]]
+                for event in ("PreToolUse", "PostToolUse")}
+    assert matchers["PreToolUse"] == matchers["PostToolUse"] and len(matchers["PreToolUse"]) == 1
 
 
 def test_installed_guard_finds_project_root(tmp_path):

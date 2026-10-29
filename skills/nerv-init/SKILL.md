@@ -40,5 +40,5 @@ The scaffold creates only the shared skeleton. Using `assay_description`, adapt 
 
 ## Hooks installed
 
-- `.nerv/hooks/raw_guard.py`: new files in `data/raw/` are allowed with a reminder to record provenance in `data/README.md`; changing or deleting existing raw files asks the user (Claude Code) or is denied with instructions (Codex). Best-effort, not a security boundary.
+- `.nerv/hooks/raw_guard.py`: new files in `data/raw/` are allowed with a reminder to record provenance in `data/README.md`, however they were written; changing or deleting existing raw files asks the user (Claude Code) or is denied with instructions (Codex), and raw files changed some other way, such as by a script, are reported after the fact. Best-effort, not a security boundary.
 - `.nerv/hooks/sync_ratio.py`: at the end of a turn, reminds the agent once if a folder changed significantly without a README update. Never blocks twice.

@@ -1,0 +1,3 @@
+- Snakemake standard layout: `workflow/Snakefile` is the entry point; rules live in `workflow/rules/*.smk`, one file per stage; `workflow/rules/common.smk` loads and validates the sample sheet.
+- Rules use `conda: "../../envs/<name>.yaml"` and call code in `scripts/` via `script:` or `shell:`. Environments and scripts stay at the top level so notebooks and tests can share them.
+- Dry-run before every real run: `snakemake -n`.

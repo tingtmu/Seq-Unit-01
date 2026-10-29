@@ -1,0 +1,32 @@
+# {{PROJECT_NAME}}
+
+<!-- nerv: what question this project answers, for whom, and its status. 3-5 sentences. -->
+
+- Assay: {{ASSAY_LABEL}}
+- Workflow: {{ENGINE_LABEL}}
+- Languages: {{LANGUAGES}}
+- Compute: {{COMPUTE}}
+
+## Quick start
+
+1. Create the environments described in `envs/README.md`.
+2. Put raw data in `data/raw/` and record provenance in `data/README.md`.
+3. Fill in `config/` (see `config/README.md`).
+4. Run: `{{RUN_COMMAND}}`
+5. Test: `{{TEST_COMMAND}}`
+
+## Layout
+
+| Folder | Contents |
+|--------|----------|
+| `config/` | Sample sheet, parameters, reference pins |
+| `data/` | `raw/` (immutable), `reference/`, `processed/` |
+| `workflow/` | Pipeline definition |
+| `scripts/` | Analysis code called by the workflow |
+| `notebooks/` | Exploration; anything final moves into `scripts/` |
+| `envs/` | Software environment specs |
+| `results/` | Generated outputs (reproducible, not hand-edited) |
+| `tests/` | Tests for scripts and workflow |
+| `docs/` | Decisions, methods notes, principles |
+
+Each folder has a README with Purpose, Conventions, Current state, and Last major change. AI agents start from `AGENTS.md`.

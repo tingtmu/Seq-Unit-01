@@ -1,0 +1,3 @@
+- DE uses raw counts (never TPM/FPKM) and reads the design and contrasts from `config/design.yaml`.
+- Record the DE method (e.g. DESeq2, edgeR, limma-voom), multiple-testing correction, and any LFC shrinkage in the script header.
+- Low-count filtering rules are written down here, not tuned after seeing results.

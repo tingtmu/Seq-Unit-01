@@ -1,0 +1,2 @@
+- One DE table per contrast in `results/de/<contrast>.tsv`, with baseMean/log2FC/p/padj columns and the gene ID version.
+- QC (MultiQC report, PCA, sample distances) goes in `results/qc/`; check for outlier samples and batch effects before DE.

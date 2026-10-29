@@ -1,0 +1,2 @@
+- FASTQ files keep their original names; the mapping to sample IDs lives in `config/samples.tsv`.
+- Quantification indexes (e.g. salmon, STAR) go in `data/reference/` and are built from the pinned FASTA/GTF.

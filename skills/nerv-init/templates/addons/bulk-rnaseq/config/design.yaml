@@ -1,0 +1,12 @@
+# Differential expression design. Fix the formula and contrasts BEFORE looking at results.
+design: "~ batch + condition"   # columns must exist in config/samples.tsv
+reference_level:
+  condition: ""                 # e.g. control
+
+contrasts:
+  # name: [factor, numerator, denominator]
+  # treated_vs_control: [condition, treated, control]
+
+thresholds:
+  padj: 0.05
+  lfc: 0                        # log2 fold-change threshold tested (not post-hoc filtered)

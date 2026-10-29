@@ -1,0 +1,2 @@
+- `workflow/run_all.sh` runs every step in order; each step is a numbered script in `scripts/` (`01_qc`, `02_...`).
+- A step must be safe to rerun: it overwrites only its own outputs in `results/` or `data/processed/`.

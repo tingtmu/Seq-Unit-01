@@ -1,0 +1,9 @@
+# Single source of truth for run parameters. Reference pins live ONLY here.
+samples: config/samples.tsv
+
+reference:
+  organism: ""          # e.g. Homo sapiens
+  genome_build: ""      # e.g. GRCh38
+  annotation: ""        # e.g. GENCODE v46
+  fasta: data/reference/genome.fa
+  gtf: data/reference/annotation.gtf

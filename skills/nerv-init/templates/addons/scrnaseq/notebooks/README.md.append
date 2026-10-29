@@ -1,0 +1,2 @@
+- Notebooks load staged objects from `results/objects/` (`.h5ad` or `.rds`) and never overwrite them.
+- Cell-type annotation decisions made while exploring are copied into `docs/integration-log.md` before they are used.

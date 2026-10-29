@@ -1,0 +1,2 @@
+- `config/design.yaml` holds the DE design formula, reference levels, contrasts, and significance thresholds. Every factor in the formula is a column in `samples.tsv`.
+- Strandedness and read layout (single/paired) are recorded per sample in `samples.tsv`, not guessed by tools.

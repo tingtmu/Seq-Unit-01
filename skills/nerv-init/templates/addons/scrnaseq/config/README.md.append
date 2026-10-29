@@ -1,0 +1,2 @@
+- Per-sample QC thresholds (genes, counts, % mitochondrial, doublet method) are recorded in `config/qc_thresholds.tsv`, one row per sample, with a note on how each was chosen. Never hardcode them in scripts or notebooks.
+- Clustering resolution, number of PCs/neighbors, and integration method go in a `clustering:` block in `config/config.yaml`; add the block when you first cluster, not in code.

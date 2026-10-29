@@ -1,0 +1,39 @@
+# AGENTS.md: {{PROJECT_NAME}}
+
+{{ASSAY_LABEL}} analysis. Workflow: {{ENGINE_LABEL}}. Languages: {{LANGUAGES}}. Compute: {{COMPUTE}}.
+
+<!-- nerv: one or two sentences on the biological question this project answers. -->
+<!-- Keep this file short (about 60 lines; hard limit 200). Put detail in folder READMEs and link it below. -->
+
+## Hard rules
+
+1. Never modify raw data in place. `data/raw/` is immutable; corrections are a workflow step that writes to `data/processed/`. When adding raw files, record source and checksum in `data/README.md`.
+2. Never commit secrets, credentials, or protected/controlled-access data.
+3. The reference genome build and annotation version are pinned in one place: `config/config.yaml`. Never hardcode them elsewhere.
+4. Results come from `config/` + `workflow/` + `envs/` only; no untracked manual steps.
+{{SENSITIVE_RULES}}
+## Commands
+
+- Run: `{{RUN_COMMAND}}`
+- Test: `{{TEST_COMMAND}}`
+
+## Where to look
+
+| Area | Read first |
+|------|------------|
+| Samples, parameters, reference pins | `config/README.md` |
+| Raw data provenance, references | `data/README.md` |
+| Pipeline steps | `workflow/README.md` |
+| Analysis scripts | `scripts/README.md` |
+| Exploratory notebooks | `notebooks/README.md` |
+| Software environments | `envs/README.md` |
+| Outputs | `results/README.md` |
+| Tests | `tests/README.md` |
+| Decisions and design notes | `docs/README.md` |
+
+## Keeping docs current
+
+After a significant change to a folder, update that folder's README sections "Current state" and "Last major change". A hook reminds you once if you forget.
+Before merging risky changes (workflow, config, statistics, data handling), run the `magi-review` skill.
+
+Principles behind these rules: `docs/principles.md`.

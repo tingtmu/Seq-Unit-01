@@ -5,9 +5,10 @@ PreToolUse: creating a new raw file is allowed; modifying, overwriting, moving o
 an existing one needs human approval ("ask" in Claude Code; "deny" with instructions in
 agents without an ask decision, e.g. Codex).
 PostToolUse: compare data/raw/ with the raw snapshot (.nerv/raw-snapshot.json: each file's
-size and modification time), then save the new one. New raw files get a provenance reminder,
-whatever tool or command wrote them. Existing raw files that were modified or removed are
-reported after the fact; nothing is blocked or undone.
+size and modification time), then save the new one. New raw files get a provenance reminder
+with a SHA-256 command for this OS, whatever tool or command wrote them. Existing raw files
+that were modified or removed are reported after the fact, with a note that their provenance
+records no longer match; nothing is blocked or undone.
 
 Usage: raw_guard.py --agent claude|codex   (hook JSON on stdin)
 
@@ -38,10 +39,13 @@ INPLACE = re.compile(r"^(-i|-[a-zA-Z]*i[a-zA-Z.]*|--in-place.*)$")
 PATCH_LINE = re.compile(r"^\*\*\* (Add|Update|Delete) File: (.+)$", re.MULTILINE)
 
 RULE = "Hard rule: raw data in data/raw/ is never modified in place; corrections are a workflow step writing to data/processed/."
+NOT_IN_GIT = "raw data is not in git"
 PROVENANCE = ("New raw file(s) added: {files}. Record each file's source (URL/accession or instrument run), "
-              "download date, and checksum (e.g. sha256sum) in data/README.md.")
+              "download date, and SHA-256 checksum in data/README.md. Checksum command: {command}")
 CHANGED = ("Raw files changed since the last raw snapshot: {files}. If the user did not approve this, "
-           "stop and tell them now. " + RULE)
+           "stop and tell them now. Their provenance records in data/README.md no longer match, and "
+           f"because {NOT_IN_GIT}, recovering a file means fetching it again from its source. " + RULE)
+CHECKSUM_TOOLS = {"darwin": "shasum -a 256", "win32": "Get-FileHash -Algorithm SHA256"}  # others: sha256sum
 
 
 def project_root():
@@ -229,7 +233,7 @@ def raw_changes(root):
                      + [f"{p} (removed)" for p in saved.keys() - current.keys()])
     messages = []
     if added:
-        messages.append(PROVENANCE.format(files=listing(added)))
+        messages.append(PROVENANCE.format(files=listing(added), command=checksum_command(added[:MAX_LISTED])))
     if changed:
         messages.append(CHANGED.format(files=listing(changed)))
     return " ".join(messages) or None
@@ -238,6 +242,14 @@ def raw_changes(root):
 def listing(items):
     extra = len(items) - MAX_LISTED
     return ", ".join(items[:MAX_LISTED]) + (f", and {extra} more" if extra > 0 else "")
+
+
+def checksum_command(files, platform=sys.platform):
+    """Return a SHA-256 command for these project-relative files, in the platform's usual shell."""
+    if platform == "win32":  # -LiteralPath: -Path would read [ ] as wildcards and silently match nothing
+        quoted = ", ".join("'" + f.replace("'", "''") + "'" for f in files)
+        return f"{CHECKSUM_TOOLS[platform]} -LiteralPath {quoted} | Format-List Hash, Path"
+    return f"{CHECKSUM_TOOLS.get(platform, 'sha256sum')} {' '.join(map(shlex.quote, files))}"
 
 
 def relative(paths, root):
@@ -257,7 +269,7 @@ def decide(event, agent, root):
         return None
     files = relative(hits, root)
     if agent == "claude":
-        reason = f"This would modify or delete existing raw data ({files}). {RULE} Approve only if intended."
+        reason = f"This would modify or delete existing raw data ({files}). {RULE} Approving cannot be undone: {NOT_IN_GIT}. Approve only if intended."
         decision = "ask"
     else:
         reason = (f"Blocked: this would modify or delete existing raw data ({files}). {RULE} "

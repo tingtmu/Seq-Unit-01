@@ -102,6 +102,11 @@ def test_created_result_lists_next_steps(tmp_path):
     assert "again after any change to `.codex/hooks.json`" in trust
     rest = " ".join(steps[1:])
     assert "config/samples.tsv" in rest and "data/raw/" in rest and "read-only" in rest
+    read_only = steps[2]
+    assert "Recommended" in read_only and "optional" not in read_only.lower()
+    assert "chmod -R a-w data/raw" in read_only and "attrib +R" in read_only
+    assert "chmod -R u+w data/raw" in read_only and "attrib -R" in read_only
+    assert "recorded in `data/README.md`" in read_only and "best-effort" in read_only
 
 
 def test_no_next_steps_when_nothing_created(tmp_path):

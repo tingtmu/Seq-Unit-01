@@ -85,8 +85,10 @@ NEXT_STEPS = (
     "trust the nerv hooks (`.nerv/hooks/raw_guard.py` and `.nerv/hooks/sync_ratio.py`). Trust them "
     "again after any change to `.codex/hooks.json`.",
     "Fill `config/samples.tsv` and the reference pins in `config/config.yaml`.",
-    "Optional: make `data/raw/` read-only at the OS level (`chmod -R a-w data/raw` on macOS or Linux, "
-    "`attrib +R /S data\\raw\\*` on Windows), because the raw-data guard is best-effort.",
+    "Recommended: once each batch of raw data is in place and recorded in `data/README.md`, make "
+    "`data/raw/` read-only at the OS level (`chmod -R a-w data/raw` on macOS or Linux, "
+    "`attrib +R /S data\\raw\\*` on Windows), because the raw-data guard is best-effort. Before "
+    "adding the next batch, make it writable again (`chmod -R u+w data/raw`, `attrib -R /S data\\raw\\*`).",
 )
 
 

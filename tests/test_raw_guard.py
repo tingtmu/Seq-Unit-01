@@ -1,13 +1,15 @@
 import json
 import os
+import shlex
 import subprocess
 import sys
 
 import pytest
 
-from conftest import NERV_INIT
+from conftest import NERV_INIT, load
 
 SCRIPT = NERV_INIT / "hooks" / "raw_guard.py"
+raw_guard = load("raw_guard", SCRIPT)
 
 
 @pytest.fixture
@@ -47,7 +49,9 @@ def test_edit_existing_raw_file_asks_in_claude(project):
     out, _ = run(project, pre("Edit", file_path=str(project / "data/raw/S1_R1.fastq.gz"),
                               old_string="a", new_string="b"))
     assert decision(out) == "ask"
-    assert "data/raw/S1_R1.fastq.gz" in out["hookSpecificOutput"]["permissionDecisionReason"]
+    reason = out["hookSpecificOutput"]["permissionDecisionReason"]
+    assert "data/raw/S1_R1.fastq.gz" in reason
+    assert "cannot be undone" in reason and "not in git" in reason
 
 
 def test_overwrite_existing_raw_file_asks(project):
@@ -70,6 +74,7 @@ def test_rm_denied_in_codex_with_instructions(project):
     assert decision(out) == "deny"
     reason = out["hookSpecificOutput"]["permissionDecisionReason"]
     assert "Hard rule" in reason and "run it themselves" in reason
+    assert "cannot be undone" not in reason
 
 
 @pytest.mark.parametrize("command", [
@@ -162,13 +167,20 @@ def test_script_modifying_raw_file_reported(settled):
     (settled / "data/raw/S1_R1.fastq.gz").write_bytes(b"rewritten by a script")
     out, _ = run(settled, post("Bash", command="python scripts/fix_headers.py"))
     assert "data/raw/S1_R1.fastq.gz" in context(out) and "modified" in context(out)
-    assert "stop" in context(out).lower() and "data/README.md" not in context(out)
+    assert "stop" in context(out).lower() and "New raw file" not in context(out)
+    assert_mismatch_and_recovery(context(out))
 
 
 def test_raw_file_removed_indirectly_reported(settled):
     (settled / "data/raw/S1_R1.fastq.gz").unlink()
     out, _ = run(settled, post("Bash", command="make clean"))
     assert "data/raw/S1_R1.fastq.gz" in context(out) and "removed" in context(out)
+    assert_mismatch_and_recovery(context(out))
+
+
+def assert_mismatch_and_recovery(message):
+    assert "data/README.md" in message and "no longer match" in message
+    assert "fetching it again from its source" in message and "not in git" in message
 
 
 def test_read_only_command_gives_no_message(settled):
@@ -208,3 +220,38 @@ def test_symlink_loop_does_not_hang(settled):
     except OSError:
         pytest.skip("symlinks not permitted here")
     assert run(settled, post("Bash", command="ls"))[0] is None
+
+
+PAIR = ["data/raw/batch2/S1_R1.fastq.gz", "data/raw/batch2/S1_R2.fastq.gz"]
+
+
+@pytest.mark.parametrize("platform, expected", [
+    ("linux", "sha256sum data/raw/batch2/S1_R1.fastq.gz data/raw/batch2/S1_R2.fastq.gz"),
+    ("darwin", "shasum -a 256 data/raw/batch2/S1_R1.fastq.gz data/raw/batch2/S1_R2.fastq.gz"),
+    ("win32", "Get-FileHash -Algorithm SHA256 -LiteralPath 'data/raw/batch2/S1_R1.fastq.gz', "
+              "'data/raw/batch2/S1_R2.fastq.gz' | Format-List Hash, Path"),
+])
+def test_checksum_command_per_platform(platform, expected):
+    assert raw_guard.checksum_command(PAIR, platform) == expected
+
+
+ODD = ["data/raw/run 1/S1.fq", "data/raw/it's.fq", "data/raw/S1[rep2]$x.fq", "data/raw/S2.fq"]
+
+
+def test_checksum_command_quotes_unusual_names_posix():
+    command = raw_guard.checksum_command(ODD, "linux")
+    assert command == "sha256sum " + " ".join(shlex.quote(f) for f in ODD)
+    assert shlex.split(command)[1:] == ODD
+
+
+def test_checksum_command_quotes_unusual_names_windows():
+    command = raw_guard.checksum_command(ODD, "win32")
+    assert "-LiteralPath 'data/raw/run 1/S1.fq', 'data/raw/it''s.fq', 'data/raw/S1[rep2]$x.fq', 'data/raw/S2.fq'" in command
+
+
+def test_provenance_reminder_includes_checksum_command(settled):
+    (settled / "data/raw/batch2").mkdir()
+    for path in PAIR:
+        (settled / path).write_bytes(b"x")
+    out, _ = run(settled, post("Bash", command="python scripts/download.py"))
+    assert raw_guard.checksum_command(PAIR) in context(out)

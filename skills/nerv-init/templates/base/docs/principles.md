@@ -12,6 +12,7 @@ These shape how humans and AI agents work in this project. The hard rules are in
 
 ## Classic software engineering
 
+- **Test-driven (red-green-refactor).** Write a failing test on tiny synthetic data, make it pass, then clean up.
 - **KISS / YAGNI.** The simplest thing that answers the question; no speculative options or folders.
 - **Fail fast.** Validate inputs (sample sheet, config) at the start of a run and stop with a clear message.
 - **Never swallow errors.** Friendly message to the user; full context in logs.

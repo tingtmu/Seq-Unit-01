@@ -56,3 +56,17 @@ def test_nerv_init_relays_every_next_step():
     text = (SKILLS / "nerv-init" / "SKILL.md").read_text(encoding="utf-8")
     assert "every entry of `next_steps`" in text and "word for word" in text
     assert "`/hooks`" not in text  # the steps live only in scaffold.py
+
+
+@pytest.mark.parametrize("skill", ["nerv-init", "sync-ratio", "magi-review"])
+def test_skill_folder_is_self_contained(skill):
+    # Templates are exempt: their relative paths point inside the generated project.
+    folder = SKILLS / skill
+    leaks = [
+        f"{path.relative_to(folder)}:{n}"
+        for path in folder.rglob("*")
+        if path.is_file() and path.suffix != ".pyc" and "templates" not in path.relative_to(folder).parts
+        for n, line in enumerate(path.read_text(encoding="utf-8").splitlines(), 1)
+        if re.search(r"\.\.[/\\]|\bskills/", line)
+    ]
+    assert not leaks, leaks

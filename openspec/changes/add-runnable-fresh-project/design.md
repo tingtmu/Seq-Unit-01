@@ -28,7 +28,7 @@ Alternatives:
 - One environment per language. That gives two environments, so the single Test command can't run in one shell. Rejected.
 
 **2. One `ENV_NAME` variable for both the YAML and the README.**
-`ENV_NAME` is `project_name` with every run of characters outside `[A-Za-z0-9_.-]` replaced by `-`. Both `workflow.yaml` and the Quick start activate command use it, so the two can't drift apart.
+`ENV_NAME` is `project_name` with every run of characters outside `[A-Za-z0-9_.-]` replaced by `-`, then leading and trailing `-` and `.` removed. If nothing is left, or the result is conda's reserved `base`, it is `project`. Both `workflow.yaml` and the Quick start activate command use it, so the two can't drift apart.
 
 **3. A language layer for the smoke tests: `templates/languages/<lang>/`.**
 `plan()` adds one layer per chosen language after the engine layer, using the existing layering code. Python ships `tests/test_smoke.py` and R ships `tests/test_smoke.R`. pytest collects only `test_*.py` and testthat runs only `^test.*\.[rR]$`, so the two files coexist. `LAYERS` in `tests/test_templates.py` gains `"languages"`. GLOSSARY's **Add-on** widens to "assay-, engine-, or language-specific".

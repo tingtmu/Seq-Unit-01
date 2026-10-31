@@ -121,6 +121,12 @@ def validate(answers):
     return a
 
 
+def env_name(project_name):
+    """Conda environment name from the project name; 'project' if nothing usable (or 'base') remains."""
+    name = re.sub(r"[^A-Za-z0-9_.-]+", "-", project_name).strip("-.")
+    return name if name and name != "base" else "project"
+
+
 def variables(a):
     engine_label, run, engine_test, shell = ENGINES[a["engine"]]
     tests = ([engine_test] if engine_test else []) + [LANGUAGES[l][1] for l in a["languages"]]
@@ -137,7 +143,7 @@ def variables(a):
         "SENSITIVE_RULES": SENSITIVE_RULES if a["sensitive"] else "",
         "PYTHON": "python" if os.name == "nt" else "python3",
         "PREREQUISITES": "conda (or mamba)" + shell,
-        "ENV_NAME": re.sub(r"[^A-Za-z0-9_.-]+", "-", a["project_name"].strip()),
+        "ENV_NAME": env_name(a["project_name"]),
         "ENV_DEPENDENCIES": "\n".join(f"  - {t}" for t in tools),
     }
 

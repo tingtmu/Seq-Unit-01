@@ -113,6 +113,15 @@ def test_env_name_matches_readme_activate(tmp_path):
     assert "conda (or mamba)" in readme and "`bash`" not in readme
 
 
+@pytest.mark.parametrize("project_name, env_name", [
+    ("小鼠 肝臟", "project"), ("!!!", "project"), ("base", "project"), ("-x", "x"), ("Mouse liver RNA", "Mouse-liver-RNA"),
+])
+def test_env_name_is_usable_by_conda(tmp_path, project_name, env_name):
+    project = build(tmp_path, project_name=project_name)
+    assert f"\nname: {env_name}\n" in (project / "envs/workflow.yaml").read_text(encoding="utf-8")
+    assert f"`conda activate {env_name}`" in (project / "README.md").read_text(encoding="utf-8")
+
+
 def test_smoke_test_only_for_chosen_languages(tmp_path):
     python_only = build(tmp_path / "py", languages=["python"])
     assert (python_only / "tests/test_smoke.py").is_file() and not (python_only / "tests/test_smoke.R").exists()
@@ -129,6 +138,14 @@ def test_python_smoke_test_passes_on_fresh_project(tmp_path):
     result = run_pytest(build(tmp_path, languages=["python"]))
     assert result.returncode == 0, result.stdout + result.stderr
     assert " passed" in result.stdout
+
+
+def test_python_smoke_test_accepts_excel_tsv(tmp_path):
+    project = build(tmp_path, languages=["python"])
+    sheet = project / "config/samples.tsv"
+    sheet.write_bytes(b"\xef\xbb\xbf" + sheet.read_bytes().replace(b"\n", b"\r\n"))  # Excel "UTF-8 TSV"
+    result = run_pytest(project)
+    assert result.returncode == 0, result.stdout
 
 
 def test_python_smoke_test_names_missing_column(tmp_path):

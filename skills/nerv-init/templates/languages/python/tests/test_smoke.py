@@ -7,7 +7,7 @@ REQUIRED_COLUMNS = {"sample_id", "fastq_1"}
 
 
 def test_sample_sheet_has_required_columns():
-    with open(SAMPLE_SHEET, newline="", encoding="utf-8") as fh:
+    with open(SAMPLE_SHEET, newline="", encoding="utf-8-sig") as fh:  # utf-8-sig: Excel adds a BOM
         header = next(csv.reader(fh, delimiter="\t"))
     missing = REQUIRED_COLUMNS - set(header)
     assert not missing, f"config/samples.tsv is missing required columns: {sorted(missing)}"

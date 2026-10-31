@@ -22,7 +22,7 @@ NERV builds the base the Evas launch from; this skill builds the base an analysi
    ```
    Use `python3` if `python` is not available. Show the user the planned top-level tree, which add-ons apply, and any conflicts. If there are conflicts, stop and ask.
 3. **Confirm.** Wait for an explicit yes. Adjust the answers and repeat step 2 if the user changes anything.
-4. **Scaffold.** Run the same command without `--dry-run`. It creates the tree, `.gitignore`, `git init`, copies hooks to `.nerv/hooks/` and the doc-sync report to `.nerv/scripts/`, and installs `.claude/settings.json` and `.codex/hooks.json`.
+4. **Scaffold.** Run the same command without `--dry-run`. It creates the tree, `.gitignore`, `.gitattributes` (LF line endings), `git init`, copies hooks to `.nerv/hooks/` and the doc-sync report to `.nerv/scripts/`, and installs `.claude/settings.json` and `.codex/hooks.json`.
 5. **Write the prose.** Replace every `<!-- nerv: ... -->` comment with project-specific text:
    - `AGENTS.md`: the one-line project question. Keep the file about 60 lines and never above 200; move detail into folder READMEs and link it.
    - `README.md`: what the project answers and its status.

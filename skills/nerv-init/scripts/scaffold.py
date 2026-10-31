@@ -8,7 +8,7 @@ Usage:
 Layers templates/base, templates/addons/<assay>, templates/engines/<engine> and
 templates/languages/<language> (one per chosen language); a file
 named X.append is inserted at the end of the Conventions section of base file X. Writes
-.gitignore, copies hooks to .nerv/hooks/ and the doc-sync report to .nerv/scripts/, installs
+.gitignore and .gitattributes (LF line endings), copies hooks to .nerv/hooks/ and the doc-sync report to .nerv/scripts/, installs
 agent adapters, and runs git init.
 Refuses to write anything if a planned path already exists (lists the conflicts, exit 1).
 Answers schema: see references/interview.md. Standard library only.
@@ -66,6 +66,10 @@ __pycache__/
 .Rproj.user/
 .env
 """
+GITATTRIBUTES = """\
+# nerv-init: store and check out text files with LF, so scripts run on Linux and HPC
+* text=auto eol=lf
+"""
 GITIGNORE_SENSITIVE = """\
 # sensitive data: keep all derived outputs out of git as well
 results/*
@@ -88,11 +92,20 @@ NEXT_STEPS = (
     "Codex: project hooks are skipped until you trust them, so the raw-data guard is off in Codex "
     "until you do. Start `codex` in the project root, run `/hooks`, and trust the nerv hooks "
     "(`.nerv/hooks/raw_guard.py`). Trust them again after any change to `.codex/hooks.json`.",
+    "Claude Code: run `/hooks` and confirm the nerv hook (`.nerv/hooks/raw_guard.py`) is listed. "
+    "If it is not, restart Claude Code in the project root.",
+    "Commit the generated project, so later changes can be diffed against it. First run "
+    "`git config user.email`; if it prints nothing, set your identity with "
+    "`git config --global user.name \"Your Name\"` and `git config --global user.email \"you@example.org\"` "
+    "(drop `--global` to set it for this project only). Then run `git add -A`, and then "
+    "`git commit -m \"nerv-init scaffold\"`.",
     "Fill `config/samples.tsv` and the reference pins in `config/config.yaml`.",
     "Recommended: once each batch of raw data is in place and recorded in `data/README.md`, make "
-    "`data/raw/` read-only at the OS level (`chmod -R a-w data/raw` on macOS or Linux, "
-    "`attrib +R /S data\\raw\\*` on Windows), because the raw-data guard is best-effort. Before "
-    "adding the next batch, make it writable again (`chmod -R u+w data/raw`, `attrib -R /S data\\raw\\*`).",
+    "`data/raw/` read-only at the OS level, because the raw-data guard is best-effort: "
+    "`chmod -R a-w data/raw` on macOS, Linux, or Git Bash on Windows; "
+    "`attrib +R /S data\\raw\\*` in Windows cmd or PowerShell. Before adding the next batch, make it "
+    "writable again: `chmod -R u+w data/raw` (macOS, Linux, Git Bash) or `attrib -R /S data\\raw\\*` "
+    "(cmd or PowerShell).",
 )
 
 
@@ -185,6 +198,7 @@ def plan(a):
     for rel, text in appends:
         files[rel] = insert_conventions(files[rel], text)
     files[".gitignore"] = GITIGNORE + (GITIGNORE_SENSITIVE if a["sensitive"] else "")
+    files[".gitattributes"] = GITATTRIBUTES
     files[".nerv/hooks/raw_guard.py"] = (HOOKS / "raw_guard.py").read_text(encoding="utf-8")
     files[".nerv/scripts/sync_ratio.py"] = (Path(__file__).parent / "sync_ratio.py").read_text(encoding="utf-8")
     files[".claude/settings.json"] = (HOOKS / "adapters" / "claude-settings.json").read_text(encoding="utf-8")

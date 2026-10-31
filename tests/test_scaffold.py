@@ -1,5 +1,6 @@
 import json
 import re
+import shutil
 import subprocess
 import sys
 
@@ -73,9 +74,27 @@ def test_other_assay_uses_base_only(tmp_path):
     assert not (project / "config/qc_thresholds.tsv").exists()
     assert "ATAC-seq" in (project / "AGENTS.md").read_text()
     top = {p.name for p in project.iterdir()}
-    assert top == {".git", ".gitignore", ".nerv", ".claude", ".codex", "AGENTS.md", "CLAUDE.md", "README.md",
+    assert top == {".git", ".gitattributes", ".gitignore", ".nerv", ".claude", ".codex", "AGENTS.md", "CLAUDE.md", "README.md",
                    "config", "data", "workflow", "scripts", "notebooks", "envs", "results", "tests", "docs"}
 
+
+
+def test_gitattributes_sets_lf(tmp_path):
+    project = build(tmp_path)
+    text = (project / ".gitattributes").read_text(encoding="utf-8")
+    assert "* text=auto eol=lf" in text.splitlines()
+
+
+@pytest.mark.skipif(shutil.which("git") is None, reason="git not available")
+def test_git_add_quiet_with_autocrlf(tmp_path):
+    project = build(tmp_path)
+    added = subprocess.run(["git", "-c", "core.autocrlf=true", "add", "-A"], cwd=project,
+                           check=True, capture_output=True, text=True)
+    assert "CRLF" not in added.stderr and "LF will be replaced" not in added.stderr, added.stderr
+    eol = git(project, "ls-files", "--eol").splitlines()
+    text_files = [line for line in eol if line.startswith("i/lf")]
+    assert text_files and all("attr/text=auto eol=lf" in line for line in text_files)
+    assert any(line.endswith(".nerv/hooks/raw_guard.py") for line in text_files)
 
 def env_dependencies(project):
     """Map package name to pinned version from the generated envs/workflow.yaml."""
@@ -172,6 +191,13 @@ def test_dry_run_writes_nothing(tmp_path):
     assert list(tmp_path.iterdir()) == []
 
 
+def find_step(steps, marker):
+    """The one next step containing marker."""
+    found = [s for s in steps if marker in s]
+    assert len(found) == 1, (marker, steps)
+    return found[0]
+
+
 def test_created_result_lists_next_steps(tmp_path):
     code, result = scaffold.scaffold(answers(), tmp_path)
     assert code == 0 and result["status"] == "created"
@@ -182,13 +208,30 @@ def test_created_result_lists_next_steps(tmp_path):
     assert "raw-data guard" in trust and "off in Codex until" in trust
     assert "sync reminder" not in trust and "sync_ratio.py" not in trust
     assert "again after any change to `.codex/hooks.json`" in trust
-    rest = " ".join(steps[1:])
-    assert "config/samples.tsv" in rest and "data/raw/" in rest and "read-only" in rest
-    read_only = steps[2]
+    assert "config/samples.tsv" in find_step(steps, "config/samples.tsv")
+
+    claude = find_step(steps, "Claude Code:")
+    assert "/hooks" in claude and "restart" in claude.lower()
+
+    commit = find_step(steps, "git commit")
+    for command in ("git config user.email", 'git config --global user.name', "git config --global user.email",
+                    "git add -A", "git commit"):
+        assert command in commit, command
+    assert commit.index("git config user.email") < commit.index("git commit")
+    assert "&&" not in commit
+
+    read_only = find_step(steps, "read-only")
+    assert "data/raw/" in read_only
     assert "Recommended" in read_only and "optional" not in read_only.lower()
-    assert "chmod -R a-w data/raw" in read_only and "attrib +R" in read_only
-    assert "chmod -R u+w data/raw" in read_only and "attrib -R" in read_only
+    assert "chmod -R a-w data/raw" in read_only and "`attrib +R /S data\\raw\\*`" in read_only
+    assert "chmod -R u+w data/raw" in read_only and "`attrib -R /S data\\raw\\*`" in read_only
     assert "recorded in `data/README.md`" in read_only and "best-effort" in read_only
+    assert "Git Bash" in read_only and "cmd or PowerShell" in read_only
+    assert read_only.index("chmod -R a-w") < read_only.index("Git Bash") < read_only.index("attrib +R")
+    assert read_only.index("attrib +R") < read_only.index("cmd or PowerShell")
+
+    order = [steps.index(s) for s in (trust, claude, commit, find_step(steps, "config/samples.tsv"), read_only)]
+    assert order == sorted(order)
 
 
 def test_no_next_steps_when_nothing_created(tmp_path):

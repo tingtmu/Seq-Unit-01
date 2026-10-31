@@ -59,8 +59,14 @@ def test_overwrite_existing_raw_file_asks(project):
     assert decision(out) == "ask"
 
 
-def test_windows_style_and_dotdot_paths(project):
-    out, _ = run(project, pre("Edit", file_path="data\\processed\\..\\raw\\S1_R1.fastq.gz"))
+@pytest.mark.parametrize("path", [
+    "data/processed/../raw/S1_R1.fastq.gz",
+    # On POSIX a backslash is a filename character, so this is only a raw path on Windows.
+    pytest.param("data\\processed\\..\\raw\\S1_R1.fastq.gz",
+                 marks=pytest.mark.skipif(sys.platform != "win32", reason="Windows path")),
+])
+def test_windows_style_and_dotdot_paths(project, path):
+    out, _ = run(project, pre("Edit", file_path=path))
     assert decision(out) == "ask"
 
 

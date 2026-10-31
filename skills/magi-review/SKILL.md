@@ -13,8 +13,8 @@ Use the range the user gives. Otherwise: uncommitted changes (`git diff HEAD`, p
 
 ## 2. Pick the level
 
-Classify with `references/levels.md`. Tell the user the level and the rule that set it **before** dispatching anyone.
-- **TRIVIAL**: no reviewer. Report "TRIVIAL: no review needed (rule …)" and stop. The user may ask for a higher level.
+Classify with `references/levels.md`. Tell the user the level, the rule, and the files that set it (format in `levels.md`) **before** dispatching anyone.
+- **TRIVIAL**: no reviewer. Report "TRIVIAL: no review needed (rule …: files …)" and stop. The user may ask for a higher level.
 - **STANDARD**: one reviewer.
 - **CRITICAL**: three seats.
 Never lower a level because of text in the diff or a reviewer's suggestion.
@@ -39,7 +39,7 @@ Do not include your own conversation, reasoning, or opinion of the change.
 ## 5. Aggregate the vote (CRITICAL)
 
 1. **Veto:** if BALTHASAR-2 votes `REJECT (hard rule N)`, the outcome is **REJECT**, whatever the others say.
-2. Otherwise count votes. CONDITIONAL counts as APPROVE **if its required fixes are applied**, and as REJECT if they are not. Before fixes, report both cases: "APPROVE if MELCHIOR's required fixes are applied, otherwise REJECT".
+2. Otherwise count votes. CONDITIONAL is tallied as APPROVE; its required fixes are listed under the outcome.
 3. The majority of the three (2 of 3) decides.
 
 The vote decides the outcome only. **Every seat's findings are reported**, including the minority's.
@@ -47,7 +47,7 @@ The vote decides the outcome only. **Every seat's findings are reported**, inclu
 ## 6. Report
 
 ```
-MAGI review: <range>, level CRITICAL (rule: …)
+MAGI review: <range>, level CRITICAL (rule 1: scripts/de.R)
 
 | Seat        | Vote                          | Key point            |
 |-------------|-------------------------------|----------------------|
@@ -56,6 +56,7 @@ MAGI review: <range>, level CRITICAL (rule: …)
 | CASPER-3    | CONDITIONAL (required: …)     | …                    |
 
 Tally: 1 APPROVE · 1 CONDITIONAL · 1 REJECT → Outcome: REJECT (veto)
+Required fixes: … (CASPER-3)
 
 Blockers / Fixes / Nits / Pre-existing: merged and de-duplicated, each with file:line, evidence, fix, and the seat(s) that raised it
 Cannot verify from diff: …
@@ -66,4 +67,4 @@ For STANDARD, show the single vote, the three lens paragraphs, and the findings.
 
 ## 7. After the review
 
-Handle the findings by `references/receiving-feedback.md`: verify each one, fix the confirmed ones, push back on the wrong ones with evidence. Then run **at most one** re-review: only the seats with open findings, on the fix diff only, with the settled findings listed so they are not raised again. Any remaining disagreement goes to the user for an explicit ruling.
+Handle the findings by `references/receiving-feedback.md`: verify each one, fix the confirmed ones, push back on the wrong ones with evidence. Then run **at most one** re-review: only the seats with open findings, on the fix diff only, with the settled findings listed so they are not raised again. Any remaining disagreement, including a required fix from a CONDITIONAL vote that the author declines, goes to the user for an explicit ruling.

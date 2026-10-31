@@ -7,7 +7,7 @@ Keeps per-folder README files in sync with the code and data they describe by de
 ## Requirements
 
 ### Requirement: Detect major changes per folder
-The doc-sync check SHALL use git to find which top-level documented folders have major changes since the last commit, counting both uncommitted and staged changes. A change is major if it adds or deletes a file, or if it changes more lines than a configurable threshold.
+The doc-sync check SHALL use git to find which top-level documented folders have major changes since the last commit, counting both uncommitted and staged changes. A change is major if it adds or deletes a file, or if it changes more lines than a configurable threshold. The check SHALL run only on demand, as a report script installed in the project outside its hooks folder; it SHALL NOT run as an agent hook.
 
 #### Scenario: New script added
 - **WHEN** a new file is added under `scripts/` and `scripts/README.md` is unchanged
@@ -21,27 +21,24 @@ The doc-sync check SHALL use git to find which top-level documented folders have
 - **WHEN** a folder has major changes and its README was also modified
 - **THEN** the check does not report that folder
 
-### Requirement: Non-blocking sync reminder at end of turn
-When an agent finishes a turn, the doc-sync hook SHALL show the agent a short reminder listing each out-of-sync folder and its README path. It SHALL NOT keep the agent from finishing: it MAY ask for at most one extra turn per unchanged out-of-sync state, and the agent decides whether to update the READMEs.
-
-#### Scenario: Out-of-sync folder at stop
-- **WHEN** the agent stops and `workflow/` is out of sync
-- **THEN** the agent receives one reminder naming `workflow/README.md`, and its next attempt to stop is allowed whether or not it updated the README
-
-#### Scenario: Repeated stop without changes
-- **WHEN** the agent stops again with the same out-of-sync state
-- **THEN** no second reminder is shown
+#### Scenario: Report output
+- **WHEN** the report script runs in a project where `scripts/` is out of sync
+- **THEN** it prints a JSON list with one entry per out-of-sync folder, giving the folder, its README path, and the changed files, and it writes no state file
 
 ### Requirement: Graceful outside git
-The doc-sync hook SHALL exit silently with success when the project is not a git repository or git is unavailable.
+The doc-sync check SHALL report no out-of-sync folders and exit with success when the project is not a git repository or git is unavailable.
 
 #### Scenario: No git
-- **WHEN** the hook runs in a directory without a git repository
-- **THEN** it produces no output and does not interrupt the agent
+- **WHEN** the report script runs in a directory without a git repository
+- **THEN** it prints an empty JSON list and exits with success
 
 ### Requirement: Manual sync skill
-The doc-sync skill SHALL let a user or agent ask for a sync review on demand. The review reports every out-of-sync folder and proposes concrete README edits, limited to the Current state and Last major change sections.
+The doc-sync skill SHALL let a user or agent ask for a sync review on demand. The review runs the project's report script, reports every out-of-sync folder, and proposes concrete README edits, limited to the Current state and Last major change sections.
 
 #### Scenario: On-demand check
 - **WHEN** the user invokes the doc-sync skill
 - **THEN** the agent lists out-of-sync folders and drafts README updates for approval
+
+#### Scenario: Report script missing
+- **WHEN** the user invokes the doc-sync skill in a project without the report script
+- **THEN** the agent tells the user that the project was not set up with nerv-init and stops

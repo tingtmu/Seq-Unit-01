@@ -2,7 +2,7 @@
 
 ## 1. LF line endings
 
-- [ ] 1.1 In `tests/test_scaffold.py`, add a test that a created project has `.gitattributes` containing `* text=auto eol=lf`, and a test that `git -c core.autocrlf=true add -A` in the created project prints no line-ending warning (skip if git is unavailable); verify both fail before the code change
+- [ ] 1.1 In `tests/test_scaffold.py`, add a test that a created project has `.gitattributes` containing `* text=auto eol=lf`, and a test that `git -c core.autocrlf=true add -A` in the created project prints no line-ending warning and that `git ls-files --eol` then shows tracked text files with `attr/text=auto eol=lf` (skip if git is unavailable); add `.gitattributes` to the exact top-level set in `test_other_assay_uses_base_only`; verify the new tests fail before the code change
 - [ ] 1.2 In `scaffold.py`, add a `GITATTRIBUTES` constant and write it in `plan()`; update the module docstring; verify the tests from 1.1 and the full suite pass
 - [ ] 1.3 List `.gitattributes` in `SKILL.md` step 4, the `any` row of `references/interview.md`, and the `nerv-init` row of `README.md`; verify by reading each line
 

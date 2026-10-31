@@ -87,14 +87,15 @@ def test_gitattributes_sets_lf(tmp_path):
 
 @pytest.mark.skipif(shutil.which("git") is None, reason="git not available")
 def test_git_add_quiet_with_autocrlf(tmp_path):
-    project = build(tmp_path)
+    project = build(tmp_path, engine="scripts")  # includes workflow/run_all.sh
     added = subprocess.run(["git", "-c", "core.autocrlf=true", "add", "-A"], cwd=project,
                            check=True, capture_output=True, text=True)
     assert "CRLF" not in added.stderr and "LF will be replaced" not in added.stderr, added.stderr
     eol = git(project, "ls-files", "--eol").splitlines()
     text_files = [line for line in eol if line.startswith("i/lf")]
     assert text_files and all("attr/text=auto eol=lf" in line for line in text_files)
-    assert any(line.endswith(".nerv/hooks/raw_guard.py") for line in text_files)
+    for name in (".nerv/hooks/raw_guard.py", "workflow/run_all.sh"):
+        assert any(line.endswith(name) for line in text_files), name
 
 def env_dependencies(project):
     """Map package name to pinned version from the generated envs/workflow.yaml."""

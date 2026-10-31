@@ -26,7 +26,7 @@ The first test run (2026-10-30) showed that the next steps after scaffolding sto
 ## Impact
 
 - `skills/nerv-init/scripts/scaffold.py`: a `.gitattributes` constant written by `plan()`, and the `NEXT_STEPS` text; the module docstring
-- `tests/test_scaffold.py`: next-steps and `.gitattributes` tests
+- `tests/test_scaffold.py`: next-steps and `.gitattributes` tests; `test_other_assay_uses_base_only` pins the top-level names and gains `.gitattributes`
 - `skills/nerv-init/SKILL.md` step 4 and `skills/nerv-init/references/interview.md`: list `.gitattributes` among the generated files
 - `README.md` (user-facing): `nerv-init` row lists `.gitattributes`
 - `ROADMAP.md`: mark the item done when it ships

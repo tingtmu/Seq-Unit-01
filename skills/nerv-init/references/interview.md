@@ -34,7 +34,7 @@ If the user wants Nextflow: choose `scripts`, then after scaffolding replace `wo
 
 | Answer | Effect |
 |--------|--------|
-| any | Shared skeleton: `config/ data/{raw,reference,processed}/ workflow/ scripts/ notebooks/ envs/ results/ tests/ docs/`, each with a 4-section README; `AGENTS.md`, `CLAUDE.md` (`@AGENTS.md`), `README.md`; `.gitignore`; `git init`; hooks in `.nerv/hooks/` wired via `.claude/settings.json` and `.codex/hooks.json` |
+| any | Shared skeleton: `config/ data/{raw,reference,processed}/ workflow/ scripts/ notebooks/ envs/ results/ tests/ docs/`, each with a 4-section README; `AGENTS.md`, `CLAUDE.md` (`@AGENTS.md`), `README.md`; `.gitignore`; `git init`; hooks in `.nerv/hooks/` wired via `.claude/settings.json` and `.codex/hooks.json`; the doc-sync report in `.nerv/scripts/` |
 | `assay: bulk-rnaseq` | Add-on: `config/design.yaml` (design formula, contrasts, thresholds); DE conventions in `config/`, `scripts/`, `data/`, `results/` READMEs |
 | `assay: scrnaseq` | Add-on: `config/qc_thresholds.tsv` (per-sample QC); object format (`.h5ad`/`.rds`) conventions in `results/` and `notebooks/` READMEs; `docs/integration-log.md` for integration/batch choices |
 | `assay: other` | Base only; you adapt README text to `assay_description` without adding folders |

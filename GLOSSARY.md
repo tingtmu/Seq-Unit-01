@@ -63,11 +63,7 @@ _Avoid_: significant change, big diff
 **Out of sync**:
 A folder with a major change whose README was not updated alongside it.
 _Avoid_: stale, outdated, drifted
-_Codename_: Angel (an out-of-sync folder is the threat the sync reminder reports)
-
-**Sync reminder**:
-The single message telling an agent which folders are out of sync. It reminds and never blocks, and it is shown once per unchanged state.
-_Avoid_: nudge, warning, alert
+_Codename_: Angel (an out-of-sync folder is the threat the sync-ratio report finds)
 
 ### Reviewing a change (`magi-review`)
 

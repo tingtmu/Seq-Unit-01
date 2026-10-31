@@ -1,6 +1,6 @@
 ---
 name: nerv-init
-description: Set up a new bioinformatics sequencing project (bulk RNA-seq, scRNA-seq, or other assays) from an empty directory. Runs a short interview, then generates the folder skeleton, a concise AGENTS.md/CLAUDE.md with hard rules, per-folder READMEs, git, and guardrail hooks (raw-data protection, README sync reminders). Use when the user wants to start, bootstrap, or scaffold a new analysis project.
+description: Set up a new bioinformatics sequencing project (bulk RNA-seq, scRNA-seq, or other assays) from an empty directory. Runs a short interview, then generates the folder skeleton, a concise AGENTS.md/CLAUDE.md with hard rules, per-folder READMEs, git, and a raw-data guard hook. Use when the user wants to start, bootstrap, or scaffold a new analysis project.
 ---
 
 # nerv-init: bootstrap a sequencing project
@@ -22,7 +22,7 @@ NERV builds the base the Evas launch from; this skill builds the base an analysi
    ```
    Use `python3` if `python` is not available. Show the user the planned top-level tree, which add-ons apply, and any conflicts. If there are conflicts, stop and ask.
 3. **Confirm.** Wait for an explicit yes. Adjust the answers and repeat step 2 if the user changes anything.
-4. **Scaffold.** Run the same command without `--dry-run`. It creates the tree, `.gitignore`, `git init`, copies hooks to `.nerv/hooks/`, and installs `.claude/settings.json` and `.codex/hooks.json`.
+4. **Scaffold.** Run the same command without `--dry-run`. It creates the tree, `.gitignore`, `git init`, copies hooks to `.nerv/hooks/` and the doc-sync report to `.nerv/scripts/`, and installs `.claude/settings.json` and `.codex/hooks.json`.
 5. **Write the prose.** Replace every `<!-- nerv: ... -->` comment with project-specific text:
    - `AGENTS.md`: the one-line project question. Keep the file about 60 lines and never above 200; move detail into folder READMEs and link it.
    - `README.md`: what the project answers and its status.
@@ -41,4 +41,3 @@ The scaffold creates only the shared skeleton. Using `assay_description`, adapt 
 ## Hooks installed
 
 - `.nerv/hooks/raw_guard.py`: new files in `data/raw/` are allowed with a reminder to record provenance in `data/README.md`, however they were written; changing or deleting existing raw files asks the user (Claude Code) or is denied with instructions (Codex), and raw files changed some other way, such as by a script, are reported after the fact. Best-effort, not a security boundary.
-- `.nerv/hooks/sync_ratio.py`: at the end of a turn, reminds the agent once if a folder changed significantly without a README update. Never blocks twice.

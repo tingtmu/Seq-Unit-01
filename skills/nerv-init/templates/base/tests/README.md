@@ -13,7 +13,7 @@ Tests for analysis scripts and the workflow.
 ## Current state
 
 <!-- nerv: list what is covered. -->
-Scaffolded {{DATE}}; no tests yet.
+- `test_smoke.*` (one per language): checks that `config/samples.tsv` has its required columns, so the Test command passes on a fresh project. Replace it with real tests.
 
 ## Last major change
 

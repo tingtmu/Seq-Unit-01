@@ -13,8 +13,8 @@ Software environment specifications ({{LANGUAGES}}) so every step runs with pinn
 ## Current state
 
 <!-- nerv: list environments. -->
-Scaffolded {{DATE}}; no environments yet.
+- `workflow.yaml`: the tools the Run and Test commands call. Create it before the first run.
 
 ## Last major change
 
-{{DATE}}: created by nerv-init.
+{{DATE}}: created by nerv-init; `workflow.yaml` versions pinned as current on conda-forge and bioconda on 2026-10-31.

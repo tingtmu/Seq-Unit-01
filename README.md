@@ -8,7 +8,7 @@ Works with **Claude Code** and **Codex**. Hook logic is Python 3 standard librar
 
 | Skill | What it does | The name |
 |-------|--------------|----------|
-| `nerv-init` | Interviews you (assay, workflow engine, language, compute, data sensitivity), then generates the project: folder skeleton, `AGENTS.md` + `CLAUDE.md`, a 4-section README per folder, `.gitignore`, `git init`, and the hooks below. | NERV is the organization that builds and runs the base everything launches from. |
+| `nerv-init` | Interviews you (assay, workflow engine, language, compute, data sensitivity), then generates the project: folder skeleton, `AGENTS.md` + `CLAUDE.md`, a 4-section README per folder, a pinned conda environment (`envs/workflow.yaml`) and one smoke test per language so the Run and Test commands pass on day one, `.gitignore`, `git init`, and the hooks below. | NERV is the organization that builds and runs the base everything launches from. |
 | `sync-ratio` | Lists folders that changed significantly without a README update and drafts the updates (only "Current state" and "Last major change"). | The sync ratio measures how well pilot and Eva move as one; here, how well a README matches its folder. |
 | `magi-review` | Risk-scaled review. TRIVIAL changes are skipped. STANDARD changes get one reviewer applying three lenses. CRITICAL changes get three independent seats that vote: MELCHIOR-1 (science), BALTHASAR-2 (safety), CASPER-3 (craft). A 2/3 majority wins; BALTHASAR can veto on hard-rule violations. | The MAGI are three supercomputers that decide by majority vote. |
 
@@ -79,7 +79,7 @@ Hook schemas were verified on 2026-10-29 against the Claude Code hooks reference
 ```
 skills/
   nerv-init/     SKILL.md, references/interview.md, scripts/{scaffold.py,sync_ratio.py},
-                 templates/{base,addons,engines}/, hooks/{raw_guard.py,adapters/}
+                 templates/{base,addons,engines,languages}/, hooks/{raw_guard.py,adapters/}
   sync-ratio/    SKILL.md
   magi-review/   SKILL.md, references/{levels,seat-briefs,receiving-feedback}.md
 tests/           pytest for the scaffold, hooks, templates, and skill docs

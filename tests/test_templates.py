@@ -36,7 +36,7 @@ def test_agents_md_points_to_folder_readmes():
     assert "docs/principles.md" in text
 
 
-LAYERS = sorted(p for kind in ("addons", "engines") for p in (TEMPLATES / kind).iterdir() if p.is_dir())
+LAYERS = sorted(p for kind in ("addons", "engines", "languages") for p in (TEMPLATES / kind).iterdir() if p.is_dir())
 
 
 @pytest.mark.parametrize("layer", LAYERS, ids=lambda p: f"{p.parent.name}/{p.name}")

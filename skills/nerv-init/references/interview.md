@@ -38,8 +38,8 @@ If the user wants Nextflow: choose `scripts`, then after scaffolding replace `wo
 | `assay: bulk-rnaseq` | Add-on: `config/design.yaml` (design formula, contrasts, thresholds); DE conventions in `config/`, `scripts/`, `data/`, `results/` READMEs |
 | `assay: scrnaseq` | Add-on: `config/qc_thresholds.tsv` (per-sample QC); object format (`.h5ad`/`.rds`) conventions in `results/` and `notebooks/` READMEs; `docs/integration-log.md` for integration/batch choices |
 | `assay: other` | Base only; you adapt README text to `assay_description` without adding folders |
-| `engine: snakemake` | `workflow/Snakefile`, `workflow/rules/common.smk` (validates the sample sheet); run `snakemake --use-conda --cores 4`; test adds `snakemake -n` |
-| `engine: scripts` | `workflow/run_all.sh`; run `bash workflow/run_all.sh` |
-| `languages` | Test command: `pytest tests/` for python, `testthat` for r; language named in `scripts/` and `envs/` READMEs |
+| `engine: snakemake` | `workflow/Snakefile`, `workflow/rules/common.smk` (validates the sample sheet); run `snakemake --use-conda --cores 4`; test adds `snakemake -n`; `envs/workflow.yaml` pins snakemake and pandas; README names conda as the prerequisite |
+| `engine: scripts` | `workflow/run_all.sh`; run `bash workflow/run_all.sh`; README names conda and `bash` as prerequisites |
+| `languages` | Test command: `pytest tests/` for python, `testthat` for r; language named in `scripts/` and `envs/` READMEs; `envs/workflow.yaml` pins python and pytest, or r-base and r-testthat; smoke test `tests/test_smoke.py` or `tests/test_smoke.R` checks the sample-sheet columns |
 | `compute` | Shown in `AGENTS.md` and `README.md`; you add scheduler notes (e.g. a Snakemake Slurm profile) to `workflow/README.md` if relevant |
 | `sensitive: true` | Extra hard rules in `AGENTS.md`; `.gitignore` also excludes everything else under `data/` and all of `results/` except READMEs, plus VCFs |

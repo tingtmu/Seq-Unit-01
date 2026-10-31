@@ -27,7 +27,7 @@ _Avoid_: template, scaffold, boilerplate
 _Codename_: GeoFront (the underground structure every NERV base is built inside)
 
 **Add-on**:
-A layer of assay-specific or engine-specific content placed on top of the skeleton. It holds only what differs from the skeleton.
+A layer of assay-, engine-, or language-specific content placed on top of the skeleton. It holds only what differs from the skeleton.
 _Avoid_: plugin, preset, variant, flavor
 
 **AGENTS.md**:

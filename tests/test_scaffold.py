@@ -1,4 +1,5 @@
 import json
+import re
 import subprocess
 import sys
 
@@ -74,6 +75,68 @@ def test_other_assay_uses_base_only(tmp_path):
     top = {p.name for p in project.iterdir()}
     assert top == {".git", ".gitignore", ".nerv", ".claude", ".codex", "AGENTS.md", "CLAUDE.md", "README.md",
                    "config", "data", "workflow", "scripts", "notebooks", "envs", "results", "tests", "docs"}
+
+
+def env_dependencies(project):
+    """Map package name to pinned version from the generated envs/workflow.yaml."""
+    text = (project / "envs/workflow.yaml").read_text(encoding="utf-8")
+    deps = text.split("dependencies:", 1)[1]
+    return dict(re.findall(r"^\s+- ([A-Za-z0-9_.-]+)=([0-9][^\s]*)$", deps, re.MULTILINE))
+
+
+def test_env_snakemake_python(tmp_path):
+    deps = env_dependencies(build(tmp_path, languages=["python"]))
+    assert {"snakemake-minimal", "pandas", "python", "pytest"} <= set(deps)
+    assert "r-base" not in deps
+
+
+def test_env_scripts_r(tmp_path):
+    project = build(tmp_path, engine="scripts", languages=["r"])
+    assert "conda (or mamba) and `bash`" in (project / "README.md").read_text()
+    deps = env_dependencies(project)
+    assert {"r-base", "r-testthat"} <= set(deps)
+    assert not any("snakemake" in name for name in deps) and "pytest" not in deps
+
+
+def test_env_both_languages(tmp_path):
+    deps = env_dependencies(build(tmp_path, engine="scripts", languages=["python", "r"]))
+    assert {"pytest", "r-testthat"} <= set(deps)
+
+
+def test_env_name_matches_readme_activate(tmp_path):
+    project = build(tmp_path, project_name="Mouse liver RNA")
+    name = re.search(r"^name: (.+)$", (project / "envs/workflow.yaml").read_text(), re.MULTILINE).group(1)
+    assert re.fullmatch(r"[A-Za-z0-9_.-]+", name)
+    readme = (project / "README.md").read_text()
+    assert "`conda env create -f envs/workflow.yaml`" in readme
+    assert f"`conda activate {name}`" in readme
+    assert "conda (or mamba)" in readme and "`bash`" not in readme
+
+
+def test_smoke_test_only_for_chosen_languages(tmp_path):
+    python_only = build(tmp_path / "py", languages=["python"])
+    assert (python_only / "tests/test_smoke.py").is_file() and not (python_only / "tests/test_smoke.R").exists()
+    r_only = build(tmp_path / "r", languages=["r"])
+    assert (r_only / "tests/test_smoke.R").is_file() and not (r_only / "tests/test_smoke.py").exists()
+
+
+def run_pytest(project):
+    return subprocess.run([sys.executable, "-m", "pytest", "tests/", "-p", "no:cacheprovider"],
+                          cwd=project, capture_output=True, text=True)
+
+
+def test_python_smoke_test_passes_on_fresh_project(tmp_path):
+    result = run_pytest(build(tmp_path, languages=["python"]))
+    assert result.returncode == 0, result.stdout + result.stderr
+    assert " passed" in result.stdout
+
+
+def test_python_smoke_test_names_missing_column(tmp_path):
+    project = build(tmp_path, languages=["python"])
+    sheet = project / "config/samples.tsv"
+    sheet.write_text(sheet.read_text().replace("fastq_1	", ""))
+    result = run_pytest(project)
+    assert result.returncode == 1 and "fastq_1" in result.stdout
 
 
 def test_non_empty_target_reports_conflicts_and_writes_nothing(tmp_path):

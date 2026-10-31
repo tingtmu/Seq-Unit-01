@@ -5,7 +5,8 @@ Usage:
   scaffold.py --answers answers.json --target DIR [--dry-run]
   (--answers - reads the JSON from stdin)
 
-Layers templates/base, templates/addons/<assay> and templates/engines/<engine>; a file
+Layers templates/base, templates/addons/<assay>, templates/engines/<engine> and
+templates/languages/<language> (one per chosen language); a file
 named X.append is inserted at the end of the Conventions section of base file X. Writes
 .gitignore, copies hooks to .nerv/hooks/ and the doc-sync report to .nerv/scripts/, installs
 agent adapters, and runs git init.
@@ -27,10 +28,13 @@ HOOKS = SKILL / "hooks"
 
 ASSAYS = {"bulk-rnaseq": "Bulk RNA-seq", "scrnaseq": "Single-cell RNA-seq", "other": None}
 ENGINES = {
-    "snakemake": ("Snakemake", "snakemake --use-conda --cores 4", "snakemake -n"),
-    "scripts": ("Plain scripts (workflow/run_all.sh)", "bash workflow/run_all.sh", None),
+    "snakemake": ("Snakemake", "snakemake --use-conda --cores 4", "snakemake -n", ""),
+    "scripts": ("Plain scripts (workflow/run_all.sh)", "bash workflow/run_all.sh", None, " and `bash`"),
 }
 LANGUAGES = {"python": ("Python", "pytest tests/"), "r": ("R", "Rscript -e \"testthat::test_dir('tests')\"")}
+# Conda packages for envs/workflow.yaml, pinned exactly (checked against conda-forge and bioconda 2026-10-31).
+ENGINE_TOOLS = {"snakemake": ["snakemake-minimal=9.27.1", "pandas=3.1.0"], "scripts": []}
+LANGUAGE_TOOLS = {"python": ["python=3.14.10", "pytest=9.2.0"], "r": ["r-base=4.5.3", "r-testthat=3.3.1"]}
 VAR = re.compile(r"\{\{([A-Z_]+)\}\}")
 
 GITIGNORE = """\
@@ -118,8 +122,9 @@ def validate(answers):
 
 
 def variables(a):
-    engine_label, run, engine_test = ENGINES[a["engine"]]
+    engine_label, run, engine_test, shell = ENGINES[a["engine"]]
     tests = ([engine_test] if engine_test else []) + [LANGUAGES[l][1] for l in a["languages"]]
+    tools = ENGINE_TOOLS[a["engine"]] + [t for l in a["languages"] for t in LANGUAGE_TOOLS[l]]
     return {
         "PROJECT_NAME": a["project_name"],
         "ASSAY_LABEL": ASSAYS[a["assay"]] or a["assay_description"].strip(),
@@ -131,6 +136,9 @@ def variables(a):
         "TEST_COMMAND": " && ".join(tests),
         "SENSITIVE_RULES": SENSITIVE_RULES if a["sensitive"] else "",
         "PYTHON": "python" if os.name == "nt" else "python3",
+        "PREREQUISITES": "conda (or mamba)" + shell,
+        "ENV_NAME": re.sub(r"[^A-Za-z0-9_.-]+", "-", a["project_name"].strip()),
+        "ENV_DEPENDENCIES": "\n".join(f"  - {t}" for t in tools),
     }
 
 
@@ -153,6 +161,7 @@ def insert_conventions(text, extra):
 def plan(a):
     """Return {relative posix path: file content (str)} for the whole project."""
     layers = [TEMPLATES / "base", TEMPLATES / "engines" / a["engine"]]
+    layers += [TEMPLATES / "languages" / lang for lang in a["languages"]]
     if a["assay"] != "other":
         layers.insert(1, TEMPLATES / "addons" / a["assay"])
     files, appends = {}, []

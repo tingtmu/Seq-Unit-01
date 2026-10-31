@@ -1,5 +1,5 @@
 {
-  "description": "nerv hooks: raw-data guard + doc-sync. Schema verified 2026-10-29 against openai/codex codex-rs/hooks (PreToolUse has no 'ask': guard denies with instructions). Start Codex from the project root; commands use relative paths. Codex skips these hooks until trusted via /hooks.",
+  "description": "nerv hooks: raw-data guard. Schema verified 2026-10-29 against openai/codex codex-rs/hooks (PreToolUse has no 'ask': guard denies with instructions). Start Codex from the project root; commands use relative paths. Codex skips these hooks until trusted via /hooks.",
   "hooks": {
     "PreToolUse": [
       {
@@ -14,13 +14,6 @@
         "matcher": "^(apply_patch|Bash)$",
         "hooks": [
           { "type": "command", "command": "python3 .nerv/hooks/raw_guard.py --agent codex", "commandWindows": "python .nerv/hooks/raw_guard.py --agent codex", "timeout": 10 }
-        ]
-      }
-    ],
-    "Stop": [
-      {
-        "hooks": [
-          { "type": "command", "command": "python3 .nerv/hooks/sync_ratio.py", "commandWindows": "python .nerv/hooks/sync_ratio.py", "timeout": 30 }
         ]
       }
     ]

@@ -7,7 +7,8 @@ Usage:
 
 Layers templates/base, templates/addons/<assay> and templates/engines/<engine>; a file
 named X.append is inserted at the end of the Conventions section of base file X. Writes
-.gitignore, copies hooks to .nerv/hooks/, installs agent adapters, and runs git init.
+.gitignore, copies hooks to .nerv/hooks/ and the doc-sync report to .nerv/scripts/, installs
+agent adapters, and runs git init.
 Refuses to write anything if a planned path already exists (lists the conflicts, exit 1).
 Answers schema: see references/interview.md. Standard library only.
 """
@@ -80,10 +81,9 @@ aggregate results. Keep data only under `data/` and `results/` (both git-ignored
 6. Follow the data use agreement; record it (not the data) in `docs/`.
 """
 NEXT_STEPS = (
-    "Codex: project hooks are skipped until you trust them, so the raw-data guard and the sync "
-    "reminder are off in Codex until you do. Start `codex` in the project root, run `/hooks`, and "
-    "trust the nerv hooks (`.nerv/hooks/raw_guard.py` and `.nerv/hooks/sync_ratio.py`). Trust them "
-    "again after any change to `.codex/hooks.json`.",
+    "Codex: project hooks are skipped until you trust them, so the raw-data guard is off in Codex "
+    "until you do. Start `codex` in the project root, run `/hooks`, and trust the nerv hooks "
+    "(`.nerv/hooks/raw_guard.py`). Trust them again after any change to `.codex/hooks.json`.",
     "Fill `config/samples.tsv` and the reference pins in `config/config.yaml`.",
     "Recommended: once each batch of raw data is in place and recorded in `data/README.md`, make "
     "`data/raw/` read-only at the OS level (`chmod -R a-w data/raw` on macOS or Linux, "
@@ -170,8 +170,8 @@ def plan(a):
     for rel, text in appends:
         files[rel] = insert_conventions(files[rel], text)
     files[".gitignore"] = GITIGNORE + (GITIGNORE_SENSITIVE if a["sensitive"] else "")
-    for name in ("sync_ratio.py", "raw_guard.py"):
-        files[f".nerv/hooks/{name}"] = (HOOKS / name).read_text(encoding="utf-8")
+    files[".nerv/hooks/raw_guard.py"] = (HOOKS / "raw_guard.py").read_text(encoding="utf-8")
+    files[".nerv/scripts/sync_ratio.py"] = (Path(__file__).parent / "sync_ratio.py").read_text(encoding="utf-8")
     files[".claude/settings.json"] = (HOOKS / "adapters" / "claude-settings.json").read_text(encoding="utf-8")
     files[".codex/hooks.json"] = (HOOKS / "adapters" / "codex-hooks.json").read_text(encoding="utf-8")
     values = variables(a)

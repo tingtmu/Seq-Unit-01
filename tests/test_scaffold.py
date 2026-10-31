@@ -30,9 +30,10 @@ def assert_common(project):
     for folder in README_FOLDERS:
         text = (project / folder / "README.md").read_text(encoding="utf-8")
         assert "## Current state" in text and "{{" not in text
-    for name in ("AGENTS.md", "CLAUDE.md", "README.md", ".gitignore", ".nerv/hooks/sync_ratio.py",
+    for name in ("AGENTS.md", "CLAUDE.md", "README.md", ".gitignore", ".nerv/scripts/sync_ratio.py",
                  ".nerv/hooks/raw_guard.py", ".claude/settings.json", ".codex/hooks.json"):
         assert (project / name).is_file(), name
+    assert not (project / ".nerv/hooks/sync_ratio.py").exists()
     assert not list(project.rglob("*.tmpl")) and not list(project.rglob("*.append"))
     assert (project / "CLAUDE.md").read_text().strip() == "@AGENTS.md"
 
@@ -98,7 +99,8 @@ def test_created_result_lists_next_steps(tmp_path):
     assert isinstance(steps, list) and steps and all(isinstance(s, str) and s for s in steps)
     trust = steps[0]
     assert "/hooks" in trust and "Codex" in trust
-    assert "raw-data guard" in trust and "sync reminder" in trust and "off in Codex until" in trust
+    assert "raw-data guard" in trust and "off in Codex until" in trust
+    assert "sync reminder" not in trust and "sync_ratio.py" not in trust
     assert "again after any change to `.codex/hooks.json`" in trust
     rest = " ".join(steps[1:])
     assert "config/samples.tsv" in rest and "data/raw/" in rest and "read-only" in rest
@@ -155,6 +157,13 @@ def test_adapters_point_to_project_hooks(tmp_path):
     assert all(c.split()[1].startswith(".nerv/hooks/") for c in commands)
 
 
+def test_adapters_have_no_stop_hook(tmp_path):
+    project = build(tmp_path)
+    for path in (NERV_INIT / "hooks/adapters/claude-settings.json", NERV_INIT / "hooks/adapters/codex-hooks.json",
+                 project / ".claude/settings.json", project / ".codex/hooks.json"):
+        assert "Stop" not in json.loads(path.read_text())["hooks"], path
+
+
 @pytest.mark.parametrize("adapter", ["claude-settings.json", "codex-hooks.json"])
 def test_guard_pre_and_post_matchers_cover_same_tools(adapter):
     hooks = json.loads((NERV_INIT / "hooks/adapters" / adapter).read_text())["hooks"]
@@ -171,6 +180,13 @@ def test_installed_guard_finds_project_root(tmp_path):
     out = subprocess.run([sys.executable, str(project / ".nerv/hooks/raw_guard.py"), "--agent", "claude"],
                          input=json.dumps(event), capture_output=True, text=True).stdout
     assert json.loads(out)["hookSpecificOutput"]["permissionDecision"] == "ask"
+
+
+def test_installed_sync_report_runs(tmp_path):
+    project = build(tmp_path)
+    out = subprocess.run([sys.executable, str(project / ".nerv/scripts/sync_ratio.py")], cwd=project,
+                         capture_output=True, text=True)
+    assert out.returncode == 0 and isinstance(json.loads(out.stdout), list)
 
 
 @pytest.mark.parametrize("bad", [

@@ -171,10 +171,14 @@ def render(text, values, source):
 
 
 def insert_conventions(text, extra):
+    """Insert extra after the Conventions bullets: before the section's first ### subsection, if any."""
     marker = "\n## Current state"
     if marker not in text:
         return text.rstrip("\n") + "\n" + extra
     head, tail = text.split(marker, 1)
+    conventions, sub, rest = head.partition("\n### ")
+    if sub:
+        return conventions.rstrip("\n") + "\n" + extra.rstrip("\n") + "\n\n" + sub.lstrip("\n") + rest + marker + tail
     return head.rstrip("\n") + "\n" + extra.rstrip("\n") + "\n\n" + marker.lstrip("\n") + tail
 
 

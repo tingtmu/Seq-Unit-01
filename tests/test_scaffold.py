@@ -188,6 +188,7 @@ def test_python_smoke_test_accepts_counts_sheet(tmp_path):
 
 def run_common_smk(project, sheet_text):
     """Execute the generated common.smk with a stub Snakemake config; return its namespace."""
+    pytest.importorskip("pandas")  # common.smk imports it; the repo venv has it
     sheet = project / "config/samples.tsv"
     sheet.write_text(sheet_text)
     source = (project / "workflow/rules/common.smk").read_text(encoding="utf-8")
@@ -234,6 +235,15 @@ def test_dry_run_writes_nothing(tmp_path):
     code, result = scaffold.scaffold(answers(), tmp_path, dry_run=True)
     assert code == 0 and result["status"] == "planned" and "AGENTS.md" in result["files"]
     assert list(tmp_path.iterdir()) == []
+
+
+def test_dry_run_plans_around_data_outside_skeleton(tmp_path):
+    delivery = tmp_path / "input_data" / "GSE141713"
+    delivery.mkdir(parents=True)
+    (delivery / "counts.tsv.gz").write_bytes(b"x")
+    code, result = scaffold.scaffold(answers(), tmp_path, dry_run=True)
+    assert code == 0 and result["status"] == "planned"
+    assert sorted(p.name for p in tmp_path.iterdir()) == ["input_data"]
 
 
 def test_dry_run_reports_conflicts(tmp_path):
@@ -341,6 +351,14 @@ def test_created_result_lists_next_steps(tmp_path, identity_missing):
 
     order = [steps.index(s) for s in (trust, claude, commit, find_step(steps, "config/samples.tsv"), read_only)]
     assert order == sorted(order)
+
+
+def test_addon_conventions_land_before_subsections(tmp_path):
+    readme = (build(tmp_path) / "data/README.md").read_text(encoding="utf-8")
+    addon = readme.index("A precomputed count matrix stays in its delivery folder")
+    assert addon < readme.index("### Adding a delivery") < readme.index("### Provenance")
+    table_end = readme.index("|------|")
+    assert readme[table_end:].split("\n", 2)[1] == "", "provenance table must stay last before Current state"
 
 
 def test_data_readme_explains_adding_a_delivery(tmp_path):

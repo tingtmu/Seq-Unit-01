@@ -3,15 +3,11 @@
 ## MODIFIED Requirements
 
 ### Requirement: Interview before generation
-The bootstrap skill SHALL ask the user about assay type (bulk-rnaseq, scrnaseq, or other), workflow engine, language, compute setup, data sensitivity, and the one-line biological question the project answers, except for answers it proposes from the files it explored. The question MAY be answered `TBD`, which is its default. The skill SHALL ask before creating any file, and SHALL show a summary of the planned structure for confirmation. The summary SHALL be an annotated top-level tree, taken from the scaffold's dry run: each top-level folder with a one-line purpose, each planned data move written as its source path and its destination path, and the add-ons that apply (assay, engine, and language layers, as the glossary defines add-on), taken from the interview answers. The full list of planned files SHALL be shown only if the user asks for it. The dry-run result SHALL list the planned files; it need not list add-ons. When the agent writes the project prose after scaffolding, it SHALL use the question answer rather than invent one.
+The bootstrap skill SHALL ask the user about assay type (bulk-rnaseq, scrnaseq, or other), workflow engine, language, compute setup, data sensitivity, and the one-line project question, except answers it proposes from the explored files. The question MAY be answered `TBD`, which is its default. The skill SHALL ask before creating any file, and SHALL show the annotated plan for confirmation. The project prose written after scaffolding SHALL use the question answer, never an invented one.
 
 #### Scenario: User answers the interview
 - **WHEN** the user invokes the bootstrap skill in an empty directory
 - **THEN** the agent asks the interview questions, shows the annotated plan, and creates nothing until the user confirms
-
-#### Scenario: Annotated plan
-- **WHEN** the agent shows the plan for a folder whose raw data will move from `input_data/GSE141713/` to `data/raw/GSE141713/`
-- **THEN** the plan shows each top-level folder with a one-line purpose, shows that move with both paths, names the add-ons, and does not list every planned file
 
 #### Scenario: Add-ons named in the plan
 - **WHEN** the agent shows the plan for answers with assay `scrnaseq`, engine `snakemake`, and language `python`
@@ -38,7 +34,7 @@ The bootstrap skill SHALL ask the user about assay type (bulk-rnaseq, scrnaseq, 
 - **THEN** the scaffold validates the answers and generates the project as it would without that key
 
 ### Requirement: Refuse to overwrite an existing project
-The bootstrap skill SHALL NOT overwrite existing files. If the target directory already holds an AGENTS.md, CLAUDE.md, README.md, or any skeleton folder, it SHALL list the conflicts and ask how to proceed. The scaffold's dry run SHALL report conflicts the same way a real run does, so the agent finds them before the user confirms. The skill SHALL NOT move, rename, or delete the user's files, except the data moves (raw and reference) listed in the plan the user confirmed, and removing source folders those moves left empty.
+The bootstrap skill SHALL NOT overwrite existing files. If the target directory already holds an AGENTS.md, CLAUDE.md, README.md, or any skeleton folder, it SHALL list the conflicts and ask how to proceed. The scaffold's dry run SHALL report conflicts as a real run does, before the user confirms. The skill SHALL NOT move, rename, or delete the user's files, except the data moves (raw and reference) listed in the plan the user confirmed, and removing source folders those moves left empty.
 
 #### Scenario: Non-empty target
 - **WHEN** the target already contains `README.md`
@@ -103,6 +99,13 @@ The generated project SHALL include, for each chosen language, one smoke test in
 - **THEN** `tests/` has no R smoke test
 
 ## ADDED Requirements
+
+### Requirement: Annotated plan before confirmation
+Before creating any file, the bootstrap skill SHALL show an annotated plan and wait for confirmation. The plan SHALL be a top-level tree from the scaffold's dry run: each top-level folder with a one-line purpose, each planned data move as its source and destination paths, and the add-ons that apply (assay, engine, and language layers), taken from the interview answers. The full file list SHALL be shown only on request. The dry-run result SHALL list the planned files; it need not list add-ons.
+
+#### Scenario: Annotated plan
+- **WHEN** the agent shows the plan for a folder whose raw data will move from `input_data/GSE141713/` to `data/raw/GSE141713/`
+- **THEN** the plan shows each top-level folder with a one-line purpose, shows that move with both paths, names the add-ons, and does not list every planned file
 
 ### Requirement: Explore the target before asking
 Before asking the interview questions, the bootstrap skill SHALL inspect the target folder: file names, sizes, and provider readmes. It SHALL propose the interview answers these settle, such as the assay and whether the inputs are reads or precomputed counts, and ask only the rest. Until the user confirms the data is not sensitive, it SHALL NOT read the contents of data or metadata tables, header rows included, because a wide table's header can hold sample identifiers.

@@ -18,6 +18,7 @@
   - Keep the four sections and the provenance table.
   - Verify: the new test from 2.1 and `test_folder_readme_has_four_sections_in_order` pass, and `grep -n sha256sum skills/nerv-init/templates` finds nothing.
 - [x] 2.4 In `templates/addons/bulk-rnaseq/data/README.md.append`, add one line: a precomputed count matrix stays in its delivery folder, and its path goes in `config/config.yaml` under `counts:`. Verify: `test_layer_only_contains_differences` passes.
+- [x] 2.5 (Found in apply review.) `insert_conventions` in `scaffold.py` puts add-on lines at the end of the Conventions bullets, before any `###` subsection, so the bulk RNA-seq data notes no longer land under the Provenance table. Test: `test_addon_conventions_land_before_subsections`.
 
 ## 3. nerv-init skill prose (SKILL.md and interview.md)
 

@@ -23,7 +23,7 @@ Works with **Claude Code** and **Codex**. Hook logic is Python 3 standard librar
 
 ## Quick start
 
-1. In a new project folder, empty or already holding your raw data, install the skills:
+1. In a new project folder, empty or already holding your raw data (anywhere except a `data/` folder, which counts as a conflict), install the skills:
    ```bash
    npx skills add tingtmu/Seq-Unit-01 -a claude-code -a codex --skill nerv-init sync-ratio magi-review yashima-blueprint --copy -y
    ```

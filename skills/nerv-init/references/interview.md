@@ -46,6 +46,6 @@ If the user wants Nextflow: choose `scripts`, then after scaffolding replace `wo
 | `engine: scripts` | `workflow/run_all.sh`; run `bash workflow/run_all.sh`; README names conda and `bash` as prerequisites |
 | `languages` | Test command: `pytest tests/` for python, `testthat` for r; language named in `scripts/` and `envs/` READMEs; `envs/workflow.yaml` pins python and pytest, or r-base and r-testthat; smoke test `tests/test_smoke.py` or `tests/test_smoke.R` checks the sample-sheet columns |
 | `compute` | Shown in `AGENTS.md` and `README.md`; you add scheduler notes (e.g. a Snakemake Slurm profile) to `workflow/README.md` if relevant |
-| `question` | Not used by `scaffold.py`. You write it into `AGENTS.md` and `README.md` in step 5; if it is `TBD`, write `TBD` there and do not invent one |
+| `question` | Not used by `scaffold.py`. You write it into `AGENTS.md` and `README.md` in step 7; if it is `TBD`, write `TBD` there and do not invent one |
 | input type (agent only) | Reads or precomputed counts, proposed from the files. Not a scaffold key. Shapes `config/samples.tsv` (FASTQ columns only for reads) and, for a count matrix, the `counts:` path you add to `config/config.yaml` at intake |
 | `sensitive: true` | Extra hard rules in `AGENTS.md`; `.gitignore` also excludes everything else under `data/` and all of `results/` except READMEs, plus VCFs |

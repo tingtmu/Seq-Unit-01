@@ -20,7 +20,7 @@ NERV builds the base the Evas launch from; this skill builds the base an analysi
    ```
    python <skill-dir>/scripts/scaffold.py --answers - --target . --dry-run
    ```
-   Use `python3` if `python` is not available. Show the user the planned top-level tree, which add-ons apply, and any conflicts. If there are conflicts, stop and ask.
+   Use `python3` if `python` is not available. If the result's `status` is `conflict`, show its `conflicts` list and stop to ask how to proceed. If it is `planned`, there are no conflicts: show the planned top-level tree from `files`, and name the add-ons that apply (assay, engine, and language layers). Take the add-ons from your answers, using the table "How answers map to the generated project" in `references/interview.md`; do not guess them from file names.
 3. **Confirm.** Wait for an explicit yes. Adjust the answers and repeat step 2 if the user changes anything.
 4. **Scaffold.** Run the same command without `--dry-run`. It creates the tree, `.gitignore`, `.gitattributes` (LF line endings), `git init`, copies hooks to `.nerv/hooks/` and the doc-sync report to `.nerv/scripts/`, and installs `.claude/settings.json` and `.codex/hooks.json`.
 5. **Write the prose.** Replace every `<!-- nerv: ... -->` comment with project-specific text:

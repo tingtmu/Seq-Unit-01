@@ -188,8 +188,19 @@ def test_non_empty_target_reports_conflicts_and_writes_nothing(tmp_path):
 
 def test_dry_run_writes_nothing(tmp_path):
     code, result = scaffold.scaffold(answers(), tmp_path, dry_run=True)
-    assert code == 0 and "AGENTS.md" in result["files"]
+    assert code == 0 and result["status"] == "planned" and "AGENTS.md" in result["files"]
     assert list(tmp_path.iterdir()) == []
+
+
+def test_dry_run_reports_conflicts(tmp_path):
+    (tmp_path / "README.md").write_text("mine\n")
+    (tmp_path / "scripts").mkdir()
+    code, result = scaffold.scaffold(answers(), tmp_path, dry_run=True)
+    assert code == 1 and result["status"] == "conflict"
+    assert result["conflicts"] == ["README.md", "scripts/"]
+    assert "files" not in result
+    assert sorted(p.name for p in tmp_path.iterdir()) == ["README.md", "scripts"]
+    assert (tmp_path / "README.md").read_text() == "mine\n"
 
 
 def find_step(steps, marker):

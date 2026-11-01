@@ -3,7 +3,7 @@
 ## MODIFIED Requirements
 
 ### Requirement: Codex trust step reported after scaffolding
-When the bootstrap skill finishes creating a project, its next steps SHALL begin with one entry that turns on the raw-data guard. The entry SHALL name `/hooks`. For Codex, it SHALL say to start Codex in the project root and trust the nerv hooks, that the raw-data guard stays off in Codex until the user does, and that the hooks must be trusted again after `.codex/hooks.json` changes. For Claude Code, it SHALL say to check that the nerv hook is listed and to restart Claude Code in the project root if it is not. The entry SHALL be reported for every created project, whichever agent the user runs.
+When a project is created, the next steps SHALL begin with one entry that turns on the raw-data guard and names `/hooks`. For Codex, it SHALL say to start Codex in the project root and trust the nerv hooks, that the guard stays off in Codex until then, and to trust them again after `.codex/hooks.json` changes. For Claude Code, it SHALL say to check that the nerv hook is listed, or else restart Claude Code in the project root. The entry SHALL be reported for every created project.
 
 #### Scenario: Project created
 - **WHEN** scaffolding finishes and the project is created
@@ -18,7 +18,7 @@ When the bootstrap skill finishes creating a project, its next steps SHALL begin
 - **THEN** no next steps are reported, because no hooks were installed
 
 ### Requirement: First commit after scaffolding
-When scaffolding creates a project, the result SHALL report whether a git identity (name and email) is set for the project, and the next steps SHALL NOT contain a commit entry or any git command. The bootstrap skill SHALL commit the project itself after writing its prose. When no identity is set, the skill SHALL ask the user for a name and email in its plan message and, after `git init`, set exactly those for this project only, never globally and never invented. The commit SHALL contain only the generated files, the installed skill copies, the files data intake filled, and other paths the user approves. Before committing, the skill SHALL list any other new or changed path and ask whether to include it. When it cannot commit, its summary SHALL say why in one sentence.
+When a project is created, the scaffold result SHALL report whether a git identity (name and email) is set for it, and the next steps SHALL NOT contain a commit entry or any git command. The bootstrap skill SHALL commit the project itself after writing its prose. The commit SHALL contain only the generated files, the installed skill copies, the files data intake filled, and other paths the user approves after the skill lists them. When it cannot commit, its summary SHALL say why in one sentence.
 
 #### Scenario: Project created
 - **WHEN** scaffolding finishes and the project is created
@@ -31,10 +31,6 @@ When scaffolding creates a project, the result SHALL report whether a git identi
 #### Scenario: No git identity on the machine
 - **WHEN** git reports no `user.name` or no `user.email` and the user gives a name and email in reply to the plan
 - **THEN** the agent sets them with `git config` in the project, without `--global`, commits, and the user's global git configuration is unchanged
-
-#### Scenario: No identity given
-- **WHEN** no identity is set and the user does not give a name and email
-- **THEN** the agent does not invent one and does not commit, and its summary says in one sentence that nothing was committed because git has no identity for the project
 
 #### Scenario: Git unavailable
 - **WHEN** scaffolding finishes but git could not be run
@@ -59,6 +55,13 @@ When scaffolding creates a project, the result SHALL report whether a git identi
 **Migration**: The first next step now covers both agents: trust the hooks in Codex, or check that the hook is listed in Claude Code and restart if it is not.
 
 ## ADDED Requirements
+
+### Requirement: Git identity set for the project only
+When no git identity is set, the bootstrap skill SHALL ask the user for a name and email in its plan message and, after `git init`, set exactly those for this project only, never globally and never invented. Without an identity, it SHALL NOT commit.
+
+#### Scenario: No identity given
+- **WHEN** no identity is set and the user does not give a name and email
+- **THEN** the agent does not invent one and does not commit, and its summary says in one sentence that nothing was committed because git has no identity for the project
 
 ### Requirement: Sample sheet and reference pins are not a user step
 The next steps SHALL NOT ask the user to fill `config/samples.tsv` or the reference pins in `config/config.yaml`. The bootstrap skill SHALL fill the reference fields that the data's own files state, such as the organism, and leave the others empty rather than guess. When an empty field blocks the project's next run, the summary SHALL name it in one line. When the data is sensitive and the sample sheet was not filled, the summary SHALL say in one line that the user fills it.

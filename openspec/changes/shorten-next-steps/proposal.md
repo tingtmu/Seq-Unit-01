@@ -31,7 +31,7 @@ None.
   - "Codex trust step reported after scaffolding": becomes the single hook entry.
   - "Claude Code hook check reported after scaffolding": removed, merged into the hook entry.
   - "First commit after scaffolding": the agent asks for and sets a project-only identity, and next steps never hold git commands.
-  - New: "Sample sheet and reference pins are not a user step", and "Summary points to the analysis".
+  - New: "Git identity set for the project only" (split out of "First commit after scaffolding"), "Sample sheet and reference pins are not a user step", and "Summary points to the analysis".
 
 ## Impact
 

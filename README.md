@@ -27,7 +27,7 @@ Works with **Claude Code** and **Codex**. Hook logic is Python 3 standard librar
    ```bash
    npx skills add tingtmu/Seq-Unit-01 -a claude-code -a codex --skill nerv-init sync-ratio magi-review yashima-blueprint --copy -y
    ```
-2. Start your agent in that folder. In Claude Code, run `/nerv-init`; in Codex, ask it to set up the project. Answer the short interview (assay, workflow engine, language, compute, data sensitivity, project question). The agent then generates the project.
+2. Start your agent in that folder. In Claude Code, run `/nerv-init`; in Codex, run `$nerv-init`. Answer the short interview (assay, workflow engine, language, compute, data sensitivity, project question). The agent then generates the project.
    - **Codex only:** run `/hooks` and trust the nerv hooks, or the raw-data guard stays off.
 3. Day to day, ask for what you need:
    - "Plan the analysis" → `yashima-blueprint`
@@ -55,7 +55,7 @@ Run in the project directory. Nothing is installed globally (no `-g`).
 npx skills add tingtmu/Seq-Unit-01 -a claude-code -a codex --skill nerv-init sync-ratio magi-review yashima-blueprint --copy -y
 ```
 
-This puts the skills in `.agents/skills/` (Codex) and `.claude/skills/` (Claude Code). Then ask the agent to set up the project, or invoke `/nerv-init` in Claude Code.
+This puts the skills in `.agents/skills/` (Codex) and `.claude/skills/` (Claude Code). Then invoke `/nerv-init` in Claude Code or `$nerv-init` in Codex (or just ask the agent to set up the project).
 - Name the four skills explicitly. `--skill '*'` would also pick up the repository's own development skills.
 - `--copy` writes real files. Without it, `.claude/skills/` holds symlinks with absolute paths, and those break when the project is committed and cloned elsewhere.
 - Use only the agents you need. Each `-a` adds a full copy of the skills, because each agent reads its own folder.

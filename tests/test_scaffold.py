@@ -210,9 +210,64 @@ def find_step(steps, marker):
     return found[0]
 
 
-def test_created_result_lists_next_steps(tmp_path):
-    code, result = scaffold.scaffold(answers(), tmp_path)
-    assert code == 0 and result["status"] == "created"
+def isolated_git_config(tmp_path, monkeypatch, identity):
+    """Point git at a temp global config (no system config), with or without user.name/user.email."""
+    config = tmp_path / "gitconfig"
+    config.write_text("[user]\n\tname = Test User\n\temail = test@example.org\n" if identity else "",
+                      encoding="utf-8")
+    monkeypatch.setenv("GIT_CONFIG_GLOBAL", str(config))
+    monkeypatch.setenv("GIT_CONFIG_NOSYSTEM", "1")
+
+
+@pytest.fixture
+def identity_set(tmp_path, monkeypatch):
+    isolated_git_config(tmp_path, monkeypatch, identity=True)
+
+
+@pytest.fixture
+def identity_missing(tmp_path, monkeypatch):
+    isolated_git_config(tmp_path, monkeypatch, identity=False)
+
+
+def create(tmp_path):
+    """Scaffold into a fresh subfolder (the temp git config lives in tmp_path itself)."""
+    code, result = scaffold.scaffold(answers(), tmp_path / "proj")
+    assert code == 0 and result["status"] == "created", result
+    return result
+
+
+@pytest.mark.skipif(shutil.which("git") is None, reason="git not available")
+def test_identity_set_leaves_commit_to_agent(tmp_path, identity_set):
+    result = create(tmp_path)
+    assert result["git"] == "initialized" and result["git_identity"] == "set"
+    steps = result["next_steps"]
+    assert not any("git config" in s or "git commit" in s for s in steps), steps
+    assert len(steps) == 4
+    assert steps[0].startswith("Codex:") and steps[1].startswith("Claude Code:")
+    assert "config/samples.tsv" in steps[2] and "read-only" in steps[3]
+
+
+@pytest.mark.skipif(shutil.which("git") is None, reason="git not available")
+def test_identity_missing_keeps_commit_step(tmp_path, identity_missing):
+    result = create(tmp_path)
+    assert result["git"] == "initialized" and result["git_identity"] == "missing"
+    commit = find_step(result["next_steps"], "git commit")
+    order = [commit.index(c) for c in ("git config --global user.name", "git config --global user.email",
+                                       "git add -A", "git commit")]
+    assert order == sorted(order) and "&&" not in commit
+
+
+def test_git_unavailable_reports_identity_missing(tmp_path, identity_set, monkeypatch):
+    def no_git(*args, **kwargs):
+        raise OSError("git not found")
+    monkeypatch.setattr(scaffold.subprocess, "run", no_git)
+    result = create(tmp_path)
+    assert result["git"] == "unavailable" and result["git_identity"] == "missing"
+    find_step(result["next_steps"], "git commit")
+
+
+def test_created_result_lists_next_steps(tmp_path, identity_missing):
+    result = create(tmp_path)
     steps = result["next_steps"]
     assert isinstance(steps, list) and steps and all(isinstance(s, str) and s for s in steps)
     trust = steps[0]

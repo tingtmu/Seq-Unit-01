@@ -94,11 +94,6 @@ NEXT_STEPS = (
     "(`.nerv/hooks/raw_guard.py`). Trust them again after any change to `.codex/hooks.json`.",
     "Claude Code: run `/hooks` and confirm the nerv hook (`.nerv/hooks/raw_guard.py`) is listed. "
     "If it is not, restart Claude Code in the project root.",
-    "Commit the generated project, so later changes can be diffed against it. First run "
-    "`git config user.email`; if it prints nothing, set your identity with "
-    "`git config --global user.name \"Your Name\"` and `git config --global user.email \"you@example.org\"` "
-    "(drop `--global` to set it for this project only). Then run `git add -A`, and then "
-    "`git commit -m \"nerv-init scaffold\"`.",
     "Fill `config/samples.tsv` and the reference pins in `config/config.yaml`.",
     "Recommended: once each batch of raw data is in place and recorded in `data/README.md`, make "
     "`data/raw/` read-only at the OS level, because the raw-data guard is best-effort: "
@@ -107,6 +102,15 @@ NEXT_STEPS = (
     "writable again: `chmod -R u+w data/raw` (macOS, Linux, Git Bash) or `attrib -R /S data\\raw\\*` "
     "(cmd or PowerShell).",
 )
+
+COMMIT_STEP = (
+    "Commit the generated project, so later changes can be diffed against it. First run "
+    "`git config user.email`; if it prints nothing, set your identity with "
+    "`git config --global user.name \"Your Name\"` and `git config --global user.email \"you@example.org\"` "
+    "(drop `--global` to set it for this project only). Then run `git add -A`, and then "
+    "`git commit -m \"nerv-init scaffold\"`."
+)
+COMMIT_STEP_AFTER = 2  # after the Claude Code entry, before config/samples.tsv
 
 
 class AnswersError(ValueError):
@@ -229,6 +233,29 @@ def git_init(target):
     return "initialized"
 
 
+def git_identity(target, git):
+    """'set' if git reports a non-empty user.name and user.email for target, else 'missing'."""
+    if git == "unavailable":
+        return "missing"
+    for key in ("user.name", "user.email"):
+        try:
+            out = subprocess.run(["git", "config", key], cwd=target, capture_output=True, text=True)
+        except OSError as exc:
+            print(f"warning: git config failed: {exc}", file=sys.stderr)
+            return "missing"
+        if out.returncode != 0 or not out.stdout.strip():
+            return "missing"
+    return "set"
+
+
+def next_steps(identity):
+    """User-only steps; the commit step only when the agent cannot commit (no identity)."""
+    steps = list(NEXT_STEPS)
+    if identity == "missing":
+        steps.insert(COMMIT_STEP_AFTER, COMMIT_STEP)
+    return steps
+
+
 def scaffold(answers, target, dry_run=False):
     """Return (exit_code, result dict)."""
     a = validate(answers)
@@ -246,8 +273,10 @@ def scaffold(answers, target, dry_run=False):
             fh.write(text)
         if rel.endswith(".sh") or rel.startswith(".nerv/hooks/"):
             path.chmod(path.stat().st_mode | 0o111)
-    return 0, {"status": "created", "files": sorted(files), "git": git_init(target),
-               "next_steps": list(NEXT_STEPS)}
+    git = git_init(target)
+    identity = git_identity(target, git)
+    return 0, {"status": "created", "files": sorted(files), "git": git, "git_identity": identity,
+               "next_steps": next_steps(identity)}
 
 
 def main(argv=None):

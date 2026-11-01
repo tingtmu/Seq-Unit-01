@@ -5,7 +5,7 @@ These shape how humans and AI agents work in this project. The hard rules are in
 ## Working with AI agents
 
 - **Plan first, small slices.** State assumptions and a short plan before changing code; deliver in small, verifiable steps.
-- **Ask, don't guess.** If a request has several readings, name them and ask.
+- **Explore before asking.** Answer what the files, git, and environment can tell you; ask only about intent or ambiguity they can't resolve.
 - **Goal-driven.** Turn each task into a check that proves it worked (a test, a dry run, a known output).
 - **Zero-trust review.** Treat generated code as unverified until reviewed (`magi-review`) and tested.
 - **Surgical changes.** Touch only what the task needs; don't reformat or refactor unrelated code.

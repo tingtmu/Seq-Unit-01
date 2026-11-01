@@ -3,7 +3,7 @@ import os
 import pandas as pd
 
 # Fail fast: validate the sample sheet before any rule runs.
-REQUIRED_COLUMNS = {"sample_id", "fastq_1"}
+REQUIRED_COLUMNS = {"sample_id"}
 
 samples = pd.read_csv(config["samples"], sep="\t", dtype=str)
 missing_columns = REQUIRED_COLUMNS - set(samples.columns)

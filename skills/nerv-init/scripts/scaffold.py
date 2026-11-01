@@ -95,12 +95,9 @@ NEXT_STEPS = (
     "Claude Code: run `/hooks` and confirm the nerv hook (`.nerv/hooks/raw_guard.py`) is listed. "
     "If it is not, restart Claude Code in the project root.",
     "Fill `config/samples.tsv` and the reference pins in `config/config.yaml`.",
-    "Recommended: once each batch of raw data is in place and recorded in `data/README.md`, make "
-    "`data/raw/` read-only at the OS level, because the raw-data guard is best-effort: "
-    "`chmod -R a-w data/raw` on macOS, Linux, or Git Bash on Windows; "
-    "`attrib +R /S data\\raw\\*` in Windows cmd or PowerShell. Before adding the next batch, make it "
-    "writable again: `chmod -R u+w data/raw` (macOS, Linux, Git Bash) or `attrib -R /S data\\raw\\*` "
-    "(cmd or PowerShell).",
+    "Each delivery in `data/raw/` is made read-only once its provenance is recorded, because the "
+    "raw-data guard is best-effort; put new data in a new delivery folder (`data/README.md` has the "
+    "commands).",
 )
 
 COMMIT_STEP = (

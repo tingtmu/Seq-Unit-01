@@ -2,7 +2,7 @@
 
 ## Purpose
 
-Bootstraps a new bioinformatics project from an empty directory through a short interview, producing a directory skeleton, layered agent/human documentation, and installed hooks (the raw-data guard and the sync reminder).
+Bootstraps a new bioinformatics project, from an empty directory or one that already holds raw data, through a short interview, producing a directory skeleton, layered agent/human documentation, the installed raw-data guard, and the raw data taken in with its provenance.
 
 ## Requirements
 

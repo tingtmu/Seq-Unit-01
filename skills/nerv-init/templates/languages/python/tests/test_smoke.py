@@ -3,7 +3,7 @@ import csv
 from pathlib import Path
 
 SAMPLE_SHEET = Path(__file__).resolve().parents[1] / "config" / "samples.tsv"
-REQUIRED_COLUMNS = {"sample_id", "fastq_1"}
+REQUIRED_COLUMNS = {"sample_id"}
 
 
 def test_sample_sheet_has_required_columns():

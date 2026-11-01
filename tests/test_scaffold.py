@@ -171,9 +171,53 @@ def test_python_smoke_test_accepts_excel_tsv(tmp_path):
 def test_python_smoke_test_names_missing_column(tmp_path):
     project = build(tmp_path, languages=["python"])
     sheet = project / "config/samples.tsv"
-    sheet.write_text(sheet.read_text().replace("fastq_1	", ""))
+    sheet.write_text(sheet.read_text().replace("sample_id	", ""))
     result = run_pytest(project)
-    assert result.returncode == 1 and "fastq_1" in result.stdout
+    assert result.returncode == 1 and "sample_id" in result.stdout
+
+
+COUNTS_SHEET = "sample_id\tcondition\treplicate\nS1\tcontrol\t1\n"
+
+
+def test_python_smoke_test_accepts_counts_sheet(tmp_path):
+    project = build(tmp_path, languages=["python"])
+    (project / "config/samples.tsv").write_text(COUNTS_SHEET)
+    result = run_pytest(project)
+    assert result.returncode == 0, result.stdout + result.stderr
+
+
+def run_common_smk(project, sheet_text):
+    """Execute the generated common.smk with a stub Snakemake config; return its namespace."""
+    sheet = project / "config/samples.tsv"
+    sheet.write_text(sheet_text)
+    source = (project / "workflow/rules/common.smk").read_text(encoding="utf-8")
+    namespace = {"config": {"samples": str(sheet)}}
+    exec(compile(source, "common.smk", "exec"), namespace)
+    return namespace
+
+
+def test_common_smk_accepts_counts_sheet(tmp_path):
+    namespace = run_common_smk(build(tmp_path), COUNTS_SHEET)
+    assert namespace["SAMPLES"] == ["S1"]
+
+
+def test_common_smk_names_missing_fastq(tmp_path):
+    missing = str(tmp_path / "absent_R1.fastq.gz")
+    with pytest.raises(ValueError, match=r"absent_R1\.fastq\.gz"):  # list repr doubles Windows backslashes
+        run_common_smk(build(tmp_path / "proj"), f"sample_id\tfastq_1\nS1\t{missing}\n")
+
+
+def test_common_smk_names_missing_sample_id(tmp_path):
+    with pytest.raises(ValueError, match="sample_id"):
+        run_common_smk(build(tmp_path), "condition\treplicate\ncontrol\t1\n")
+
+
+def test_bulk_design_left_open_without_batch(tmp_path):
+    project = build(tmp_path)
+    design = (project / "config/design.yaml").read_text(encoding="utf-8")
+    assert re.search(r'^design: ""\s+# fix in the analysis plan before looking at results', design, re.MULTILINE)
+    header = (project / "config/samples.tsv").read_text(encoding="utf-8").splitlines()[0].split("\t")
+    assert "batch" not in design and "batch" not in header
 
 
 def test_non_empty_target_reports_conflicts_and_writes_nothing(tmp_path):
@@ -288,17 +332,34 @@ def test_created_result_lists_next_steps(tmp_path, identity_missing):
     assert "&&" not in commit
 
     read_only = find_step(steps, "read-only")
-    assert "data/raw/" in read_only
-    assert "Recommended" in read_only and "optional" not in read_only.lower()
-    assert "chmod -R a-w data/raw" in read_only and "`attrib +R /S data\\raw\\*`" in read_only
-    assert "chmod -R u+w data/raw" in read_only and "`attrib -R /S data\\raw\\*`" in read_only
-    assert "recorded in `data/README.md`" in read_only and "best-effort" in read_only
-    assert "Git Bash" in read_only and "cmd or PowerShell" in read_only
-    assert read_only.index("chmod -R a-w") < read_only.index("Git Bash") < read_only.index("attrib +R")
-    assert read_only.index("attrib +R") < read_only.index("cmd or PowerShell")
+    assert read_only == steps[-1]
+    assert len(re.findall(r"[.!?](?:\s|$)", read_only)) <= 2, read_only
+    assert "delivery" in read_only and "data/raw/" in read_only
+    assert "best-effort" in read_only and "new delivery folder" in read_only
+    assert "chmod" not in read_only and "attrib" not in read_only
+    assert not re.search(r"\block\b", read_only, re.IGNORECASE)
 
     order = [steps.index(s) for s in (trust, claude, commit, find_step(steps, "config/samples.tsv"), read_only)]
     assert order == sorted(order)
+
+
+def test_data_readme_explains_adding_a_delivery(tmp_path):
+    readme = (build(tmp_path) / "data/README.md").read_text(encoding="utf-8")
+    assert "### Adding a delivery" in readme
+    section = readme.split("### Adding a delivery", 1)[1].split("\n## ", 1)[0]
+    for phrase in ("checksum", "raw/<delivery>/", "provenance", "read-only", "config/samples.tsv"):
+        assert phrase in section, phrase
+    sequence = ["chmod -R a-w data/raw/<delivery>", "Git Bash",
+                "attrib +R /S data\\raw\\<delivery>\\*", "cmd or PowerShell",
+                "chmod -R u+w data/raw/<delivery>", "Git Bash",
+                "attrib -R /S data\\raw\\<delivery>\\*", "cmd or PowerShell"]
+    position = 0
+    for text in sequence:
+        found = section.find(text, position)
+        assert found >= 0, (text, section)
+        position = found + len(text)
+    assert "sha256sum" not in readme
+    assert not re.search(r"\block\b", readme, re.IGNORECASE)
 
 
 def test_no_next_steps_when_nothing_created(tmp_path):

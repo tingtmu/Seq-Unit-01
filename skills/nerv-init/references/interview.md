@@ -2,10 +2,12 @@
 
 Ask these in one short round (group them; don't interrogate one by one). Offer the default in brackets and accept it if the user has no preference.
 
+Answers the explored files settle (SKILL.md step 1) are proposed, not asked: state the answer and the files it came from, and let the user correct it. The assay has no default only when the files don't show it.
+
 | # | Question | Answers key | Allowed values | Default |
 |---|----------|-------------|----------------|---------|
 | 1 | Project name? | `project_name` | short text | name of the target folder |
-| 2 | Assay type? | `assay` | `bulk-rnaseq`, `scrnaseq`, `other` | none: must ask |
+| 2 | Assay type? | `assay` | `bulk-rnaseq`, `scrnaseq`, `other` | proposed from the files; otherwise none: must ask |
 | 2b | (only if other) Describe the assay in a sentence (e.g. "ATAC-seq, paired-end, mouse"). | `assay_description` | text | none |
 | 3 | Workflow engine? | `engine` | `snakemake`, `scripts` | `snakemake` |
 | 4 | Analysis language(s)? | `languages` | list of `python`, `r` | `["python"]` |
@@ -45,4 +47,5 @@ If the user wants Nextflow: choose `scripts`, then after scaffolding replace `wo
 | `languages` | Test command: `pytest tests/` for python, `testthat` for r; language named in `scripts/` and `envs/` READMEs; `envs/workflow.yaml` pins python and pytest, or r-base and r-testthat; smoke test `tests/test_smoke.py` or `tests/test_smoke.R` checks the sample-sheet columns |
 | `compute` | Shown in `AGENTS.md` and `README.md`; you add scheduler notes (e.g. a Snakemake Slurm profile) to `workflow/README.md` if relevant |
 | `question` | Not used by `scaffold.py`. You write it into `AGENTS.md` and `README.md` in step 5; if it is `TBD`, write `TBD` there and do not invent one |
+| input type (agent only) | Reads or precomputed counts, proposed from the files. Not a scaffold key. Shapes `config/samples.tsv` (FASTQ columns only for reads) and, for a count matrix, the `counts:` path you add to `config/config.yaml` at intake |
 | `sensitive: true` | Extra hard rules in `AGENTS.md`; `.gitignore` also excludes everything else under `data/` and all of `results/` except READMEs, plus VCFs |

@@ -125,9 +125,17 @@ _Avoid_: amendment, revision, plan update
 The original, untouched files under `data/raw/`, kept exactly as received.
 _Avoid_: input data, source data, original files
 
+**Delivery**:
+A set of raw files received together, kept as received in its own folder under `data/raw/`. Each delivery is made read-only once its provenance is recorded; new data arrives as a new delivery.
+_Avoid_: batch (this glossary uses "batch" only in the statistical sense), dataset, upload
+
 **Provenance record**:
 The entry in `data/README.md` giving where a raw file came from and its checksum.
 _Avoid_: metadata, data log, manifest
+
+**Data intake**:
+Taking a delivery into a project: checking the provider's checksums, placing the files under `data/raw/`, writing their provenance records, making the delivery read-only, and updating the sample sheet from the sample metadata.
+_Avoid_: import, ingest, migration, adoption
 
 **Raw-data guard**:
 The hook that lets agents add new raw files but requires a person's approval to change or delete an existing one, and reports raw files changed some other way after the fact. It is a best-effort safeguard, not a security boundary.

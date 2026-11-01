@@ -121,7 +121,7 @@ skills/
   magi-review/   SKILL.md, references/{levels,seat-briefs,receiving-feedback}.md
   yashima-blueprint/ SKILL.md
 tests/           pytest for the scaffold, hooks, templates, and skill docs
-assets/          banner.svg (README art)
+assets/          banner.svg (README art) and make_banner.py, which generates it
 ```
 
 Run the tests with `python -m pytest`; the only requirement is pytest.

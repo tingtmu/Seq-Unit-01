@@ -89,25 +89,14 @@ aggregate results. Keep data only under `data/` and `results/` (both git-ignored
 6. Follow the data use agreement; record it (not the data) in `docs/`.
 """
 NEXT_STEPS = (
-    "Codex: project hooks are skipped until you trust them, so the raw-data guard is off in Codex "
-    "until you do. Start `codex` in the project root, run `/hooks`, and trust the nerv hooks "
-    "(`.nerv/hooks/raw_guard.py`). Trust them again after any change to `.codex/hooks.json`.",
-    "Claude Code: run `/hooks` and confirm the nerv hook (`.nerv/hooks/raw_guard.py`) is listed. "
-    "If it is not, restart Claude Code in the project root.",
-    "Fill `config/samples.tsv` and the reference pins in `config/config.yaml`.",
+    "Turn on the raw-data guard: run `/hooks` in your agent. In Codex, started in the project root, "
+    "trust the nerv hook (`.nerv/hooks/raw_guard.py`); the guard stays off in Codex until you do, and "
+    "again after any change to `.codex/hooks.json`. In Claude Code, check that it is listed; if not, "
+    "restart Claude Code in the project root.",
     "Each delivery in `data/raw/` is made read-only once its provenance is recorded, because the "
     "raw-data guard is best-effort; put new data in a new delivery folder (`data/README.md` has the "
     "commands).",
 )
-
-COMMIT_STEP = (
-    "Commit the generated project, so later changes can be diffed against it. First run "
-    "`git config user.email`; if it prints nothing, set your identity with "
-    "`git config --global user.name \"Your Name\"` and `git config --global user.email \"you@example.org\"` "
-    "(drop `--global` to set it for this project only). Then run `git add -A`, and then "
-    "`git commit -m \"nerv-init scaffold\"`."
-)
-COMMIT_STEP_AFTER = 2  # after the Claude Code entry, before config/samples.tsv
 
 
 class AnswersError(ValueError):
@@ -249,12 +238,9 @@ def git_identity(target, git):
     return "set"
 
 
-def next_steps(identity):
-    """User-only steps; the commit step only when the agent cannot commit (no identity)."""
-    steps = list(NEXT_STEPS)
-    if identity == "missing":
-        steps.insert(COMMIT_STEP_AFTER, COMMIT_STEP)
-    return steps
+def next_steps():
+    """Steps only the user can do; the agent sets any identity and commits itself."""
+    return list(NEXT_STEPS)
 
 
 def scaffold(answers, target, dry_run=False):
@@ -277,7 +263,7 @@ def scaffold(answers, target, dry_run=False):
     git = git_init(target)
     identity = git_identity(target, git)
     return 0, {"status": "created", "files": sorted(files), "git": git, "git_identity": identity,
-               "next_steps": next_steps(identity)}
+               "next_steps": next_steps()}
 
 
 def main(argv=None):

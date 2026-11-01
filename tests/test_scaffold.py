@@ -257,13 +257,6 @@ def test_dry_run_reports_conflicts(tmp_path):
     assert (tmp_path / "README.md").read_text() == "mine\n"
 
 
-def find_step(steps, marker):
-    """The one next step containing marker."""
-    found = [s for s in steps if marker in s]
-    assert len(found) == 1, (marker, steps)
-    return found[0]
-
-
 def isolated_git_config(tmp_path, monkeypatch, identity):
     """Point git at a temp global config (no system config), with or without user.name/user.email."""
     config = tmp_path / "gitconfig"
@@ -290,25 +283,30 @@ def create(tmp_path):
     return result
 
 
+GIT_COMMANDS = ("git config", "git commit", "git add")
+
+
+def assert_two_user_steps(steps):
+    """Exactly the raw-data guard entry, then the read-only entry; no git command or sample sheet."""
+    assert len(steps) == 2, steps
+    assert "raw-data guard" in steps[0] and "read-only" in steps[1]
+    for step in steps:
+        assert not any(c in step for c in GIT_COMMANDS), step
+        assert "config/samples.tsv" not in step, step
+
+
 @pytest.mark.skipif(shutil.which("git") is None, reason="git not available")
 def test_identity_set_leaves_commit_to_agent(tmp_path, identity_set):
     result = create(tmp_path)
     assert result["git"] == "initialized" and result["git_identity"] == "set"
-    steps = result["next_steps"]
-    assert not any("git config" in s or "git commit" in s for s in steps), steps
-    assert len(steps) == 4
-    assert steps[0].startswith("Codex:") and steps[1].startswith("Claude Code:")
-    assert "config/samples.tsv" in steps[2] and "read-only" in steps[3]
+    assert_two_user_steps(result["next_steps"])
 
 
 @pytest.mark.skipif(shutil.which("git") is None, reason="git not available")
-def test_identity_missing_keeps_commit_step(tmp_path, identity_missing):
+def test_identity_missing_has_no_git_step(tmp_path, identity_missing):
     result = create(tmp_path)
     assert result["git"] == "initialized" and result["git_identity"] == "missing"
-    commit = find_step(result["next_steps"], "git commit")
-    order = [commit.index(c) for c in ("git config --global user.name", "git config --global user.email",
-                                       "git add -A", "git commit")]
-    assert order == sorted(order) and "&&" not in commit
+    assert_two_user_steps(result["next_steps"])
 
 
 def test_git_unavailable_reports_identity_missing(tmp_path, identity_set, monkeypatch):
@@ -317,40 +315,28 @@ def test_git_unavailable_reports_identity_missing(tmp_path, identity_set, monkey
     monkeypatch.setattr(scaffold.subprocess, "run", no_git)
     result = create(tmp_path)
     assert result["git"] == "unavailable" and result["git_identity"] == "missing"
-    find_step(result["next_steps"], "git commit")
+    assert_two_user_steps(result["next_steps"])
 
 
 def test_created_result_lists_next_steps(tmp_path, identity_missing):
     result = create(tmp_path)
     steps = result["next_steps"]
-    assert isinstance(steps, list) and steps and all(isinstance(s, str) and s for s in steps)
-    trust = steps[0]
-    assert "/hooks" in trust and "Codex" in trust
-    assert "raw-data guard" in trust and "off in Codex until" in trust
-    assert "sync reminder" not in trust and "sync_ratio.py" not in trust
-    assert "again after any change to `.codex/hooks.json`" in trust
-    assert "config/samples.tsv" in find_step(steps, "config/samples.tsv")
+    assert isinstance(steps, list) and all(isinstance(s, str) and s for s in steps)
+    assert len(steps) == 2, steps
+    guard, read_only = steps
 
-    claude = find_step(steps, "Claude Code:")
-    assert "/hooks" in claude and "restart" in claude.lower()
+    assert "raw-data guard" in guard and "/hooks" in guard
+    assert "Codex" in guard and "project root" in guard[:guard.index("Claude Code")]
+    assert "off in Codex until" in guard
+    assert "again after any change to `.codex/hooks.json`" in guard
+    assert "Claude Code" in guard and "restart Claude Code" in guard
+    assert "sync reminder" not in guard and "sync_ratio.py" not in guard
 
-    commit = find_step(steps, "git commit")
-    for command in ("git config user.email", 'git config --global user.name', "git config --global user.email",
-                    "git add -A", "git commit"):
-        assert command in commit, command
-    assert commit.index("git config user.email") < commit.index("git commit")
-    assert "&&" not in commit
-
-    read_only = find_step(steps, "read-only")
-    assert read_only == steps[-1]
     assert len(re.findall(r"[.!?](?:\s|$)", read_only)) <= 2, read_only
     assert "delivery" in read_only and "data/raw/" in read_only
     assert "best-effort" in read_only and "new delivery folder" in read_only
     assert "chmod" not in read_only and "attrib" not in read_only
     assert not re.search(r"\block\b", read_only, re.IGNORECASE)
-
-    order = [steps.index(s) for s in (trust, claude, commit, find_step(steps, "config/samples.tsv"), read_only)]
-    assert order == sorted(order)
 
 
 def test_addon_conventions_land_before_subsections(tmp_path):

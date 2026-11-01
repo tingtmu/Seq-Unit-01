@@ -7,8 +7,9 @@ Tests for analysis scripts and the workflow.
 ## Conventions
 
 - Run with: `{{TEST_COMMAND}}`
-- Use tiny synthetic inputs checked into `tests/data/`; never real patient data.
+- Use tiny synthetic inputs, built inline or checked into `tests/data/`; never real patient data.
 - Test the logic that decides results: filters, thresholds, statistics.
+- Don't test styling (colours, labels, themes); test the data a plot or report draws.
 
 ## Current state
 

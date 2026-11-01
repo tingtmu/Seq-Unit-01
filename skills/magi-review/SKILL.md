@@ -31,7 +31,9 @@ Do not include your own conversation, reasoning, or opinion of the change.
 
 - **STANDARD**: one fresh subagent with the STANDARD brief.
 - **CRITICAL**: three fresh subagents in parallel (one message, three dispatches): MELCHIOR-1, BALTHASAR-2, CASPER-3. Ask for the strongest available model.
-- Tell every subagent it is read-only; use a read-only agent type if the platform has one.
+- Tell every subagent it is read-only (rule 1 of the brief), and use a read-only agent type where the platform has one:
+  - **Claude Code:** `Explore` (Write and Edit are denied; it can still run shell commands, so the brief's rule still applies).
+  - **Codex:** no built-in role is read-only (`default`, `explorer`, and `worker` inherit the parent's sandbox). Use `default` and rely on the brief's rule.
 - If the platform has no subagents, run each brief yourself in sequence, rereading the diff from scratch for each seat, and note in the report that the seats were not independent.
 
 **Escalation:** if the STANDARD reviewer reports a Blocker, a hard-rule violation, or `ESCALATE: yes`, run the full CRITICAL review on the same range and say why.
@@ -58,7 +60,8 @@ MAGI review: <range>, level CRITICAL (rule 1: scripts/de.R)
 Tally: 1 APPROVE · 1 CONDITIONAL · 1 REJECT → Outcome: REJECT (veto)
 Required fixes: … (CASPER-3)
 
-Blockers / Fixes / Nits / Pre-existing: merged and de-duplicated, each with file:line, evidence, fix, and the seat(s) that raised it
+Blockers / Fixes / Nits / Pre-existing: merged and de-duplicated, each with file:line, evidence, fix, and the seat(s) that raised it.
+  Mark a finding raised independently by two or more seats "(2 seats)" or "(3 seats)"; agreement is a strong signal, whatever the tag.
 Cannot verify from diff: …
 Declined to judge: …
 ```
@@ -67,4 +70,4 @@ For STANDARD, show the single vote, the three lens paragraphs, and the findings.
 
 ## 7. After the review
 
-Handle the findings by `references/receiving-feedback.md`: verify each one, fix the confirmed ones, push back on the wrong ones with evidence. Then run **at most one** re-review: only the seats with open findings, on the fix diff only, with the settled findings listed so they are not raised again. Any remaining disagreement, including a required fix from a CONDITIONAL vote that the author declines, goes to the user for an explicit ruling.
+Handle the findings by `references/receiving-feedback.md`: verify each one, fix the confirmed ones, push back on the wrong ones with evidence. Then run **at most one** re-review: only the seats with open findings, on the fix diff only, with the settled findings listed so they are not raised again. Skipping it is fine when every fix is small and already checked (for example, a new test that passes, or an optional Nit left alone); say in the report that it was skipped and why. Run it when a fix changed logic or resolved a Blocker. Any remaining disagreement, including a required fix from a CONDITIONAL vote that the author declines, goes to the user for an explicit ruling.

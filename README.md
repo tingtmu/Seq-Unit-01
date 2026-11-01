@@ -7,7 +7,7 @@
 [![magi-review](https://img.shields.io/badge/magi--review-review-FFB000?style=for-the-badge&labelColor=0B0A14)](skills/magi-review/)
 [![yashima-blueprint](https://img.shields.io/badge/yashima--blueprint-analysis_plan-CC2B1D?style=for-the-badge&labelColor=0B0A14)](skills/yashima-blueprint/)
 
-**[Quick start](#quick-start) · [The skills](#the-skills) · [Install](#install-per-project) · [Requirements](#requirements) · [Hooks and their limits](#hooks-and-their-limits) · [Repository layout](#repository-layout) · [License](#license)**
+**[Quick start](#quick-start) · [The skills](#the-skills) · [Install](#install-per-project) · [Repository layout](#repository-layout) · [Requirements](#requirements) · [Hooks and their limits](#hooks-and-their-limits) · [License](#license)**
 
 <sub>Unofficial fan homage. Not affiliated with or endorsed by khara, Inc. The MIT license covers this code, not Evangelion names or marks.</sub>
 
@@ -87,6 +87,21 @@ Remove-Item -Recurse -Force $env:TEMP\nerv-skills
 
 Each skill folder is self-contained, so you can copy just one, for example only `nerv-init`.
 
+## Repository layout
+
+```
+skills/
+  nerv-init/     SKILL.md, references/interview.md, scripts/{scaffold.py,sync_ratio.py},
+                 templates/{base,addons,engines,languages}/, hooks/{raw_guard.py,adapters/}
+  sync-ratio/    SKILL.md
+  magi-review/   SKILL.md, references/{levels,seat-briefs,receiving-feedback}.md
+  yashima-blueprint/ SKILL.md
+tests/           pytest for the scaffold, hooks, templates, and skill docs
+assets/          banner.svg (README art) and make_banner.py, which generates it
+```
+
+Run the tests with `python -m pytest`; the only requirement is pytest.
+
 ## Requirements
 
 - Python 3 (standard library) for hooks and the scaffold script
@@ -110,21 +125,6 @@ Limitations:
 - Claude Code hook commands use `python` on Windows and `python3` elsewhere, chosen when the project is scaffolded.
 
 Hook schemas were verified on 2026-10-29 against the Claude Code hooks reference (code.claude.com/docs/en/hooks) and the Codex source (`openai/codex`: `codex-rs/hooks/src/schema.rs`, `output_parser.rs`, `config/src/hook_config.rs`). The `PostToolUse` matchers for shell tools and `additionalContext` output were re-checked on 2026-10-29; Codex reports shell tools as `Bash` (`core/src/tools/hook_names.rs`), and both agents run `PostToolUse` only after a tool succeeds. The Codex trust behavior (untrusted or modified project hooks are skipped; `/hooks` trusts them) was checked on 2026-10-29 against `codex-rs/hooks/src/engine/discovery.rs`. Codex rejects `permissionDecision: "ask"` in `PreToolUse`, so the guard denies there instead.
-
-## Repository layout
-
-```
-skills/
-  nerv-init/     SKILL.md, references/interview.md, scripts/{scaffold.py,sync_ratio.py},
-                 templates/{base,addons,engines,languages}/, hooks/{raw_guard.py,adapters/}
-  sync-ratio/    SKILL.md
-  magi-review/   SKILL.md, references/{levels,seat-briefs,receiving-feedback}.md
-  yashima-blueprint/ SKILL.md
-tests/           pytest for the scaffold, hooks, templates, and skill docs
-assets/          banner.svg (README art) and make_banner.py, which generates it
-```
-
-Run the tests with `python -m pytest`; the only requirement is pytest.
 
 ## License
 

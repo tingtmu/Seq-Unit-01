@@ -43,7 +43,7 @@ def test_balthasar_veto():
     assert "veto" in section("BALTHASAR-2")
 
 
-@pytest.mark.parametrize("skill", ["nerv-init", "sync-ratio", "magi-review"])
+@pytest.mark.parametrize("skill", ["nerv-init", "sync-ratio", "magi-review", "yashima-blueprint"])
 def test_skill_frontmatter_states_function_first(skill):
     text = (SKILLS / skill / "SKILL.md").read_text(encoding="utf-8")
     front = re.match(r"^---\nname: (.+)\ndescription: (.+)\n---\n", text)
@@ -58,7 +58,7 @@ def test_nerv_init_relays_every_next_step():
     assert "`/hooks`" not in text  # the steps live only in scaffold.py
 
 
-@pytest.mark.parametrize("skill", ["nerv-init", "sync-ratio", "magi-review"])
+@pytest.mark.parametrize("skill", ["nerv-init", "sync-ratio", "magi-review", "yashima-blueprint"])
 def test_skill_folder_is_self_contained(skill):
     # Templates are exempt: their relative paths point inside the generated project.
     folder = SKILLS / skill

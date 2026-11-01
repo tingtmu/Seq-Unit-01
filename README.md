@@ -11,6 +11,7 @@ Works with **Claude Code** and **Codex**. Hook logic is Python 3 standard librar
 | `nerv-init` | Interviews you (assay, workflow engine, language, compute, data sensitivity, the project question or `TBD`), then generates the project: folder skeleton, `AGENTS.md` + `CLAUDE.md`, a 4-section README per folder, a pinned conda environment (`envs/workflow.yaml`) and one smoke test per language so the Run and Test commands pass on day one, `.gitignore`, `.gitattributes` (LF line endings), `git init`, and the hooks below. If a git identity is already set, it makes the first commit itself (and asks before including files it didn't generate); otherwise its next steps give the commands to set one and commit. | NERV is the organization that builds and runs the base everything launches from. |
 | `sync-ratio` | Lists folders that changed significantly without a README update and drafts the updates (only "Current state" and "Last major change"). | The sync ratio measures how well pilot and Eva move as one; here, how well a README matches its folder. |
 | `magi-review` | Risk-scaled review. TRIVIAL changes are skipped. STANDARD changes get one reviewer applying three lenses. CRITICAL changes get three independent seats that vote: MELCHIOR-1 (science), BALTHASAR-2 (safety), CASPER-3 (craft). A 2/3 majority wins; BALTHASAR can veto on hard-rule violations. | The MAGI are three supercomputers that decide by majority vote. |
+| `yashima-blueprint` | Plans an analysis that answers the scientific question before any results exist. It reads the project first, ranks the fatal risks (those no later code change can fix, such as batch confounded with condition) and names the false result each would produce, then, once you agree, commits the analysis plan and its thresholds. The plan carries its own confirmatory scope and an append-only Deviations section. It hands off to boundary tests and `magi-review`; it writes no code. | Operation Yashima had one shot, so everything that could make it miss was removed before firing. |
 
 `nerv-init` also installs the **raw-data guard**. New files in `data/raw/` are allowed, with a reminder to record their provenance in `data/README.md` and a ready-to-run SHA-256 command. Changing, moving, or deleting an existing raw file needs your approval, and the request warns that approving cannot be undone, because raw data is not in git. If a raw file changes, by an approved edit or some other way such as a script, the agent is told after the fact that its provenance record no longer matches and that getting it back means fetching it again from its source.
 
@@ -19,18 +20,18 @@ Works with **Claude Code** and **Codex**. Hook logic is Python 3 standard librar
 Run in the project directory. Nothing is installed globally (no `-g`).
 
 ```bash
-npx skills add tingtmu/Seq-Unit-01 -a claude-code -a codex --skill nerv-init sync-ratio magi-review --copy -y
+npx skills add tingtmu/Seq-Unit-01 -a claude-code -a codex --skill nerv-init sync-ratio magi-review yashima-blueprint --copy -y
 ```
 
 This puts the skills in `.agents/skills/` (Codex) and `.claude/skills/` (Claude Code). Then ask the agent to set up the project, or invoke `/nerv-init` in Claude Code.
-- Name the three skills explicitly. `--skill '*'` would also pick up the repository's own development skills.
+- Name the four skills explicitly. `--skill '*'` would also pick up the repository's own development skills.
 - `--copy` writes real files. Without it, `.claude/skills/` holds symlinks with absolute paths, and those break when the project is committed and cloned elsewhere.
 - Use only the agents you need. Each `-a` adds a full copy of the skills, because each agent reads its own folder.
 - If the agent doesn't list the new skills yet, wait a turn or start a new session before running `/nerv-init`.
 
 **Commit the installed skills.** Commit `.claude/skills/`, `.agents/skills/`, and `skills-lock.json` with the project, so every clone has the same skill versions without Node. The lock file records where each skill came from and a hash of its files. Installing from GitHub records `tingtmu/Seq-Unit-01`; installing from a local folder records a relative path, which breaks if the project moves. Don't git-ignore the copies with a plan to restore them from the lock file: the restore command (`npx skills experimental_install`) is experimental and fills only `.agents/skills/`, so Claude Code would get nothing.
 
-The flags (`-a`, `--skill`, `--copy`, `-y`) and the install paths per agent were verified on 2026-10-29 against the `vercel-labs/skills` CLI docs (`docs/commands.md`, `docs/agents.md`). The `skills-lock.json` behavior and the restore command were checked on 2026-11-01 against the same docs (`docs/commands.md`) and the lock reference (`src/local-lock.ts`).
+The flags (`-a`, `--skill`, `--copy`, `-y`) and the install paths per agent were verified on 2026-10-29 against the `vercel-labs/skills` CLI docs (`docs/commands.md`, `docs/agents.md`); the space-separated `--skill` list was re-checked on 2026-11-01 (`--skill <skills...>`, `docs/commands.md`). The `skills-lock.json` behavior and the restore command were checked on 2026-11-01 against the same docs (`docs/commands.md`) and the lock reference (`src/local-lock.ts`).
 
 ### Fallback without Node
 

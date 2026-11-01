@@ -103,6 +103,22 @@ _Avoid_: prompt, context pack
 One problem a reviewer reports, tagged Blocker (must fix before merging), Fix (should fix), Nit (minor), or Pre-existing (not introduced by this change).
 _Avoid_: issue, comment, defect
 
+### Planning an analysis (`yashima-blueprint`)
+
+The skill is named after the Yashima clause in `SCOPE.md`, the admission rule that lets an item skip "observed" when its first failure would be severe and irreversible. The skill is not the clause itself: the clause is why the skill was admitted, and the skill is what the agent runs.
+
+**Analysis plan**:
+The agreed, committed record of how an analysis will answer the scientific question: the test or model, the contrast, the thresholds, the multiple-testing correction, its confirmatory scope, and the results already seen when it was written. It ends with a Deviations section.
+_Avoid_: preregistration, blueprint, protocol
+
+**Fatal risk**:
+A risk no later code change can fix, such as batch fully confounded with condition. A problem that a rerun fixes, such as a wrong genome build, is not a fatal risk and is left to review.
+_Avoid_: blocker, showstopper, critical issue
+
+**Deviation**:
+A change to a committed analysis plan, added as a dated entry in its Deviations section giving what changed, why, and whether it was made before or after seeing results. The original plan text is never edited.
+_Avoid_: amendment, revision, plan update
+
 ### Protecting data
 
 **Raw data**:

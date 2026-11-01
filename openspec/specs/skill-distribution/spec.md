@@ -11,7 +11,7 @@ The skill set SHALL be installable into one project with a single `npx skills ad
 
 #### Scenario: Install via skills CLI
 - **WHEN** a user runs the documented install command in an empty project directory
-- **THEN** the three skills are available to the agent in that project only
+- **THEN** the four skills are available to the agent in that project only
 
 #### Scenario: Fallback install
 - **WHEN** a user without Node follows the documented fallback

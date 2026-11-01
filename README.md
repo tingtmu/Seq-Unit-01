@@ -25,8 +25,12 @@ npx skills add tingtmu/Seq-Unit-01 -a claude-code -a codex --skill nerv-init syn
 This puts the skills in `.agents/skills/` (Codex) and `.claude/skills/` (Claude Code). Then ask the agent to set up the project, or invoke `/nerv-init` in Claude Code.
 - Name the three skills explicitly. `--skill '*'` would also pick up the repository's own development skills.
 - `--copy` writes real files. Without it, `.claude/skills/` holds symlinks with absolute paths, and those break when the project is committed and cloned elsewhere.
+- Use only the agents you need. Each `-a` adds a full copy of the skills, because each agent reads its own folder.
+- If the agent doesn't list the new skills yet, wait a turn or start a new session before running `/nerv-init`.
 
-The flags (`-a`, `--skill`, `--copy`, `-y`) and the install paths per agent were verified on 2026-10-29 against the `vercel-labs/skills` CLI docs (`docs/commands.md`, `docs/agents.md`).
+**Commit the installed skills.** Commit `.claude/skills/`, `.agents/skills/`, and `skills-lock.json` with the project, so every clone has the same skill versions without Node. The lock file records where each skill came from and a hash of its files. Installing from GitHub records `tingtmu/Seq-Unit-01`; installing from a local folder records a relative path, which breaks if the project moves. Don't git-ignore the copies with a plan to restore them from the lock file: the restore command (`npx skills experimental_install`) is experimental and fills only `.agents/skills/`, so Claude Code would get nothing.
+
+The flags (`-a`, `--skill`, `--copy`, `-y`) and the install paths per agent were verified on 2026-10-29 against the `vercel-labs/skills` CLI docs (`docs/commands.md`, `docs/agents.md`). The `skills-lock.json` behavior and the restore command were checked on 2026-11-01 against the same docs (`docs/commands.md`) and the lock reference (`src/local-lock.ts`).
 
 ### Fallback without Node
 

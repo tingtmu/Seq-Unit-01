@@ -63,7 +63,7 @@ This puts the skills in `.agents/skills/` (Codex) and `.claude/skills/` (Claude 
 
 **Commit the installed skills.** Commit `.claude/skills/`, `.agents/skills/`, and `skills-lock.json` with the project, so every clone has the same skill versions without Node. The lock file records where each skill came from and a hash of its files. Installing from GitHub records `tingtmu/Seq-Unit-01`; installing from a local folder records a relative path, which breaks if the project moves. Don't git-ignore the copies with a plan to restore them from the lock file: the restore command (`npx skills experimental_install`) is experimental and fills only `.agents/skills/`, so Claude Code would get nothing.
 
-The flags (`-a`, `--skill`, `--copy`, `-y`) and the install paths per agent were verified on 2026-10-29 against the `vercel-labs/skills` CLI docs (`docs/commands.md`, `docs/agents.md`); the space-separated `--skill` list was re-checked on 2026-11-01 (`--skill <skills...>`, `docs/commands.md`). The `skills-lock.json` behavior and the restore command were checked on 2026-11-01 against the same docs (`docs/commands.md`) and the lock reference (`src/local-lock.ts`).
+Checked against the `vercel-labs/skills` docs: the flags and install paths on 2026-10-29; the `--skill` list syntax, `skills-lock.json` behavior, and restore command on 2026-11-01.
 
 ### Fallback without Node
 

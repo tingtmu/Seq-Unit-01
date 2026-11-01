@@ -7,7 +7,7 @@ Provides zero-trust code review for bioinformatics projects at a cost proportion
 ## Requirements
 
 ### Requirement: Review level selection
-The review skill SHALL put each change into one level: TRIVIAL, STANDARD, or CRITICAL. The level is based on which paths changed, what the touched files do, and how large the diff is. Changes that touch workflow logic, statistics or QC code, or data handling SHALL be at least CRITICAL. Statistics or QC code SHALL be recognized by what the touched files do, not only the changed lines, and not by matching a keyword list; when unsure, the level SHALL be CRITICAL. The level SHALL be stated to the user before the review starts, together with the rule and the files that set it.
+The review skill SHALL put each change into one level, TRIVIAL, STANDARD, or CRITICAL, by the paths changed, what the touched files do, and diff size. Changes touching workflow logic, statistics or QC code, or data handling SHALL be at least CRITICAL. Statistics or QC code SHALL be recognized by what the touched files do, not by the changed lines alone or a keyword list; when unsure, the level SHALL be CRITICAL. The level SHALL be stated before review, with the rule and files that set it.
 
 #### Scenario: Docs-only change
 - **WHEN** the diff touches only Markdown files outside AGENTS.md and CLAUDE.md, with fewer than 50 changed lines in total
@@ -47,7 +47,7 @@ The review SHALL escalate from STANDARD to CRITICAL when the STANDARD reviewer r
 - **THEN** the full three-seat review runs on the same change
 
 ### Requirement: Three-seat vote at CRITICAL
-At CRITICAL level, three independent reviewers SHALL run in parallel on the same change, each through one lens: MELCHIOR-1 (scientific validity), BALTHASAR-2 (safety), and CASPER-3 (craftsmanship). Each seat SHALL vote APPROVE, CONDITIONAL, or REJECT, with findings. A CONDITIONAL vote SHALL be tallied as APPROVE, and the report SHALL show one outcome with that seat's required fixes listed. A required fix the author declines SHALL go to the user for a ruling. The outcome SHALL be the majority of the three votes.
+At CRITICAL level, three independent reviewers SHALL run in parallel on the same change, each through one lens: MELCHIOR-1 (scientific validity), BALTHASAR-2 (safety), and CASPER-3 (craftsmanship). Each seat SHALL vote APPROVE, CONDITIONAL, or REJECT, with findings. The outcome SHALL be the majority vote, with CONDITIONAL tallied as APPROVE and the report showing one outcome that lists that seat's required fixes. A required fix the author declines SHALL go to the user for a ruling.
 
 #### Scenario: Two approve, one rejects
 - **WHEN** MELCHIOR and CASPER vote APPROVE and BALTHASAR votes REJECT without a hard-rule violation

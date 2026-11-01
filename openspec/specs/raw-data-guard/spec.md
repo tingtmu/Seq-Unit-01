@@ -52,7 +52,7 @@ The guard SHALL inspect shell commands for common destructive operations that ta
 - **THEN** the guard allows it without prompting
 
 ### Requirement: Report changes to existing raw files after the fact
-After any agent file-edit or shell tool call, the guard SHALL report each existing file under `data/raw/` that was modified or removed since the last check, and tell the agent to stop and inform the user if the user did not approve the change. The report SHALL also state that the provenance records of those files in `data/README.md` no longer match, and that recovering a file means fetching it again from its source because raw data is not in version control. The report SHALL NOT block or undo the action. Detection SHALL compare file size and modification time only, and SHALL be documented as best-effort.
+After each agent edit or shell call, the guard SHALL report each existing `data/raw/` file modified or removed since the last check, and tell the agent to stop and tell the user if it was not approved. The report SHALL say the files' provenance records in `data/README.md` no longer match, and that recovery means fetching them again from their source, as raw data is not in git. It SHALL NOT block or undo the action. Detection SHALL use size and mtime only, documented as best-effort.
 
 #### Scenario: Script modifies a raw file
 - **WHEN** an agent runs `python scripts/fix_headers.py` and the script rewrites `data/raw/S1_R1.fastq.gz`

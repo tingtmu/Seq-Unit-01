@@ -1,8 +1,40 @@
+<div align="center">
+
+<img src="assets/banner.svg" alt="NERV · Seq-Unit-01: agent skills for sequencing projects" width="100%">
+
+[![nerv-init](https://img.shields.io/badge/nerv--init-setup-734F9A?style=for-the-badge&labelColor=0B0A14)](skills/nerv-init/)
+[![sync-ratio](https://img.shields.io/badge/sync--ratio-doc_sync-8BD450?style=for-the-badge&labelColor=0B0A14)](skills/sync-ratio/)
+[![magi-review](https://img.shields.io/badge/magi--review-review-FF9900?style=for-the-badge&labelColor=0B0A14)](skills/magi-review/)
+[![yashima-blueprint](https://img.shields.io/badge/yashima--blueprint-analysis_plan-E52F20?style=for-the-badge&labelColor=0B0A14)](skills/yashima-blueprint/)
+
+**[Quick start](#quick-start) · [The skills](#the-skills) · [Install](#install-per-project) · [Requirements](#requirements) · [Hooks and their limits](#hooks-and-their-limits) · [Repository layout](#repository-layout) · [License](#license)**
+
+</div>
+
+> **NERV briefing.** NERV builds the base, and every project it sets up is a Unit. The MAGI vote on risky changes. The AT Field (the raw-data guard) stands around `data/raw/`. The sync ratio shows which READMEs have fallen behind their folders. And, as in Operation Yashima, where there was only one shot, everything that could make an analysis miss is removed before any result exists.
+>
+> <sub>Unofficial fan homage. Not affiliated with or endorsed by khara, Inc. The MIT license covers this code, not Evangelion names or marks.</sub>
+
 # NERV skills for sequencing projects
 
 Agent skills that set up and look after bioinformatics sequencing projects (bulk RNA-seq, scRNA-seq, and others) with AI coding agents. They give the agent layered documentation: a short `AGENTS.md` pointing to per-folder READMEs. A hook protects raw data, an on-demand check keeps those READMEs current, and a review process is tuned to bioinformatics risks such as reproducibility, provenance, and statistical validity.
 
 Works with **Claude Code** and **Codex**. Hook logic is Python 3 standard library only.
+
+## Quick start
+
+1. In a new, empty project folder, install the skills:
+   ```bash
+   npx skills add tingtmu/Seq-Unit-01 -a claude-code -a codex --skill nerv-init sync-ratio magi-review yashima-blueprint --copy -y
+   ```
+2. Start your agent in that folder. In Claude Code, run `/nerv-init`; in Codex, ask it to set up the project. Answer the short interview (assay, workflow engine, language, compute, data sensitivity, project question). The agent then generates the project.
+   - **Codex only:** run `/hooks` and trust the nerv hooks, or the raw-data guard stays off.
+3. Day to day, ask for what you need:
+   - "Plan the analysis" → `yashima-blueprint`
+   - "Review my change" → `magi-review`
+   - "Are the folder READMEs up to date?" → `sync-ratio`
+
+[Install](#install-per-project) explains the flags and gives a fallback without Node.
 
 ## The skills
 
@@ -89,6 +121,7 @@ skills/
   magi-review/   SKILL.md, references/{levels,seat-briefs,receiving-feedback}.md
   yashima-blueprint/ SKILL.md
 tests/           pytest for the scaffold, hooks, templates, and skill docs
+assets/          banner.svg (README art)
 ```
 
 Run the tests with `python -m pytest`; the only requirement is pytest.

@@ -313,6 +313,11 @@ def test_installed_sync_report_runs(tmp_path):
     assert out.returncode == 0 and isinstance(json.loads(out.stdout), list)
 
 
+@pytest.mark.parametrize("question", ["Which genes respond to drug X in liver?", "TBD"])
+def test_question_answer_accepted(tmp_path, question):
+    assert_common(build(tmp_path, question=question))
+
+
 @pytest.mark.parametrize("bad", [
     {"assay": "wgs"},
     {"assay": "other"},

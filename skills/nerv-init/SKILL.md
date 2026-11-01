@@ -15,7 +15,7 @@ NERV builds the base the Evas launch from; this skill builds the base an analysi
 
 ## Flow
 
-1. **Interview.** Ask the questions in `references/interview.md` in one message. Propose the defaults (Snakemake engine, Python, local compute, not sensitive). Assay type has no default: ask.
+1. **Interview.** Ask the questions in `references/interview.md` in one message. Propose the defaults (Snakemake engine, Python, local compute, not sensitive, project question `TBD`). Assay type has no default: ask.
 2. **Plan.** Build the answers JSON and run a dry run, passing the JSON on stdin. `<skill-dir>` is the folder containing this SKILL.md:
    ```
    python <skill-dir>/scripts/scaffold.py --answers - --target . --dry-run
@@ -24,6 +24,7 @@ NERV builds the base the Evas launch from; this skill builds the base an analysi
 3. **Confirm.** Wait for an explicit yes. Adjust the answers and repeat step 2 if the user changes anything.
 4. **Scaffold.** Run the same command without `--dry-run`. It creates the tree, `.gitignore`, `.gitattributes` (LF line endings), `git init`, copies hooks to `.nerv/hooks/` and the doc-sync report to `.nerv/scripts/`, and installs `.claude/settings.json` and `.codex/hooks.json`.
 5. **Write the prose.** Replace every `<!-- nerv: ... -->` comment with project-specific text:
+   - The project question in `AGENTS.md` and `README.md` comes from the `question` answer. If it is `TBD`, write `TBD`; never invent a question.
    - `AGENTS.md`: the one-line project question. Keep the file about 60 lines and never above 200; move detail into folder READMEs and link it.
    - `README.md`: what the project answers and its status.
    - Each folder README: fill "Conventions" and "Current state" for this assay, engine, and language. Keep all four sections.

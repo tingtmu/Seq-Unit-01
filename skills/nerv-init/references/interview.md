@@ -11,6 +11,7 @@ Ask these in one short round (group them; don't interrogate one by one). Offer t
 | 4 | Analysis language(s)? | `languages` | list of `python`, `r` | `["python"]` |
 | 5 | Where will it run? (laptop, lab server, Slurm HPC, cloud) | `compute` | short text | `local` |
 | 6 | Does the project hold human or controlled-access data (dbGaP, EGA, patient samples)? | `sensitive` | `true` / `false` | `false` |
+| 7 | In one line, what biological question does this project answer? | `question` | one-line text, or `TBD` | `TBD` |
 
 If the user wants Nextflow: choose `scripts`, then after scaffolding replace `workflow/run_all.sh` with a Nextflow layout and record that choice in `workflow/README.md`. No Nextflow template ships in v1.
 
@@ -24,7 +25,8 @@ If the user wants Nextflow: choose `scripts`, then after scaffolding replace `wo
   "engine": "snakemake",
   "languages": ["python", "r"],
   "compute": "Slurm HPC",
-  "sensitive": true
+  "sensitive": true,
+  "question": "Which T-cell states expand in responders after checkpoint therapy?"
 }
 ```
 
@@ -42,4 +44,5 @@ If the user wants Nextflow: choose `scripts`, then after scaffolding replace `wo
 | `engine: scripts` | `workflow/run_all.sh`; run `bash workflow/run_all.sh`; README names conda and `bash` as prerequisites |
 | `languages` | Test command: `pytest tests/` for python, `testthat` for r; language named in `scripts/` and `envs/` READMEs; `envs/workflow.yaml` pins python and pytest, or r-base and r-testthat; smoke test `tests/test_smoke.py` or `tests/test_smoke.R` checks the sample-sheet columns |
 | `compute` | Shown in `AGENTS.md` and `README.md`; you add scheduler notes (e.g. a Snakemake Slurm profile) to `workflow/README.md` if relevant |
+| `question` | Not used by `scaffold.py`. You write it into `AGENTS.md` and `README.md` in step 5; if it is `TBD`, write `TBD` there and do not invent one |
 | `sensitive: true` | Extra hard rules in `AGENTS.md`; `.gitignore` also excludes everything else under `data/` and all of `results/` except READMEs, plus VCFs |

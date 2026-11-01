@@ -18,7 +18,7 @@ _Codename_: Unit (each project is an Eva unit that NERV builds and launches)
 ### Setting up a project (`nerv-init`)
 
 **Interview**:
-The short set of questions asked before anything is created: assay, workflow engine, language, compute, and data sensitivity.
+The short set of questions asked before anything is created: assay, workflow engine, language, compute, data sensitivity, and the one-line project question (which may be `TBD`).
 _Avoid_: wizard, questionnaire, prompt
 
 **Skeleton**:

@@ -6,7 +6,7 @@
 
 ## What Changes
 
-- `nerv-init` SKILL.md step 2 says where each part of the plan summary comes from: the top-level tree from the dry run's `files`; the add-on and engine layers from the answers, using the answer-to-output table in `references/interview.md`; conflicts from a `status: "conflict"` result (whose `conflicts` list is shown, then the agent stops and asks). A `status: "planned"` result means there are no conflicts.
+- `nerv-init` SKILL.md step 2 says where each part of the plan summary comes from: the top-level tree from the dry run's `files`; the add-ons that apply (assay, engine, and language layers) from the answers, using the answer-to-output table in `references/interview.md`; conflicts from a `status: "conflict"` result (whose `conflicts` list is shown, then the agent stops and asks). A `status: "planned"` result means there are no conflicts.
 - `scaffold.py` is not changed. The dry run already checks conflicts before planning and returns the same conflict result as a real run. A pytest pins this, because no test covers conflicts on a dry run today.
 - Not added (non-goals): `addons`, `engine`, `conflicts: []`, `git`, or a `next_steps` preview in the dry-run JSON. Step 4 already tells the agent what the real run does (`git init`, hooks).
 

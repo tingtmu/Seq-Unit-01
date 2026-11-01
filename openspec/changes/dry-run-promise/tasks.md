@@ -7,7 +7,7 @@
 
 ## 2. Skill prose
 
-- [ ] 2.1 Rewrite the last two sentences of `skills/nerv-init/SKILL.md` step 2 so they say: if the result's `status` is `conflict`, show its `conflicts` list and stop to ask; if it is `planned`, there are no conflicts, so show the top-level tree from `files` and name the add-on and engine layers that apply, taken from the answers using the answer-to-output table in `references/interview.md`, not guessed from file names. Keep step 3 unchanged. Verify `.venv/Scripts/python -m pytest tests/test_skill_docs.py` passes and the description's first sentence is unchanged.
+- [ ] 2.1 Rewrite the last two sentences of `skills/nerv-init/SKILL.md` step 2 so they say: if the result's `status` is `conflict`, show its `conflicts` list and stop to ask; if it is `planned`, there are no conflicts, so show the top-level tree from `files` and name the add-ons that apply (assay, engine, and language layers), taken from the answers using the answer-to-output table in `references/interview.md`, not guessed from file names. Keep step 3 unchanged. Verify `.venv/Scripts/python -m pytest tests/test_skill_docs.py` passes and the description's first sentence is unchanged.
 
 ## 3. Integration
 

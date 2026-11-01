@@ -1,15 +1,15 @@
 ## MODIFIED Requirements
 
 ### Requirement: Interview before generation
-The bootstrap skill SHALL ask the user about assay type (bulk-rnaseq, scrnaseq, or other), workflow engine, language, compute setup, data sensitivity, and the one-line biological question the project answers. The question MAY be answered `TBD`, which is its default. The skill SHALL ask before creating any file, and SHALL show a summary of the planned structure for confirmation. The summary SHALL contain the planned top-level tree, taken from the scaffold's dry run, and the add-on and engine layers that apply, taken from the interview answers. The dry-run result SHALL list the planned files; it need not list add-ons. When the agent writes the project prose after scaffolding, it SHALL use the question answer rather than invent one.
+The bootstrap skill SHALL ask the user about assay type (bulk-rnaseq, scrnaseq, or other), workflow engine, language, compute setup, data sensitivity, and the one-line biological question the project answers. The question MAY be answered `TBD`, which is its default. The skill SHALL ask before creating any file, and SHALL show a summary of the planned structure for confirmation. The summary SHALL contain the planned top-level tree, taken from the scaffold's dry run, and the add-ons that apply (assay, engine, and language layers, as the glossary defines add-on), taken from the interview answers. The dry-run result SHALL list the planned files; it need not list add-ons. When the agent writes the project prose after scaffolding, it SHALL use the question answer rather than invent one.
 
 #### Scenario: User answers the interview
 - **WHEN** the user invokes the bootstrap skill in an empty directory
 - **THEN** the agent asks the interview questions, shows the planned tree, and creates nothing until the user confirms
 
 #### Scenario: Add-ons named in the plan
-- **WHEN** the agent shows the plan for answers with assay `scrnaseq` and engine `snakemake`
-- **THEN** it names the scRNA-seq add-on and the Snakemake engine layer from the answers, without inferring them from planned file names
+- **WHEN** the agent shows the plan for answers with assay `scrnaseq`, engine `snakemake`, and language `python`
+- **THEN** it names the scRNA-seq, Snakemake, and Python add-ons from the answers, without inferring them from planned file names
 
 #### Scenario: Dry run lists planned files
 - **WHEN** the scaffold runs as a dry run on a target without conflicts

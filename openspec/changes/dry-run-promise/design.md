@@ -4,7 +4,7 @@
 
 `scaffold()` validates the answers, plans the files, then checks conflicts before it looks at `--dry-run`. So a dry run on a target with conflicts already returns `{"status": "conflict", "conflicts": [...], "message": ...}` with exit code 1, the same as a real run. Only the clean case returns `{"status": "planned", "files": [...]}`. The gap in finding 5 is in the prose: SKILL.md step 2 asks for add-ons and conflicts without saying where they come from, so the agent looked for them in the clean result and found neither.
 
-The answer-to-output table in `references/interview.md` already maps each `assay` and `engine` value to its add-on content. The agent built the answers JSON one step earlier, so it has everything needed to name the layers.
+The answer-to-output table in `references/interview.md` already maps each `assay`, `engine`, and `languages` value to its add-on content. The agent built the answers JSON one step earlier, so it has everything needed to name the layers.
 
 ## Goals / Non-Goals
 

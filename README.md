@@ -133,7 +133,7 @@ Limitations:
 - Codex runs hook commands with relative paths, so start Codex from the project root.
 - Claude Code hook commands use `python` on Windows and `python3` elsewhere, chosen when the project is scaffolded.
 
-Hook schemas were verified on 2026-10-29 against the Claude Code hooks reference (code.claude.com/docs/en/hooks) and the Codex source (`openai/codex`: `codex-rs/hooks/src/schema.rs`, `output_parser.rs`, `config/src/hook_config.rs`). The `PostToolUse` matchers for shell tools and `additionalContext` output were re-checked on 2026-10-29; Codex reports shell tools as `Bash` (`core/src/tools/hook_names.rs`), and both agents run `PostToolUse` only after a tool succeeds. The Codex trust behavior (untrusted or modified project hooks are skipped; `/hooks` trusts them) was checked on 2026-10-29 against `codex-rs/hooks/src/engine/discovery.rs`. Codex rejects `permissionDecision: "ask"` in `PreToolUse`, so the guard denies there instead.
+Hook schemas and Codex's trust behavior checked on 2026-10-29 against the Claude Code hooks reference and the Codex source (`openai/codex`).
 
 ## License
 

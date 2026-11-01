@@ -3,7 +3,7 @@
 ## 1. Two next-step entries (scaffold.py)
 
 - [ ] 1.1 In `tests/test_scaffold.py`, rewrite the next-steps tests:
-  - `test_created_result_lists_next_steps`: exactly two entries. The first names `/hooks`, "raw-data guard", "off in Codex until", "again after any change to `.codex/hooks.json`", and a Claude Code restart, with no sync mention. The second is the read-only entry.
+  - `test_created_result_lists_next_steps`: exactly two entries. The first names `/hooks`, "project root" for Codex, "raw-data guard", "off in Codex until", "again after any change to `.codex/hooks.json`", and a Claude Code restart, with no sync mention. The second is the read-only entry.
   - `test_identity_set_leaves_commit_to_agent` and `test_identity_missing_keeps_commit_step`, the latter renamed to `test_identity_missing_has_no_git_step`: the same two entries, `git_identity` reported, and no entry contains `git config`, `git commit`, `git add`, or `config/samples.tsv`.
   - `test_git_unavailable_reports_identity_missing`: `git: "unavailable"`, `git_identity: "missing"`, and no git command in any entry.
   - Run them and confirm they fail (red).
@@ -26,7 +26,7 @@
 
 ## 3. Pins and forward pointer (SKILL.md)
 
-- [ ] 3.1 In the `SKILL.md` data-intake step, fill the reference fields in `config/config.yaml` that the data's own files state, leave the others empty, and never guess a build. In Summarize, name in one line an empty field that blocks the next run, and end with an invitation to say what to compare; in an empty folder, the data request comes first. Name no other skill. Verify: `tests/test_skill_docs.py` passes (self-contained), and the summary order reads correctly for the yeast case and the empty-folder case.
+- [ ] 3.1 In the `SKILL.md` data-intake step, fill the reference fields in `config/config.yaml` that the data's own files state, leave the others empty, and never guess a build. In Summarize, name in one line an empty field that blocks the next run; for sensitive data, say in one line that the user fills `config/samples.tsv` because the agent did not read the metadata; and end with an invitation to say what to compare; in an empty folder, the data request comes first. Name no other skill. Verify: `tests/test_skill_docs.py` passes (self-contained), and the summary order reads correctly for the yeast case and the empty-folder case.
 
 ## 4. Docs and roadmap
 

@@ -3,11 +3,11 @@
 ## MODIFIED Requirements
 
 ### Requirement: Codex trust step reported after scaffolding
-When the bootstrap skill finishes creating a project, its next steps SHALL begin with one entry that turns on the raw-data guard. The entry SHALL name `/hooks`. For Codex, it SHALL say to trust the nerv hooks, that the raw-data guard stays off in Codex until the user does, and that the hooks must be trusted again after `.codex/hooks.json` changes. For Claude Code, it SHALL say to check that the nerv hook is listed and to restart Claude Code in the project root if it is not. The entry SHALL be reported for every created project, whichever agent the user runs.
+When the bootstrap skill finishes creating a project, its next steps SHALL begin with one entry that turns on the raw-data guard. The entry SHALL name `/hooks`. For Codex, it SHALL say to start Codex in the project root and trust the nerv hooks, that the raw-data guard stays off in Codex until the user does, and that the hooks must be trusted again after `.codex/hooks.json` changes. For Claude Code, it SHALL say to check that the nerv hook is listed and to restart Claude Code in the project root if it is not. The entry SHALL be reported for every created project, whichever agent the user runs.
 
 #### Scenario: Project created
 - **WHEN** scaffolding finishes and the project is created
-- **THEN** the first next step names `/hooks`, states that the raw-data guard is off in Codex until the hooks are trusted, says to trust them again after `.codex/hooks.json` changes, gives restarting Claude Code as the fallback, and does not mention a sync reminder
+- **THEN** the first next step names `/hooks`, says to start Codex in the project root, states that the raw-data guard is off in Codex until the hooks are trusted, says to trust them again after `.codex/hooks.json` changes, gives restarting Claude Code as the fallback, and does not mention a sync reminder
 
 #### Scenario: Agent relays the step
 - **WHEN** the agent summarizes the created project for the user
@@ -61,7 +61,7 @@ When scaffolding creates a project, the result SHALL report whether a git identi
 ## ADDED Requirements
 
 ### Requirement: Sample sheet and reference pins are not a user step
-The next steps SHALL NOT ask the user to fill `config/samples.tsv` or the reference pins in `config/config.yaml`. The bootstrap skill SHALL fill the reference fields that the data's own files state, such as the organism, and leave the others empty rather than guess. When an empty field blocks the project's next run, the summary SHALL name it in one line.
+The next steps SHALL NOT ask the user to fill `config/samples.tsv` or the reference pins in `config/config.yaml`. The bootstrap skill SHALL fill the reference fields that the data's own files state, such as the organism, and leave the others empty rather than guess. When an empty field blocks the project's next run, the summary SHALL name it in one line. When the data is sensitive and the sample sheet was not filled, the summary SHALL say in one line that the user fills it.
 
 #### Scenario: No fill-in entry
 - **WHEN** scaffolding finishes and the project is created
@@ -70,6 +70,10 @@ The next steps SHALL NOT ask the user to fill `config/samples.tsv` or the refere
 #### Scenario: Organism stated by the data
 - **WHEN** the delivery's readme names the organism but not the genome build
 - **THEN** `config/config.yaml` has the organism filled, the genome build left empty, and no invented build
+
+#### Scenario: Sensitive data
+- **WHEN** the project holds sensitive data, so the agent did not read the sample metadata
+- **THEN** no next step mentions `config/samples.tsv`, and the summary says in one line that the user fills it, because the agent did not read the metadata
 
 ### Requirement: Summary points to the analysis
 After the next steps, the bootstrap skill's summary SHALL end by inviting the user to say what they want to compare or test, so the conversation moves on to planning the analysis. In an empty folder, the request for raw data SHALL come before this invitation.

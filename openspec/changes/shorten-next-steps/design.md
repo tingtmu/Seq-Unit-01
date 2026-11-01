@@ -34,7 +34,7 @@ This change assumes `add-data-intake` is applied first. That change rewrites the
 - **After `git init`:** the scaffold's `git_identity` is checked again. If it is still `missing` and the user gave a name and email, the agent sets them. If the user gave none, the agent skips the commit and says why in one sentence.
 
 ### 3. Final text of the two entries
-1. "Turn on the raw-data guard: run `/hooks` in your agent. In Codex, trust the nerv hook (`.nerv/hooks/raw_guard.py`); the guard stays off in Codex until you do, and again after any change to `.codex/hooks.json`. In Claude Code, check that it is listed; if not, restart Claude Code in the project root."
+1. "Turn on the raw-data guard: run `/hooks` in your agent. In Codex, started in the project root, trust the nerv hook (`.nerv/hooks/raw_guard.py`); the guard stays off in Codex until you do, and again after any change to `.codex/hooks.json`. In Claude Code, check that it is listed; if not, restart Claude Code in the project root."
 2. The read-only sentence from `add-data-intake`.
 
 ### 4. Reference pins and the forward pointer are SKILL.md prose

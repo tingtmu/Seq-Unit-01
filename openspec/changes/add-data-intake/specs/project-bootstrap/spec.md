@@ -38,7 +38,7 @@ The bootstrap skill SHALL ask the user about assay type (bulk-rnaseq, scrnaseq, 
 - **THEN** the scaffold validates the answers and generates the project as it would without that key
 
 ### Requirement: Refuse to overwrite an existing project
-The bootstrap skill SHALL NOT overwrite existing files. If the target directory already holds an AGENTS.md, CLAUDE.md, README.md, or any skeleton folder, it SHALL list the conflicts and ask how to proceed. The scaffold's dry run SHALL report conflicts the same way a real run does, so the agent finds them before the user confirms. The skill SHALL NOT move, rename, or delete the user's files, except the raw data moves listed in the plan the user confirmed.
+The bootstrap skill SHALL NOT overwrite existing files. If the target directory already holds an AGENTS.md, CLAUDE.md, README.md, or any skeleton folder, it SHALL list the conflicts and ask how to proceed. The scaffold's dry run SHALL report conflicts the same way a real run does, so the agent finds them before the user confirms. The skill SHALL NOT move, rename, or delete the user's files, except the data moves (raw and reference) listed in the plan the user confirmed, and removing source folders those moves left empty.
 
 #### Scenario: Non-empty target
 - **WHEN** the target already contains `README.md`
@@ -61,7 +61,7 @@ The bootstrap skill SHALL NOT overwrite existing files. If the target directory 
 - **THEN** the skill leaves it where it is and does not move, rename, or delete it
 
 ### Requirement: Read-only raw data recommended after scaffolding
-When scaffolding creates a project, the next steps SHALL include one entry, of at most two sentences, saying that each delivery in `data/raw/` is made read-only once its provenance is recorded, that new data goes in a new delivery folder, and that the raw-data guard is best-effort. The entry SHALL NOT list operating-system commands; the commands that lock and unlock a delivery live in the generated `data/README.md`.
+When scaffolding creates a project, the next steps SHALL include one entry, of at most two sentences, saying that each delivery in `data/raw/` is made read-only once its provenance is recorded, that new data goes in a new delivery folder, and that the raw-data guard is best-effort. The entry SHALL NOT list operating-system commands; the commands that make a delivery read-only or writable again live in the generated `data/README.md`.
 
 #### Scenario: Project created
 - **WHEN** scaffolding finishes and the project is created
@@ -69,10 +69,10 @@ When scaffolding creates a project, the next steps SHALL include one entry, of a
 
 #### Scenario: Adding the next batch
 - **WHEN** the user reads the read-only entry before adding more raw data
-- **THEN** it tells them to put the new data in a new delivery folder, so nothing has to be unlocked first
+- **THEN** it tells them to put the new data in a new delivery folder, so no permissions have to change first
 
 #### Scenario: Windows user in Git Bash
-- **WHEN** a user or a later agent session on Windows needs to lock or unlock a delivery
+- **WHEN** a user or a later agent session on Windows needs to make a delivery read-only or writable again
 - **THEN** the generated `data/README.md` gives the commands for macOS, Linux, or Git Bash on Windows, and for Windows cmd or PowerShell, each labeled with the shells it works in
 
 ### Requirement: Fresh project passes its own Test command
@@ -105,11 +105,11 @@ The generated project SHALL include, for each chosen language, one smoke test in
 ## ADDED Requirements
 
 ### Requirement: Explore the target before asking
-Before asking the interview questions, the bootstrap skill SHALL inspect the target folder: file names, sizes, provider readmes, and the header rows of metadata tables. It SHALL propose the interview answers those files settle, such as the assay and whether the inputs are reads or precomputed counts, and ask only the rest. Until the user confirms the data is not sensitive, it SHALL read nothing beyond file names, sizes, readmes, and header rows.
+Before asking the interview questions, the bootstrap skill SHALL inspect the target folder: file names, sizes, and provider readmes. It SHALL propose the interview answers these settle, such as the assay and whether the inputs are reads or precomputed counts, and ask only the rest. Until the user confirms the data is not sensitive, it SHALL NOT read the contents of data or metadata tables, header rows included, because a wide table's header can hold sample identifiers.
 
 #### Scenario: Folder holds precomputed counts
 - **WHEN** the target holds a gzipped gene-count matrix, a sample annotation, and a readme that describes RNA-seq UMI counts
-- **THEN** the agent proposes bulk RNA-seq with precomputed counts as the starting point, says which files it based this on, and asks only the questions the files do not settle
+- **THEN** the agent proposes bulk RNA-seq with precomputed counts as the starting point, says which file names and readme it based this on, and asks only the questions they do not settle
 
 #### Scenario: Assay not clear from the files
 - **WHEN** the files do not show which assay produced them
@@ -117,10 +117,10 @@ Before asking the interview questions, the bootstrap skill SHALL inspect the tar
 
 #### Scenario: Sensitivity not yet answered
 - **WHEN** the agent explores a folder before the user has said whether the data is sensitive
-- **THEN** it reads only file names, sizes, readmes, and the header rows of metadata tables, and no data rows
+- **THEN** it reads only file names, sizes, and readmes, and opens no data or metadata table, not even its header row
 
 ### Requirement: Data intake after scaffolding
-When the confirmed plan lists raw data, the bootstrap skill SHALL, after scaffolding and before the first commit, put each delivery in its own folder `data/raw/<delivery>/` with the files as received. It SHALL move raw data found inside the project folder and copy raw data the user points to outside it. Reference sequences and annotations SHALL go in `data/reference/`. It SHALL move or copy only the paths the plan lists.
+When the confirmed plan lists raw data, the bootstrap skill SHALL, after scaffolding and before the first commit, put each delivery in its own folder `data/raw/<delivery>/` with the files as received. It SHALL move raw data found inside the project folder and copy raw data the user points to outside it. Reference sequences and annotations SHALL go in `data/reference/`. It SHALL move or copy only the paths the plan lists, and remove only empty source folders, never recursively.
 
 #### Scenario: Raw data inside the project folder
 - **WHEN** the confirmed plan moves `input_data/GSE141713/` to `data/raw/GSE141713/`
@@ -136,10 +136,10 @@ When the confirmed plan lists raw data, the bootstrap skill SHALL, after scaffol
 
 #### Scenario: Very large copy
 - **WHEN** a copy would take long enough, or use enough disk space, to matter to the user
-- **THEN** the agent asks before copying and offers to move the files instead
+- **THEN** the agent asks before copying, and offers to move the files instead only when the source is on the same volume as the project; it never moves data off another volume or a shared drive
 
 ### Requirement: Provenance recorded at intake
-For each file taken in, the bootstrap skill SHALL record in `data/README.md` its path, its source, the date received, and its SHA-256 checksum. The source SHALL be an accession or URL only when the data's own files state it; otherwise it SHALL say the data was supplied locally and give the original path. When the delivery includes provider checksum files, the skill SHALL verify them first. After a copy, each copy's checksum SHALL match its source.
+For each file taken in, the bootstrap skill SHALL record in `data/README.md` its path, its source, the date received, and its SHA-256 checksum. The source SHALL be an accession or URL only when the data's own files state it; otherwise it SHALL say the data was supplied locally and give the original path. When the delivery includes provider checksum files, the skill SHALL verify them at the source, before moving or copying anything. After a copy, each copy's checksum SHALL match its source.
 
 #### Scenario: Provenance recorded
 - **WHEN** a delivery's files are in `data/raw/GSE141713/`
@@ -151,21 +151,21 @@ For each file taken in, the bootstrap skill SHALL record in `data/README.md` its
 
 #### Scenario: Provider checksum mismatch
 - **WHEN** a delivery includes an MD5 file and a listed file does not match it
-- **THEN** the agent stops that delivery's intake, names the mismatched files, and does not lock the delivery or record it as verified
+- **THEN** the agent stops that delivery's intake before moving or copying it, names the mismatched files, and leaves the delivery where it was, outside `data/raw/`
 
-### Requirement: Each delivery locked after intake
-After a delivery's provenance is recorded, the bootstrap skill SHALL make that delivery's folder read-only at the operating-system level, using a command for the shell it runs in. It SHALL leave `data/raw/` itself writable, so a new delivery can be added without unlocking anything. It SHALL unlock a delivery only after the user approves replacing files in it.
+### Requirement: Each delivery made read-only after intake
+After a delivery's provenance is recorded, the bootstrap skill SHALL make that delivery's folder read-only at the operating-system level, using a command for the shell it runs in. It SHALL leave `data/raw/` itself writable, so a new delivery can be added without changing any permissions. It SHALL make a delivery writable again only after the user approves replacing files in it.
 
-#### Scenario: Delivery locked
+#### Scenario: Delivery made read-only
 - **WHEN** the provenance of `data/raw/GSE141713/` is recorded
 - **THEN** the files in that folder are read-only, and a new folder can still be created in `data/raw/`
 
 #### Scenario: Replacing a broken download
-- **WHEN** the user reports that a raw file in a locked delivery is corrupt and must be fetched again
-- **THEN** the agent asks before unlocking that delivery, unlocks only that delivery, and locks it again after the new file's provenance is recorded
+- **WHEN** the user reports that a raw file in a read-only delivery is corrupt and must be fetched again
+- **THEN** the agent asks before making that delivery writable, changes only that delivery, and makes it read-only again after the new file's provenance is recorded; where the raw-data guard denies the replacement (Codex), the agent gives the user the commands to run instead
 
 ### Requirement: Raw data requested in an empty folder
-When exploration finds no raw data, the bootstrap skill SHALL, after scaffolding, ask the user to put the raw files, as received, in `data/raw/<delivery>/` or to give their path. When the user says the data is in place, the skill SHALL run the same intake: provenance, lock, and sample sheet.
+When exploration finds no raw data, the bootstrap skill SHALL, after scaffolding, ask the user to put the raw files, as received, in `data/raw/<delivery>/` or to give their path. When the user says the data is in place, the skill SHALL run the same intake: provenance, read-only delivery, and sample sheet.
 
 #### Scenario: Empty folder
 - **WHEN** the bootstrap skill runs in an empty folder and the project is created
@@ -173,10 +173,25 @@ When exploration finds no raw data, the bootstrap skill SHALL, after scaffolding
 
 #### Scenario: Data added later
 - **WHEN** the user says the raw data is in `data/raw/run1/`
-- **THEN** the agent records its provenance, locks `data/raw/run1/`, and fills the sample sheet from its metadata
+- **THEN** the agent records its provenance, makes `data/raw/run1/` read-only, and fills the sample sheet from its metadata
+
+#### Scenario: Data added in a later session
+- **WHEN** an agent without the bootstrap skill loaded reads the generated `data/README.md` before adding a delivery
+- **THEN** its "Adding a delivery" section lists the whole intake: verify provider checksums, put the files in a new delivery folder, record provenance, make the folder read-only, and update `config/samples.tsv`
+
+### Requirement: Sensitive data at intake
+When the user declares the data sensitive, intake SHALL still move or copy each delivery, record its checksums, and make it read-only, but the skill SHALL NOT read the contents of data or metadata files and SHALL NOT fill the sample sheet. Before the first commit, it SHALL say that `data/README.md` lists raw file names and ask whether to commit it.
+
+#### Scenario: Sensitive delivery
+- **WHEN** the user answers that the data is sensitive and confirms the plan
+- **THEN** the delivery is in `data/raw/<delivery>/` with checksums recorded and made read-only, `config/samples.tsv` is left as the template, and no data or metadata rows were read
+
+#### Scenario: Provenance table before commit
+- **WHEN** the project holds sensitive data and the agent is about to commit
+- **THEN** it tells the user that `data/README.md` lists raw file names and commits it only if the user agrees
 
 ### Requirement: Sample sheet built from the data
-When discovered metadata describes the samples, the bootstrap skill SHALL fill `config/samples.tsv` from it: one row per sample, a `sample_id` column, and only columns the metadata supports. FASTQ path columns SHALL appear only when reads are present. The path of a precomputed count matrix SHALL be recorded in `config/config.yaml`. The bulk RNA-seq add-on SHALL ship an empty design formula, for the analysis plan to fix.
+When discovered metadata describes the samples and the data is not sensitive, the bootstrap skill SHALL fill `config/samples.tsv` from it: one row per sample, a `sample_id` column, and only columns the metadata supports. FASTQ path columns SHALL appear only when reads are present. The path of a precomputed count matrix SHALL be recorded in `config/config.yaml`. The bulk RNA-seq add-on SHALL ship an empty design formula, for the analysis plan to fix.
 
 #### Scenario: Precomputed counts
 - **WHEN** the delivery holds a count matrix and a sample annotation with the columns `sample`, `var_name`, and `repeat_id`

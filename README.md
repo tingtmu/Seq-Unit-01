@@ -7,7 +7,7 @@
 [![magi-review](https://img.shields.io/badge/magi--review-review-FFB000?style=for-the-badge&labelColor=0B0A14)](skills/magi-review/)
 [![yashima-blueprint](https://img.shields.io/badge/yashima--blueprint-analysis_plan-CC2B1D?style=for-the-badge&labelColor=0B0A14)](skills/yashima-blueprint/)
 
-**[Quick start](#quick-start) · [The skills](#the-skills) · [Install](#install-per-project) · [Repository layout](#repository-layout) · [Requirements](#requirements) · [Hooks and their limits](#hooks-and-their-limits) · [License](#license)**
+**[Quick start](#quick-start) · [The skills](#the-skills) · [Install](#install) · [Repository layout](#repository-layout) · [Requirements](#requirements) · [Hooks and their limits](#hooks-and-their-limits) · [License](#license)**
 
 <sub>Unofficial fan homage. Not affiliated with or endorsed by khara, Inc. The MIT license covers this code, not Evangelion names or marks.</sub>
 
@@ -27,6 +27,10 @@ Works with **Claude Code** and **Codex**. Hook logic is Python 3 standard librar
    ```bash
    npx skills add tingtmu/Seq-Unit-01 -a claude-code -a codex --skill nerv-init sync-ratio magi-review yashima-blueprint --copy -y
    ```
+   To install once for all your projects instead, use `-g` and drop `--copy`:
+   ```bash
+   npx skills add tingtmu/Seq-Unit-01 -g -a claude-code -a codex --skill nerv-init sync-ratio magi-review yashima-blueprint -y
+   ```
 2. Start your agent in that folder. In Claude Code, run `/nerv-init`; in Codex, run `$nerv-init`. Answer the short interview (assay, workflow engine, language, compute, data sensitivity, project question). The agent then generates the project.
    - **Codex only:** run `/hooks` and trust the nerv hooks, or the raw-data guard stays off.
 3. Day to day, ask for what you need:
@@ -34,7 +38,7 @@ Works with **Claude Code** and **Codex**. Hook logic is Python 3 standard librar
    - "Review my change" → `magi-review`
    - "Are the folder READMEs up to date?" → `sync-ratio`
 
-[Install](#install-per-project) explains the flags and gives a fallback without Node.
+[Install](#install) explains the per-project and global options and gives a fallback without Node.
 
 ## The skills
 
@@ -47,23 +51,28 @@ Works with **Claude Code** and **Codex**. Hook logic is Python 3 standard librar
 
 `nerv-init` also installs the **raw-data guard**. New files in `data/raw/` are allowed, with a reminder to record their provenance in `data/README.md` and a ready-to-run SHA-256 command. Changing, moving, or deleting an existing raw file needs your approval, and the request warns that approving cannot be undone, because raw data is not in git. If a raw file changes, by an approved edit or some other way such as a script, the agent is told after the fact that its provenance record no longer matches and that getting it back means fetching it again from its source.
 
-## Install (per project)
+## Install
 
-Run in the project directory. Nothing is installed globally (no `-g`).
+**Per project (recommended).** Run in the project directory:
 
 ```bash
 npx skills add tingtmu/Seq-Unit-01 -a claude-code -a codex --skill nerv-init sync-ratio magi-review yashima-blueprint --copy -y
 ```
 
-This puts the skills in `.agents/skills/` (Codex) and `.claude/skills/` (Claude Code). Then invoke `/nerv-init` in Claude Code or `$nerv-init` in Codex (or just ask the agent to set up the project).
-- Name the four skills explicitly. `--skill '*'` would also pick up the repository's own development skills.
-- `--copy` writes real files. Without it, `.claude/skills/` holds symlinks with absolute paths, and those break when the project is committed and cloned elsewhere.
-- Use only the agents you need. Each `-a` adds a full copy of the skills, because each agent reads its own folder.
-- If the agent doesn't list the new skills yet, wait a turn or start a new session before running `/nerv-init`.
+This puts the skills in `.claude/skills/` (Claude Code) and `.agents/skills/` (Codex). Then run `/nerv-init` in Claude Code or `$nerv-init` in Codex.
+- Commit `.claude/skills/`, `.agents/skills/`, and `skills-lock.json`, so every clone has the same skill versions. `--copy` makes them real files; symlinks would break when the project is cloned elsewhere.
+- Using only one agent? Drop the other `-a`.
+- If the agent doesn't list the new skills yet, start a new session.
 
-**Commit the installed skills.** Commit `.claude/skills/`, `.agents/skills/`, and `skills-lock.json` with the project, so every clone has the same skill versions without Node. The lock file records where each skill came from and a hash of its files. Installing from GitHub records `tingtmu/Seq-Unit-01`; installing from a local folder records a relative path, which breaks if the project moves. Don't git-ignore the copies with a plan to restore them from the lock file: the restore command (`npx skills experimental_install`) is experimental and fills only `.agents/skills/`, so Claude Code would get nothing.
+**Global (all your projects).** Add `-g` and drop `--copy`:
 
-Checked against the `vercel-labs/skills` docs: the flags and install paths on 2026-10-29; the `--skill` list syntax, `skills-lock.json` behavior, and restore command on 2026-11-01.
+```bash
+npx skills add tingtmu/Seq-Unit-01 -g -a claude-code -a codex --skill nerv-init sync-ratio magi-review yashima-blueprint -y
+```
+
+This puts the skills in `~/.claude/skills/` and `~/.agents/skills/`, so they are available in every project without reinstalling. They are not part of any project's repo, so a clone on another machine needs its own install. The hooks that `nerv-init` generates still live in each project.
+
+Install paths and flags checked against the `vercel-labs/skills` docs on 2026-11-01 (per-project paths and `--copy` on 2026-10-29).
 
 ### Fallback without Node
 

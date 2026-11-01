@@ -15,7 +15,7 @@ In Evangelion the sync ratio measures how well pilot and Eva move together; here
    ```
    (`python3` if `python` is unavailable.) It prints a JSON list of out-of-sync folders, each with `folder`, `readme`, and the changed `files`. An empty list (`[]`) means everything is in sync: say so and stop.
    If `.nerv/scripts/sync_ratio.py` is missing, the project was not set up with nerv-init; tell the user and stop.
-2. For each folder, inspect what changed (`git diff HEAD -- <folder>`, and read new untracked files) so the update describes the real change.
+2. For each folder, inspect what changed so the update describes the real change. Start with `git status --short -- <folder>`, because `git diff HEAD` does not show untracked files. Then read the diff of tracked files (`git diff HEAD -- <folder>`) and the new untracked files themselves.
 3. Draft edits to that folder's README, limited to two sections:
    - **Current state**: what the folder contains or does now.
    - **Last major change**: `YYYY-MM-DD: <one line on what changed and why>`.

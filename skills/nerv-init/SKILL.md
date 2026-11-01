@@ -32,13 +32,13 @@ NERV builds the base the Evas launch from; this skill builds the base an analysi
 6. **Commit.** Only if the scaffold result's `git_identity` is `set`; if it is `missing`, skip this step, because `next_steps` tells the user how to set an identity and commit. Never set or invent an identity yourself.
    - List what changed: `git status --porcelain --untracked-files=all`. Compare the paths with the result's `files`. Expected extras are the installed skill copies: the `skills` folders under `.claude` and `.agents`, and `skills-lock.json`.
    - If any other path is new or changed (including changes the user had already staged), list those paths and ask whether to include them. Wait for the answer.
-   - Stage and commit by explicit path, as two separate commands, where `<paths>` is the generated files, the skill copies, and any paths the user approved:
+   - Stage and commit by explicit path, as two separate commands, where `<paths>` is the generated files, the skill copies that `git status` listed (leave out any that don't exist, or `git add` fails), and any paths the user approved:
      ```
      git add -- <paths>
      git commit -m "nerv-init scaffold" -- <paths>
      ```
      The paths after `--` keep declined or already-staged paths out of the commit. If the user declines the other paths, still commit the rest.
-   - If the commit fails, show git's error to the user and continue; do not retry with a different identity.
+   - If `git add` or `git commit` fails, show git's error to the user and continue; do not retry with a different identity.
 7. **Summarize.** Report the created tree, the hooks installed, and the commit (its short hash, or why there is none). Then show the user every entry of `next_steps` from the scaffold result, in order and word for word. Do not drop or shorten any of them: the first one says which safety hooks stay off in Codex until the user trusts them.
 
 ## "Other" assay

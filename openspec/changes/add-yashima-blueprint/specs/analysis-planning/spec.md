@@ -57,12 +57,12 @@ When a fatal risk cannot be removed, such as batch fully confounded with conditi
 - **WHEN** every treated sample is in one batch and every control in another
 - **THEN** the skill tells the user that the condition effect cannot be separated from batch, and any plan it records labels its claims as descriptive or within-batch
 
-### Requirement: Confirmatory conclusions only
-The analysis plan SHALL cover confirmatory conclusions only. Findings from exploration SHALL be labelled exploratory, or tested under a new analysis plan.
+### Requirement: Plan states its confirmatory scope
+The written analysis plan SHALL state that it covers confirmatory conclusions only, and that findings outside it are to be labelled exploratory or tested under a new analysis plan, so a later agent reading the plan follows the rule without the skill running again.
 
-#### Scenario: Pattern found while exploring
-- **WHEN** a pattern found in exploratory work is to be reported as a conclusion
-- **THEN** it is labelled exploratory or tested under a new analysis plan, not added to the existing plan's conclusions
+#### Scenario: Plan written
+- **WHEN** the skill writes an analysis plan
+- **THEN** the plan contains a line stating that it covers confirmatory conclusions only and that findings outside it are exploratory or need a new plan
 
 ### Requirement: Plan committed after agreement
 Only after the user agrees, the skill SHALL write the analysis plan to the project's docs location and its threshold values under a topic key in the configuration the code reads, using existing locations and creating `docs/` or `config/` only when none exist. It SHALL commit only those paths. The plan SHALL record which results, if any, had been seen when it was written.
@@ -83,12 +83,16 @@ Only after the user agrees, the skill SHALL write the analysis plan to the proje
 - **WHEN** the project already keeps its configuration elsewhere, for example `conf/` in an nf-core project
 - **THEN** the thresholds go into that existing configuration, and no new `config/` folder is created
 
-### Requirement: Deviations appended
-When an agreed plan changes, the skill SHALL add a dated Deviation entry stating what changed, why, and whether the change was made before or after seeing results. It SHALL NOT rewrite the plan's original text.
+### Requirement: Plan carries its deviation rule
+The written analysis plan SHALL end with a Deviations section whose first line states the rule: a change to the plan is added as a dated entry giving what changed, why, and whether it was made before or after seeing results, and the original text is never edited. The rule lives in the plan so a later agent follows it without the skill running again.
+
+#### Scenario: Plan written
+- **WHEN** the skill writes an analysis plan
+- **THEN** the plan ends with a Deviations section whose first line states the append-only rule
 
 #### Scenario: Failed sample excluded after QC
-- **WHEN** QC shows a sample must be excluded after the plan was committed
-- **THEN** the plan gains a dated Deviation entry giving the exclusion, the reason, and that it was made before or after seeing results, and the original text is unchanged
+- **WHEN** a later agent excludes a sample after the plan was committed and reads the plan first
+- **THEN** it adds a dated Deviation entry giving the exclusion, the reason, and that it was made before or after seeing results, and leaves the original text unchanged
 
 ### Requirement: Handoff to tests and review
 After committing the plan, the skill SHALL hand off rather than implement: the thresholds become boundary tests written first (values exactly at each threshold), and the plan is given as the requirements when the analysis code is reviewed with `magi-review`. The skill SHALL NOT write tests or analysis code.

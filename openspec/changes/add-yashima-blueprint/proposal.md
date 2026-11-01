@@ -11,9 +11,9 @@ The v1 mission includes planning with an agent, but NERV has no planning skill. 
   - Defines a **fatal risk** as a risk that no later code change can fix. It gives three short examples from different fields as illustrations, not as a checklist, and the agent finds the risks for this particular study.
   - Ranks up to 8 fatal risks, with no minimum, and names for each the false result it would produce. "Analysis decisions fixed before results" is always on the list. The agent stops when the remaining risks can be fixed later; those are left to `magi-review`.
   - When a risk can't be fixed, says plainly what the data cannot show, and plans only claims that avoid the risk (descriptive or within a batch), labelled as such.
-  - Covers confirmatory conclusions only. Anything found during exploration is labelled exploratory, or tested under a new plan.
+  - Writes into the plan itself that it covers confirmatory conclusions only, and that anything found during exploration is labelled exploratory or tested under a new plan.
   - After the user agrees, writes the analysis plan to the project's docs folder, and the threshold values under a topic key in the config the code reads. It commits only those paths. The plan records which results, if any, had been seen when it was written. The commit order is evidence that the plan came first, not proof.
-  - When the plan changes, adds a dated Deviation entry and leaves the original text unchanged.
+  - Ends the plan with a Deviations section whose first line states the rule: add a dated entry and never edit the original text. The rule lives in the plan, so a later agent follows it without the skill running again.
   - Hands off to implementation: write the boundary tests first, and pass the plan as the requirements when the analysis goes to `magi-review`. It does not write tests or analysis code.
 - `GLOSSARY.md`: add **Analysis plan**, **Fatal risk**, and **Deviation** under a new "Planning an analysis (`yashima-blueprint`)" section. The section separates the skill from the SCOPE.md clause it is named after.
 - `README.md`: add a row to the skills table, add the skill to the `--skill` list in the install command, and change "Name the three skills" to "Name the four skills".
@@ -23,7 +23,7 @@ The v1 mission includes planning with an agent, but NERV has no planning skill. 
 
 ### New Capabilities
 
-- `analysis-planning`: what the planning skill promises. It finds and ranks fatal risks before any results exist, records the agreed plan and its thresholds as a commit, appends deviations instead of rewriting the plan, and hands off to tests and review.
+- `analysis-planning`: what the planning skill promises. It finds and ranks fatal risks before any results exist, records the agreed plan and its thresholds as a commit, writes the confirmatory scope and the append-only deviation rule into the plan, and hands off to tests and review.
 
 ### Modified Capabilities
 

@@ -87,6 +87,7 @@ skills/
                  templates/{base,addons,engines,languages}/, hooks/{raw_guard.py,adapters/}
   sync-ratio/    SKILL.md
   magi-review/   SKILL.md, references/{levels,seat-briefs,receiving-feedback}.md
+  yashima-blueprint/ SKILL.md
 tests/           pytest for the scaffold, hooks, templates, and skill docs
 ```
 

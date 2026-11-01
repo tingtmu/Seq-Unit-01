@@ -25,4 +25,6 @@
 - `skills/nerv-init/references/interview.md`: new row 7, `question` in the answers JSON example, and a row in the answer-to-output table.
 - `skills/nerv-init/SKILL.md`: step 1 names the `TBD` default; step 5 says where the answer goes.
 - `tests/test_scaffold.py`: one test showing that answers with `question` scaffold successfully.
-- No hook, template, or adapter changes. The README skill description does not change.
+- `README.md`: the `nerv-init` row lists the project question among the interview topics ("README follows behavior").
+- `GLOSSARY.md`: the "Interview" definition adds the project question.
+- No hook, template, or adapter changes.

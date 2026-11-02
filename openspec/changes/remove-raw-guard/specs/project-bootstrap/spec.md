@@ -8,7 +8,7 @@
 ## MODIFIED Requirements
 
 ### Requirement: Hard rules recorded
-The generated AGENTS.md SHALL include these hard rules: files in `data/raw/` are never deleted, overwritten, or edited, and deliveries there are read-only; corrections are a workflow step that writes to `data/processed/`; secrets, credentials, and protected/controlled-access data are never committed; and the reference genome build and annotation version are pinned in one place. When the user reports sensitive data, the rules SHALL add stricter handling of that data.
+The generated AGENTS.md SHALL include these hard rules: files in `data/raw/` are never deleted, moved, overwritten, or edited, and deliveries there are read-only; corrections are a workflow step that writes to `data/processed/`; secrets, credentials, and protected/controlled-access data are never committed; and the reference genome build and annotation version are pinned in one place. When the user reports sensitive data, the rules SHALL add stricter handling of that data.
 
 #### Scenario: Sensitive data declared
 - **WHEN** the user answers that the project contains human or controlled-access data
@@ -16,7 +16,7 @@ The generated AGENTS.md SHALL include these hard rules: files in `data/raw/` are
 
 #### Scenario: Raw data rule names deletion
 - **WHEN** the skeleton is generated
-- **THEN** the first hard rule in AGENTS.md says never to delete, overwrite, or edit files in `data/raw/`, says deliveries there are read-only, and says to record a new delivery's source and checksum in `data/README.md`
+- **THEN** the first hard rule in AGENTS.md says never to delete, move, overwrite, or edit files in `data/raw/`, says deliveries there are read-only, and says to record a new delivery's source and checksum in `data/README.md`
 
 ### Requirement: Git initialization without agent hooks
 The bootstrap skill SHALL initialize a git repository with a `.gitignore` suited to bioinformatics data and a `.gitattributes` that stores and checks out text files with LF line endings. It SHALL install the doc-sync report script in `.nerv/scripts/`. It SHALL NOT install any agent hook or agent hook configuration.
@@ -55,6 +55,10 @@ When scaffolding creates a project, the next steps SHALL include one entry, of a
 #### Scenario: Windows user in Git Bash
 - **WHEN** a user or a later agent session on Windows needs to make a delivery read-only or writable again
 - **THEN** the generated `data/README.md` gives the commands for macOS, Linux, or Git Bash on Windows, and for Windows cmd or PowerShell, each labeled with the shells it works in
+
+#### Scenario: Windows limit stated
+- **WHEN** a user reads how deliveries are protected in the generated `data/README.md`
+- **THEN** it says that on Windows, read-only files still block overwrites but Git Bash `rm` can delete them, so the hard rule is the protection there, and the read-only next step makes no claim that every tool is blocked
 
 #### Scenario: Agent relays the step
 - **WHEN** the agent summarizes the created project for the user

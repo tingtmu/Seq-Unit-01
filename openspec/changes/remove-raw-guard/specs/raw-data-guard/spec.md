@@ -7,8 +7,8 @@
 **Migration**: None needed. Projects created earlier keep their own copy of the guard, which keeps working; delete `.nerv/hooks/`, `.codex/hooks.json`, and the nerv entries in `.claude/settings.json` to remove it.
 
 ### Requirement: Require approval to modify or delete existing raw files
-**Reason**: The approval was triggered by shell parsing, which blocked a confirmed intake move in Codex (no "ask", so a hard deny) and still missed deletions through scripts. Read-only deliveries stop deletion and overwrites at the operating-system level for any tool, and the generated hard rule forbids deleting, overwriting, or editing raw files.
-**Migration**: Raw data is protected by read-only deliveries, the hard rule in `AGENTS.md`, and `magi-review`.
+**Reason**: The approval was triggered by shell parsing, which blocked a confirmed intake move in Codex (no "ask", so a hard deny) and still missed deletions through scripts. The generated hard rule forbids deleting, moving, overwriting, or editing raw files. Read-only deliveries enforce it at the operating-system level, except on Windows, where Git Bash `rm` can still delete read-only files; that gap is accepted and documented.
+**Migration**: Raw data is protected by the hard rule in `AGENTS.md`, read-only deliveries, and `magi-review`.
 
 ### Requirement: Best-effort shell detection
 **Reason**: Heuristic shell parsing gave false positives (a multi-line script read as one command) and misses (`python -c`, workflow rules). It is the source of the friction this change removes.

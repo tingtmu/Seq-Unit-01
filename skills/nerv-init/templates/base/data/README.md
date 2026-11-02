@@ -27,7 +27,7 @@ Commands, run from the project root. To make a delivery read-only:
 - `chmod -R a-w data/raw/<delivery>` (macOS, Linux, Git Bash on Windows)
 - `attrib +R /S data\raw\<delivery>\*` (Windows cmd or PowerShell)
 
-On Windows, read-only files still block overwrites, but Git Bash `rm` can delete them, so the hard rule in `AGENTS.md` is the protection there.
+On Windows, read-only files still block overwrites, but Git Bash `rm` and PowerShell `Remove-Item -Force` can delete them, so the hard rule in `AGENTS.md` is the protection there.
 
 To make it writable again, only to replace a broken file, and read-only again after recording the new file:
 

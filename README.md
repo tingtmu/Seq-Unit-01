@@ -122,9 +122,9 @@ Run the tests with `python -m pytest`; the only requirement is pytest.
 - **Read-only deliveries.** Once a delivery's provenance is recorded, `nerv-init` makes it read-only at the OS level (`chmod -R a-w`, or `attrib +R /S` on Windows). `data/raw/` itself stays writable, so the next delivery goes in a new folder without changing permissions. The generated `data/README.md` has the commands, including how to make a delivery writable again to replace a broken file.
 - **Review.** `magi-review` checks every change for code that writes, moves, or deletes under `data/raw/`, including through scripts and workflow outputs, and a hard-rule violation is a veto.
 
-Limit: on macOS and Linux, a read-only delivery's files cannot be deleted or overwritten by any tool until someone restores write permission. On Windows, the read-only attribute blocks overwrites and PowerShell or Python deletes, but **Git Bash `rm` still deletes read-only files** (checked on 2026-11-02). There, the hard rule is the protection.
+Limit: on macOS and Linux, a read-only delivery's files cannot be deleted or overwritten by any tool until someone restores write permission. On Windows, the read-only attribute blocks overwrites, Python deletes, and a plain PowerShell `Remove-Item`, but **Git Bash `rm` and PowerShell `Remove-Item -Force` still delete read-only files** (checked on 2026-11-02). There, the hard rule is the protection.
 
-Projects created by earlier versions have a raw-data hook in `.nerv/hooks/`, `.claude/settings.json`, and `.codex/hooks.json`. It keeps working; delete those files to remove it.
+Projects created by earlier versions have a raw-data hook, which keeps working. To remove it, delete `.nerv/hooks/` and `.nerv/raw-snapshot.json`, remove only the entries that run `.nerv/hooks/raw_guard.py` from `.claude/settings.json` and `.codex/hooks.json` (delete a file only if nothing else is left in it, since it may hold your own settings), and drop the `.nerv/*raw-snapshot*` line from `.gitignore`.
 
 ## License
 

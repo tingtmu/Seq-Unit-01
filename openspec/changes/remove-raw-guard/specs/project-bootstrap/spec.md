@@ -58,7 +58,7 @@ When scaffolding creates a project, the next steps SHALL include one entry, of a
 
 #### Scenario: Windows limit stated
 - **WHEN** a user reads how deliveries are protected in the generated `data/README.md`
-- **THEN** it says that on Windows, read-only files still block overwrites but Git Bash `rm` can delete them, so the hard rule is the protection there, and the read-only next step makes no claim that every tool is blocked
+- **THEN** it says that on Windows, read-only files still block overwrites but Git Bash `rm` and PowerShell `Remove-Item -Force` can delete them, so the hard rule is the protection there, and the read-only next step makes no claim that every tool is blocked
 
 #### Scenario: Agent relays the step
 - **WHEN** the agent summarizes the created project for the user

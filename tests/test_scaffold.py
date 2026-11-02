@@ -328,6 +328,7 @@ def test_created_result_lists_next_steps(tmp_path, identity_missing):
     assert "new delivery folder" in read_only
     assert "chmod" not in read_only and "attrib" not in read_only
     assert not any(w in read_only.lower() for w in ("guard", "hook", "/hooks")), read_only
+    assert not re.search(r"no tool|any tool|every tool|cannot be deleted", read_only, re.IGNORECASE), read_only
     assert not re.search(r"\block\b", read_only, re.IGNORECASE)
 
 
@@ -361,7 +362,7 @@ def test_data_readme_explains_adding_a_delivery(tmp_path):
 def test_data_readme_states_windows_limit(tmp_path):
     readme = (build(tmp_path) / "data/README.md").read_text(encoding="utf-8")
     section = readme.split("### Adding a delivery", 1)[1].split("### Provenance", 1)[0]
-    assert "Git Bash `rm`" in section and "hard rule" in section, section
+    assert "Git Bash `rm`" in section and "`Remove-Item -Force`" in section and "hard rule" in section, section
     assert not re.search(r"hook|guard", readme, re.IGNORECASE)
 
 

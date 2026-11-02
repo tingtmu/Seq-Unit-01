@@ -55,7 +55,7 @@ def test_skill_frontmatter_states_function_first(skill):
 def test_nerv_init_relays_every_next_step():
     text = (SKILLS / "nerv-init" / "SKILL.md").read_text(encoding="utf-8")
     assert "every entry of `next_steps`" in text and "word for word" in text
-    assert "`/hooks`" not in text  # the steps live only in scaffold.py
+    assert "/hooks" not in text and "raw-data guard" not in text  # no hooks; the steps live only in scaffold.py
 
 
 @pytest.mark.parametrize("skill", ["nerv-init", "sync-ratio", "magi-review", "yashima-blueprint"])

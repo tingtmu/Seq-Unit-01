@@ -8,15 +8,14 @@ Usage:
 Layers templates/base, templates/addons/<assay>, templates/engines/<engine> and
 templates/languages/<language> (one per chosen language); a file
 named X.append is inserted at the end of the Conventions section of base file X. Writes
-.gitignore and .gitattributes (LF line endings), copies hooks to .nerv/hooks/ and the doc-sync report to .nerv/scripts/, installs
-agent adapters, and runs git init.
+.gitignore and .gitattributes (LF line endings), copies the doc-sync report to .nerv/scripts/, and
+runs git init. Installs no agent hooks.
 Refuses to write anything if a planned path already exists (lists the conflicts, exit 1).
 Answers schema: see references/interview.md. Standard library only.
 """
 import argparse
 import datetime
 import json
-import os
 import re
 import subprocess
 import sys
@@ -24,7 +23,6 @@ from pathlib import Path
 
 SKILL = Path(__file__).resolve().parents[1]
 TEMPLATES = SKILL / "templates"
-HOOKS = SKILL / "hooks"
 
 ASSAYS = {"bulk-rnaseq": "Bulk RNA-seq", "scrnaseq": "Single-cell RNA-seq", "other": None}
 ENGINES = {
@@ -45,7 +43,6 @@ data/reference/*
 !data/reference/.gitkeep
 data/processed/*
 !data/processed/.gitkeep
-.nerv/*raw-snapshot*
 *.fastq
 *.fastq.gz
 *.fq
@@ -89,13 +86,8 @@ aggregate results. Keep data only under `data/` and `results/` (both git-ignored
 6. Follow the data use agreement; record it (not the data) in `docs/`.
 """
 NEXT_STEPS = (
-    "Turn on the raw-data guard: run `/hooks` in your agent. In Codex, started in the project root, "
-    "trust the nerv hook (`.nerv/hooks/raw_guard.py`); the guard stays off in Codex until you do, and "
-    "again after any change to `.codex/hooks.json`. In Claude Code, check that it is listed; if not, "
-    "restart Claude Code in the project root.",
-    "Each delivery in `data/raw/` is made read-only once its provenance is recorded, because the "
-    "raw-data guard is best-effort; put new data in a new delivery folder (`data/README.md` has the "
-    "commands).",
+    "Each delivery in `data/raw/` is made read-only once its provenance is recorded; put new data in a "
+    "new delivery folder (`data/README.md` has the commands and their limits).",
 )
 
 
@@ -144,7 +136,6 @@ def variables(a):
         "RUN_COMMAND": run,
         "TEST_COMMAND": " && ".join(tests),
         "SENSITIVE_RULES": SENSITIVE_RULES if a["sensitive"] else "",
-        "PYTHON": "python" if os.name == "nt" else "python3",
         "PREREQUISITES": "conda (or mamba)" + shell,
         "ENV_NAME": env_name(a["project_name"]),
         "ENV_DEPENDENCIES": "\n".join(f"  - {t}" for t in tools),
@@ -193,10 +184,7 @@ def plan(a):
         files[rel] = insert_conventions(files[rel], text)
     files[".gitignore"] = GITIGNORE + (GITIGNORE_SENSITIVE if a["sensitive"] else "")
     files[".gitattributes"] = GITATTRIBUTES
-    files[".nerv/hooks/raw_guard.py"] = (HOOKS / "raw_guard.py").read_text(encoding="utf-8")
     files[".nerv/scripts/sync_ratio.py"] = (Path(__file__).parent / "sync_ratio.py").read_text(encoding="utf-8")
-    files[".claude/settings.json"] = (HOOKS / "adapters" / "claude-settings.json").read_text(encoding="utf-8")
-    files[".codex/hooks.json"] = (HOOKS / "adapters" / "codex-hooks.json").read_text(encoding="utf-8")
     values = variables(a)
     return {rel: text if rel.startswith(".nerv/") else render(text, values, rel) for rel, text in files.items()}
 
@@ -258,7 +246,7 @@ def scaffold(answers, target, dry_run=False):
         path.parent.mkdir(parents=True, exist_ok=True)
         with open(path, "w", encoding="utf-8", newline="\n") as fh:
             fh.write(text)
-        if rel.endswith(".sh") or rel.startswith(".nerv/hooks/"):
+        if rel.endswith(".sh"):
             path.chmod(path.stat().st_mode | 0o111)
     git = git_init(target)
     identity = git_identity(target, git)

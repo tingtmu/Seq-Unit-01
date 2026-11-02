@@ -1,6 +1,6 @@
 ---
 name: nerv-init
-description: Set up a new bioinformatics sequencing project (bulk RNA-seq, scRNA-seq, or other assays) in an empty folder or one that already holds raw data. Looks at the folder first, runs a short interview, then generates the folder skeleton, a concise AGENTS.md/CLAUDE.md with hard rules, per-folder READMEs, git, and a raw-data guard hook, and takes in the raw data with its provenance. Use when the user wants to start, bootstrap, or scaffold a new analysis project.
+description: Set up a new bioinformatics sequencing project (bulk RNA-seq, scRNA-seq, or other assays) in an empty folder or one that already holds raw data. Looks at the folder first, runs a short interview, then generates the folder skeleton, a concise AGENTS.md/CLAUDE.md with hard rules, per-folder READMEs, and git, and takes in the raw data with its provenance as read-only deliveries. Use when the user wants to start, bootstrap, or scaffold a new analysis project.
 ---
 
 # nerv-init: bootstrap a sequencing project
@@ -29,7 +29,7 @@ NERV builds the base the Evas launch from; this skill builds the base an analysi
 
    Show the full file list only if the user asks for it. Name the git identity the commit will use ("Commit as Ana <ana@lab.org>"). If either value is missing, ask for a name and email in the same message.
 4. **Confirm.** Wait for an explicit yes. Adjust the answers and repeat step 3 if the user changes anything.
-5. **Scaffold.** Run the same command without `--dry-run`. It creates the tree, `.gitignore`, `.gitattributes` (LF line endings), `git init`, copies hooks to `.nerv/hooks/` and the doc-sync report to `.nerv/scripts/`, and installs `.claude/settings.json` and `.codex/hooks.json`.
+5. **Scaffold.** Run the same command without `--dry-run`. It creates the tree, `.gitignore`, `.gitattributes` (LF line endings), `git init`, and copies the doc-sync report to `.nerv/scripts/`.
 6. **Data intake.** For each delivery (raw files received together) in the confirmed plan:
    - **Verify provider checksums first.** If the delivery has checksum files (`*.md5`, `md5sum.txt`, `MD5.txt`, `*.sha256`), verify them where the data sits, before moving or copying. On a mismatch, stop this delivery: name the mismatched files and leave them outside `data/raw/`.
    - **Place it.** Folder name: the accession the data's own files state (`GSE141713`), else the folder it arrived in, else today's date. Move raw data found inside the project folder into `data/raw/<delivery>/`; copy raw data the user points to outside it, leave the original in place, and check each copy's SHA-256 against its source. Files stay as received: no unzipping or renaming. References go to `data/reference/`.
@@ -40,7 +40,7 @@ NERV builds the base the Evas launch from; this skill builds the base an analysi
    - **Sample sheet** (not for sensitive data). Rewrite `config/samples.tsv` from the sample metadata: one row per sample, a `sample_id` column, and only columns the metadata supports. Never invent one, such as `batch`. Add FASTQ columns (`fastq_1`, `fastq_2`, paths under `data/raw/<delivery>/`) only for reads. For a count matrix, add `counts: <path>` to `config/config.yaml`.
    - **Reference fields.** Fill the `reference` fields in `config/config.yaml` that the data's own files state, such as the organism from a provider readme. Leave the others empty; never guess a genome build or annotation.
    - **Sensitive data.** Still verify, place, record checksums, and make the delivery read-only, but read no data or metadata contents and leave `config/samples.tsv` as the template for the user to fill.
-   - **Replacing a file later** in a read-only delivery: ask first, make only that delivery writable, and make it read-only again after recording the new file. In Codex the raw-data guard denies the replacement, so give the user the commands instead.
+   - **Replacing a file later** in a read-only delivery: ask first, make only that delivery writable, and make it read-only again after recording the new file.
 
    If exploration found no raw data, skip this step; step 9 asks for the data.
 7. **Write the prose.** Replace every `<!-- nerv: ... -->` comment with project-specific text:
@@ -66,7 +66,7 @@ NERV builds the base the Evas launch from; this skill builds the base an analysi
      The paths after `--` keep declined or already-staged paths out of the commit. If the user declines the other paths, still commit the rest.
    - Sensitive data: before committing, say that `data/README.md` lists the raw file names, which can be identifiers, and ask whether to commit it. If the user declines, leave it out of `<paths>`.
    - If `git add` or `git commit` fails, show git's error to the user and continue; do not retry with a different identity.
-9. **Summarize.** Report the created tree, the hooks installed, the deliveries taken in and made read-only, and the commit: its short hash, or one sentence on why there is none (git is unavailable, or git has no identity for the project). Then show the user every entry of `next_steps` from the scaffold result, in order and word for word. Do not drop or shorten any of them: the first one says the raw-data guard stays off in Codex until the user trusts the hooks. After them:
+9. **Summarize.** Report the created tree, the deliveries taken in and made read-only, and the commit: its short hash, or one sentence on why there is none (git is unavailable, or git has no identity for the project). Then show the user every entry of `next_steps` from the scaffold result, in order and word for word. Do not drop or shorten any of them. After them:
    - If an empty `reference` field blocks the project's next run, name it in one line.
    - Sensitive data: say in one line that the user fills `config/samples.tsv`, because you did not read the metadata.
    - If no raw data was found, ask the user to put the raw files, as received, in `data/raw/<delivery>/` or give their path; when they say the data is in, run step 6 for it, then commit the updated `data/README.md`, `config/samples.tsv`, and `config/config.yaml` as in step 8.
@@ -79,7 +79,3 @@ The scaffold creates only the shared skeleton. Using `assay_description`, adapt 
 - `data/README.md`: expected raw formats and any assay-specific reference files (e.g. blacklists, known-sites VCFs).
 - `scripts/README.md` and `results/README.md`: the main analysis steps and outputs.
 - Add files only when the user asks or the assay cannot work without them; record any addition in that folder's "Last major change".
-
-## Hooks installed
-
-- `.nerv/hooks/raw_guard.py`: new files in `data/raw/` are allowed with a reminder to record provenance in `data/README.md`, however they were written; changing or deleting existing raw files asks the user (Claude Code) or is denied with instructions (Codex), and raw files changed some other way, such as by a script, are reported after the fact. Best-effort, not a security boundary.

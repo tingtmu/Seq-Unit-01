@@ -7,7 +7,7 @@
 [![magi-review](https://img.shields.io/badge/magi--review-review-FFB000?style=for-the-badge&labelColor=0B0A14)](skills/magi-review/)
 [![yashima-blueprint](https://img.shields.io/badge/yashima--blueprint-analysis_plan-CC2B1D?style=for-the-badge&labelColor=0B0A14)](skills/yashima-blueprint/)
 
-**[Quick start](#quick-start) · [The skills](#the-skills) · [Install](#install) · [Repository layout](#repository-layout) · [Requirements](#requirements) · [Hooks and their limits](#hooks-and-their-limits) · [License](#license)**
+**[Quick start](#quick-start) · [The skills](#the-skills) · [Install](#install) · [Repository layout](#repository-layout) · [Requirements](#requirements) · [Raw data protection](#raw-data-protection) · [License](#license)**
 
 <sub>Unofficial fan homage. Not affiliated with or endorsed by khara, Inc. The MIT license covers this code, not Evangelion names or marks.</sub>
 
@@ -15,11 +15,11 @@
 
 # NERV skills for sequencing projects
 
-Agent skills that set up and look after bioinformatics sequencing projects (bulk RNA-seq, scRNA-seq, and others) with AI coding agents. They give the agent layered documentation: a short `AGENTS.md` pointing to per-folder READMEs. A hook protects raw data, an on-demand check keeps those READMEs current, and a review process is tuned to bioinformatics risks such as reproducibility, provenance, and statistical validity.
+Agent skills that set up and look after bioinformatics sequencing projects (bulk RNA-seq, scRNA-seq, and others) with AI coding agents. They give the agent layered documentation: a short `AGENTS.md` pointing to per-folder READMEs. A hard rule and read-only deliveries protect raw data, an on-demand check keeps those READMEs current, and a review process is tuned to bioinformatics risks such as reproducibility, provenance, and statistical validity.
 
-Works with **Claude Code** and **Codex**. Hook logic is Python 3 standard library only.
+Works with **Claude Code** and **Codex**.
 
-> **NERV briefing.** NERV builds the base, and every project it sets up is a Unit. The MAGI vote on risky changes. The AT Field (the raw-data guard) stands around `data/raw/`. The sync ratio shows which READMEs have fallen behind their folders. And, as in Operation Yashima, where there was only one shot, everything that could make an analysis miss is removed before any result exists.
+> **NERV briefing.** NERV builds the base, and every project it sets up is a Unit. The MAGI vote on risky changes. The AT Field (each read-only delivery) stands around `data/raw/`. The sync ratio shows which READMEs have fallen behind their folders. And, as in Operation Yashima, where there was only one shot, everything that could make an analysis miss is removed before any result exists.
 
 ## Quick start
 
@@ -32,7 +32,6 @@ Works with **Claude Code** and **Codex**. Hook logic is Python 3 standard librar
    npx skills add tingtmu/Seq-Unit-01 -g -a claude-code -a codex --skill nerv-init sync-ratio magi-review yashima-blueprint -y
    ```
 2. Start your agent in that folder. In Claude Code, run `/nerv-init`; in Codex, run `$nerv-init`. The agent looks at the folder first and proposes what the files show (such as the assay, and reads or precomputed counts), then asks the rest of the short interview (assay, workflow engine, language, compute, data sensitivity, project question). After your yes it generates the project, takes in the raw data it found (or asks you for it), records each file's provenance, and makes each delivery read-only.
-   - **Codex only:** run `/hooks` and trust the nerv hooks, or the raw-data guard stays off.
 3. Day to day, ask for what you need:
    - "Plan the analysis" → `yashima-blueprint`
    - "Review my change" → `magi-review`
@@ -44,12 +43,10 @@ Works with **Claude Code** and **Codex**. Hook logic is Python 3 standard librar
 
 | Skill | What it does | The name |
 |-------|--------------|----------|
-| `nerv-init` | **Looks at the folder first**, proposes the answers its files settle, and **interviews you** for the rest (assay, workflow engine, language, compute, data sensitivity, the project question or `TBD`), then **generates the project**: **folder skeleton**, **`AGENTS.md` + `CLAUDE.md`**, a **4-section README per folder**, a **pinned conda environment** (`envs/workflow.yaml`) and **one smoke test per language** so the Run and Test commands pass on day one, `.gitignore`, `.gitattributes` (LF line endings), `git init`, and **the hooks below**. It then **takes in the raw data** it found, or asks you for it: each delivery goes in `data/raw/<delivery>/` as received, with provider checksums verified, **its provenance recorded** in `data/README.md`, the delivery **made read-only**, and the sample sheet filled from the sample metadata. If no git identity is set, it asks for your name and email and **saves them for this project only** (never globally). It then **makes the first commit itself** (and asks before including files it didn't generate), and ends by asking what you want to compare. | NERV is the organization that builds and runs the base everything launches from. |
+| `nerv-init` | **Looks at the folder first**, proposes the answers its files settle, and **interviews you** for the rest (assay, workflow engine, language, compute, data sensitivity, the project question or `TBD`), then **generates the project**: **folder skeleton**, **`AGENTS.md` + `CLAUDE.md`**, a **4-section README per folder**, a **pinned conda environment** (`envs/workflow.yaml`) and **one smoke test per language** so the Run and Test commands pass on day one, `.gitignore`, `.gitattributes` (LF line endings), and `git init`. It then **takes in the raw data** it found, or asks you for it: each delivery goes in `data/raw/<delivery>/` as received, with provider checksums verified, **its provenance recorded** in `data/README.md`, the delivery **made read-only**, and the sample sheet filled from the sample metadata. If no git identity is set, it asks for your name and email and **saves them for this project only** (never globally). It then **makes the first commit itself** (and asks before including files it didn't generate), and ends by asking what you want to compare. | NERV is the organization that builds and runs the base everything launches from. |
 | `sync-ratio` | **Lists folders that changed significantly without a README update** and **drafts the updates** (only "Current state" and "Last major change"). | The sync ratio measures how well pilot and Eva move as one; here, how well a README matches its folder. |
 | `magi-review` | **Risk-scaled review.** **TRIVIAL** changes are skipped. **STANDARD** changes get one reviewer applying three lenses. **CRITICAL** changes get **three independent seats that vote**: MELCHIOR-1 (science), BALTHASAR-2 (safety), CASPER-3 (craft). A **2/3 majority wins**; **BALTHASAR can veto** on hard-rule violations. | The MAGI are three supercomputers that decide by majority vote. |
 | `yashima-blueprint` | **Plans an analysis before any results exist.** It **reads the project first**, **ranks the fatal risks** (those no later code change can fix, such as batch confounded with condition) and **names the false result each would produce**, then, once you agree, **commits the analysis plan and its thresholds**. The plan carries its own confirmatory scope and an append-only Deviations section. It hands off to boundary tests and `magi-review`; **it writes no code**. | Operation Yashima had one shot, so everything that could make it miss was removed before firing. |
-
-`nerv-init` also installs the **raw-data guard**. New files in `data/raw/` are allowed, with a reminder to record their provenance in `data/README.md` and a ready-to-run SHA-256 command. Changing, moving, or deleting an existing raw file needs your approval, and the request warns that approving cannot be undone, because raw data is not in git. If a raw file changes, by an approved edit or some other way such as a script, the agent is told after the fact that its provenance record no longer matches and that getting it back means fetching it again from its source.
 
 ## Install
 
@@ -70,7 +67,7 @@ This puts the skills in `.claude/skills/` (Claude Code) and `.agents/skills/` (C
 npx skills add tingtmu/Seq-Unit-01 -g -a claude-code -a codex --skill nerv-init sync-ratio magi-review yashima-blueprint -y
 ```
 
-This puts the skills in `~/.claude/skills/` and `~/.agents/skills/`, so they are available in every project without reinstalling. They are not part of any project's repo, so a clone on another machine needs its own install. The hooks that `nerv-init` generates still live in each project.
+This puts the skills in `~/.claude/skills/` and `~/.agents/skills/`, so they are available in every project without reinstalling. They are not part of any project's repo, so a clone on another machine needs its own install. The files that `nerv-init` generates, including the doc-sync report in `.nerv/scripts/`, still live in each project.
 
 Install paths and flags checked against the `vercel-labs/skills` docs on 2026-11-01 (per-project paths and `--copy` on 2026-10-29).
 
@@ -101,11 +98,11 @@ Each skill folder is self-contained, so you can copy just one, for example only 
 ```
 skills/
   nerv-init/     SKILL.md, references/interview.md, scripts/{scaffold.py,sync_ratio.py},
-                 templates/{base,addons,engines,languages}/, hooks/{raw_guard.py,adapters/}
+                 templates/{base,addons,engines,languages}/
   sync-ratio/    SKILL.md
   magi-review/   SKILL.md, references/{levels,seat-briefs,receiving-feedback}.md
   yashima-blueprint/ SKILL.md
-tests/           pytest for the scaffold, hooks, templates, and skill docs
+tests/           pytest for the scaffold, the doc-sync report, templates, and skill docs
 assets/          banner.svg (README art) and make_banner.py, which generates it
 ```
 
@@ -113,27 +110,21 @@ Run the tests with `python -m pytest`; the only requirement is pytest.
 
 ## Requirements
 
-- Python 3 (standard library) for hooks and the scaffold script
+- Python 3 (standard library) for the scaffold script
 - git
 - Node, only for `npx skills`
 
-## Hooks and their limits
+## Raw data protection
 
-`nerv-init` copies the hook script into the project (`.nerv/hooks/`) and wires it up for each agent; it also copies the doc-sync report that `sync-ratio` runs into `.nerv/scripts/`. The project owns its copies, and they keep working if the skills are removed.
+`nerv-init` installs no agent hooks. Raw data is protected in three ways:
 
-| Hook | Claude Code (`.claude/settings.json`) | Codex (`.codex/hooks.json`) |
-|------|---------------------------------------|-----------------------------|
-| Raw-data guard, before a write | `PreToolUse` on Write/Edit/MultiEdit/NotebookEdit/Bash/PowerShell; existing raw file → **ask** you, warning that approving cannot be undone | `PreToolUse` on `apply_patch`/`Bash`; existing raw file → **deny** with instructions (Codex hooks have no "ask") |
-| Raw-data guard, after a write | `PostToolUse` on the same tools: compares `data/raw/` with the raw snapshot (`.nerv/raw-snapshot.json`, git-ignored); new raw files → provenance reminder with a SHA-256 command for your OS, modified or removed raw files → reported after the fact, with a note that their provenance records in `data/README.md` no longer match | `PostToolUse` on `apply_patch`/`Bash`: same |
+- **A hard rule.** The generated `AGENTS.md` says never to delete, move, overwrite, or edit files in `data/raw/`, that deliveries there are read-only, and that fixes are workflow steps writing to `data/processed/`.
+- **Read-only deliveries.** Once a delivery's provenance is recorded, `nerv-init` makes it read-only at the OS level (`chmod -R a-w`, or `attrib +R /S` on Windows). `data/raw/` itself stays writable, so the next delivery goes in a new folder without changing permissions. The generated `data/README.md` has the commands, including how to make a delivery writable again to replace a broken file.
+- **Review.** `magi-review` checks every change for code that writes, moves, or deletes under `data/raw/`, including through scripts and workflow outputs, and a hard-rule violation is a veto.
 
-Limitations:
-- **The raw-data guard is best-effort, not a security boundary.** Shell detection is a heuristic for `rm`, `mv`, `cp` onto existing files, `sed -i`/`perl -i`, `truncate`, `tee`, `>`/`>>`, and PowerShell `Remove-Item`/`Move-Item`/`Set-Content`/`Out-File`. Indirect writes, such as a script that writes into `data/raw/`, are not prevented: after each covered tool call, the guard compares each raw file's size and modification time with the raw snapshot and reports new, modified, or removed files. Rewrites that keep both size and modification time are missed, and a raw change from a failed command is reported at the next covered tool call. For real protection, `nerv-init` makes each delivery in `data/raw/` read-only at the OS level once its checksums are recorded; the generated `data/README.md` gives the commands for later deliveries.
-- If the guard itself fails (for example, on malformed input), it allows the action and writes the error to stderr, so a broken hook never breaks a session.
-- **Codex silently skips project hooks until you trust them.** Open `codex` in the project root, run `/hooks`, and trust the nerv hooks. Until you do, the raw-data guard is **off** in Codex, and Codex itself does not warn you. `nerv-init` prints this step in its next steps after scaffolding. Re-trust after any change to `.codex/hooks.json`.
-- Codex runs hook commands with relative paths, so start Codex from the project root.
-- Claude Code hook commands use `python` on Windows and `python3` elsewhere, chosen when the project is scaffolded.
+Limit: on macOS and Linux, a read-only delivery's files cannot be deleted or overwritten by any tool until someone restores write permission. On Windows, the read-only attribute blocks overwrites and PowerShell or Python deletes, but **Git Bash `rm` still deletes read-only files** (checked on 2026-11-02). There, the hard rule is the protection.
 
-Hook schemas and Codex's trust behavior checked on 2026-10-29 against the Claude Code hooks reference and the Codex source (`openai/codex`).
+Projects created by earlier versions have a raw-data hook in `.nerv/hooks/`, `.claude/settings.json`, and `.codex/hooks.json`. It keeps working; delete those files to remove it.
 
 ## License
 

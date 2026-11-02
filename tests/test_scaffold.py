@@ -32,8 +32,7 @@ def assert_common(project):
     for folder in README_FOLDERS:
         text = (project / folder / "README.md").read_text(encoding="utf-8")
         assert "## Current state" in text and "{{" not in text
-    for name in ("AGENTS.md", "CLAUDE.md", "README.md", ".gitignore", ".nerv/scripts/sync_ratio.py",
-                 ".nerv/hooks/raw_guard.py", ".claude/settings.json", ".codex/hooks.json"):
+    for name in ("AGENTS.md", "CLAUDE.md", "README.md", ".gitignore", ".nerv/scripts/sync_ratio.py"):
         assert (project / name).is_file(), name
     assert not (project / ".nerv/hooks/sync_ratio.py").exists()
     assert not list(project.rglob("*.tmpl")) and not list(project.rglob("*.append"))
@@ -74,7 +73,7 @@ def test_other_assay_uses_base_only(tmp_path):
     assert not (project / "config/qc_thresholds.tsv").exists()
     assert "ATAC-seq" in (project / "AGENTS.md").read_text()
     top = {p.name for p in project.iterdir()}
-    assert top == {".git", ".gitattributes", ".gitignore", ".nerv", ".claude", ".codex", "AGENTS.md", "CLAUDE.md", "README.md",
+    assert top == {".git", ".gitattributes", ".gitignore", ".nerv", "AGENTS.md", "CLAUDE.md", "README.md",
                    "config", "data", "workflow", "scripts", "notebooks", "envs", "results", "tests", "docs"}
 
 
@@ -94,7 +93,7 @@ def test_git_add_quiet_with_autocrlf(tmp_path):
     eol = git(project, "ls-files", "--eol").splitlines()
     text_files = [line for line in eol if line.startswith("i/lf")]
     assert text_files and all("attr/text=auto eol=lf" in line for line in text_files)
-    for name in (".nerv/hooks/raw_guard.py", "workflow/run_all.sh"):
+    for name in (".nerv/scripts/sync_ratio.py", "workflow/run_all.sh"):
         assert any(line.endswith(name) for line in text_files), name
 
 def env_dependencies(project):
@@ -286,27 +285,26 @@ def create(tmp_path):
 GIT_COMMANDS = ("git config", "git commit", "git add")
 
 
-def assert_two_user_steps(steps):
-    """Exactly the raw-data guard entry, then the read-only entry; no git command or sample sheet."""
-    assert len(steps) == 2, steps
-    assert "raw-data guard" in steps[0] and "read-only" in steps[1]
-    for step in steps:
-        assert not any(c in step for c in GIT_COMMANDS), step
-        assert "config/samples.tsv" not in step, step
+def assert_one_user_step(steps):
+    """Exactly the read-only entry; no git command or sample sheet."""
+    assert len(steps) == 1, steps
+    assert "read-only" in steps[0]
+    assert not any(c in steps[0] for c in GIT_COMMANDS), steps[0]
+    assert "config/samples.tsv" not in steps[0], steps[0]
 
 
 @pytest.mark.skipif(shutil.which("git") is None, reason="git not available")
 def test_identity_set_leaves_commit_to_agent(tmp_path, identity_set):
     result = create(tmp_path)
     assert result["git"] == "initialized" and result["git_identity"] == "set"
-    assert_two_user_steps(result["next_steps"])
+    assert_one_user_step(result["next_steps"])
 
 
 @pytest.mark.skipif(shutil.which("git") is None, reason="git not available")
 def test_identity_missing_has_no_git_step(tmp_path, identity_missing):
     result = create(tmp_path)
     assert result["git"] == "initialized" and result["git_identity"] == "missing"
-    assert_two_user_steps(result["next_steps"])
+    assert_one_user_step(result["next_steps"])
 
 
 def test_git_unavailable_reports_identity_missing(tmp_path, identity_set, monkeypatch):
@@ -315,27 +313,21 @@ def test_git_unavailable_reports_identity_missing(tmp_path, identity_set, monkey
     monkeypatch.setattr(scaffold.subprocess, "run", no_git)
     result = create(tmp_path)
     assert result["git"] == "unavailable" and result["git_identity"] == "missing"
-    assert_two_user_steps(result["next_steps"])
+    assert_one_user_step(result["next_steps"])
 
 
 def test_created_result_lists_next_steps(tmp_path, identity_missing):
     result = create(tmp_path)
     steps = result["next_steps"]
     assert isinstance(steps, list) and all(isinstance(s, str) and s for s in steps)
-    assert len(steps) == 2, steps
-    guard, read_only = steps
-
-    assert "raw-data guard" in guard and "/hooks" in guard
-    assert "Codex" in guard and "project root" in guard[:guard.index("Claude Code")]
-    assert "off in Codex until" in guard
-    assert "again after any change to `.codex/hooks.json`" in guard
-    assert "Claude Code" in guard and "restart Claude Code" in guard
-    assert "sync reminder" not in guard and "sync_ratio.py" not in guard
+    assert len(steps) == 1, steps
+    read_only = steps[0]
 
     assert len(re.findall(r"[.!?](?:\s|$)", read_only)) <= 2, read_only
     assert "delivery" in read_only and "data/raw/" in read_only
-    assert "best-effort" in read_only and "new delivery folder" in read_only
+    assert "new delivery folder" in read_only
     assert "chmod" not in read_only and "attrib" not in read_only
+    assert not any(w in read_only.lower() for w in ("guard", "hook", "/hooks")), read_only
     assert not re.search(r"\block\b", read_only, re.IGNORECASE)
 
 
@@ -366,6 +358,13 @@ def test_data_readme_explains_adding_a_delivery(tmp_path):
     assert not re.search(r"\block\b", readme, re.IGNORECASE)
 
 
+def test_data_readme_states_windows_limit(tmp_path):
+    readme = (build(tmp_path) / "data/README.md").read_text(encoding="utf-8")
+    section = readme.split("### Adding a delivery", 1)[1].split("### Provenance", 1)[0]
+    assert "Git Bash `rm`" in section and "hard rule" in section, section
+    assert not re.search(r"hook|guard", readme, re.IGNORECASE)
+
+
 def test_no_next_steps_when_nothing_created(tmp_path):
     _, planned = scaffold.scaffold(answers(), tmp_path, dry_run=True)
     assert "next_steps" not in planned
@@ -383,8 +382,7 @@ def test_git_works_and_data_ignored(tmp_path):
     tracked = set(git(project, "ls-files", "--others", "--exclude-standard").split())
     assert "data/raw/S1.fastq.gz" not in tracked and "data/processed/x.tsv" not in tracked
     assert "results/de.h5ad" not in tracked
-    assert {"data/README.md", "data/raw/.gitkeep", "AGENTS.md", ".nerv/hooks/raw_guard.py"} <= tracked
-    git(project, "check-ignore", ".nerv/raw-snapshot.json")  # exits non-zero if not ignored
+    assert {"data/README.md", "data/raw/.gitkeep", "AGENTS.md", ".nerv/scripts/sync_ratio.py"} <= tracked
 
 
 def test_sensitive_adds_rules_and_ignores(tmp_path):
@@ -398,43 +396,25 @@ def test_sensitive_adds_rules_and_ignores(tmp_path):
     assert {"results/README.md", "data/README.md", "config/samples.tsv"} <= untracked
 
 
+def test_raw_data_rule_names_deletion(tmp_path):
+    agents = (build(tmp_path) / "AGENTS.md").read_text(encoding="utf-8")
+    first_rule = re.search(r"^1\. (.+)$", agents, re.MULTILINE).group(1)
+    assert "Never delete, move, overwrite, or edit files in `data/raw/`" in first_rule
+    assert "read-only" in first_rule
+    assert "record its source and checksum in `data/README.md`" in first_rule
+
+
 def test_not_sensitive_has_no_extra_rules(tmp_path):
     assert "sensitive" not in (build(tmp_path) / "AGENTS.md").read_text()
 
 
-def test_adapters_point_to_project_hooks(tmp_path):
+def test_no_agent_hooks(tmp_path):
+    """No hook files or hook config, so nothing can intercept an intake move or run at end of turn."""
     project = build(tmp_path)
-    claude = json.loads((project / ".claude/settings.json").read_text())
-    commands = [h["command"] for groups in claude["hooks"].values() for g in groups for h in g["hooks"]]
-    assert all(".nerv/hooks/" in c and "{{" not in c for c in commands)
-    codex = json.loads((project / ".codex/hooks.json").read_text())
-    commands = [h["command"] for groups in codex["hooks"].values() for g in groups for h in g["hooks"]]
-    assert all(c.split()[1].startswith(".nerv/hooks/") for c in commands)
-
-
-def test_adapters_have_no_stop_hook(tmp_path):
-    project = build(tmp_path)
-    for path in (NERV_INIT / "hooks/adapters/claude-settings.json", NERV_INIT / "hooks/adapters/codex-hooks.json",
-                 project / ".claude/settings.json", project / ".codex/hooks.json"):
-        assert "Stop" not in json.loads(path.read_text())["hooks"], path
-
-
-@pytest.mark.parametrize("adapter", ["claude-settings.json", "codex-hooks.json"])
-def test_guard_pre_and_post_matchers_cover_same_tools(adapter):
-    hooks = json.loads((NERV_INIT / "hooks/adapters" / adapter).read_text())["hooks"]
-    matchers = {event: [g["matcher"] for g in hooks[event] if "raw_guard.py" in g["hooks"][0]["command"]]
-                for event in ("PreToolUse", "PostToolUse")}
-    assert matchers["PreToolUse"] == matchers["PostToolUse"] and len(matchers["PreToolUse"]) == 1
-
-
-def test_installed_guard_finds_project_root(tmp_path):
-    project = build(tmp_path)
-    (project / "data/raw/S1.fq").write_text("x")
-    event = {"hook_event_name": "PreToolUse", "tool_name": "Edit", "cwd": str(project),
-             "tool_input": {"file_path": "data/raw/S1.fq"}}
-    out = subprocess.run([sys.executable, str(project / ".nerv/hooks/raw_guard.py"), "--agent", "claude"],
-                         input=json.dumps(event), capture_output=True, text=True).stdout
-    assert json.loads(out)["hookSpecificOutput"]["permissionDecision"] == "ask"
+    for path in (".nerv/hooks", ".claude/settings.json", ".codex/hooks.json"):
+        assert not (project / path).exists(), path
+    assert "raw-snapshot" not in (project / ".gitignore").read_text(encoding="utf-8")
+    assert (project / ".nerv/scripts/sync_ratio.py").is_file()
 
 
 def test_installed_sync_report_runs(tmp_path):

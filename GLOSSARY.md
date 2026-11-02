@@ -39,7 +39,7 @@ A README in each main folder with four sections: Purpose, Conventions, Current s
 _Avoid_: folder doc, local doc, sub-README
 
 **Hard rule**:
-A short, non-negotiable rule listed in AGENTS.md, such as never modifying raw data in place. Hard rules are enforced where the tools allow.
+A short, non-negotiable rule listed in AGENTS.md, such as never deleting raw data. Hard rules are enforced where the tools allow.
 _Avoid_: guardrail, constraint, policy
 
 **Principle**:
@@ -47,7 +47,7 @@ A flexible best-practice guideline, such as KISS or Fail Fast. Principles shape 
 _Avoid_: soft rule, convention, best practice
 
 **Next steps**:
-The follow-up actions the scaffold reports to the user after it creates a project, such as trusting the Codex hooks. The list lives in one place, `NEXT_STEPS` in `scaffold.py`, and the agent shows it in full.
+The follow-up actions the scaffold reports to the user after it creates a project, such as making each delivery read-only. The list lives in one place, `NEXT_STEPS` in `scaffold.py`, and the agent shows it in full.
 _Avoid_: todo list, checklist, post-install steps
 
 ### Keeping documents current (`sync-ratio`)
@@ -128,6 +128,7 @@ _Avoid_: input data, source data, original files
 **Delivery**:
 A set of raw files received together, kept as received in its own folder under `data/raw/`. Each delivery is made read-only once its provenance is recorded; new data arrives as a new delivery.
 _Avoid_: batch (this glossary uses "batch" only in the statistical sense), dataset, upload
+_Codename_: AT Field (a read-only delivery is the barrier around raw data; strong, but not absolute)
 
 **Provenance record**:
 The entry in `data/README.md` giving where a raw file came from and its checksum.
@@ -136,12 +137,3 @@ _Avoid_: metadata, data log, manifest
 **Data intake**:
 Taking a delivery into a project: checking the provider's checksums, placing the files under `data/raw/`, writing their provenance records, making the delivery read-only, and updating the sample sheet from the sample metadata.
 _Avoid_: import, ingest, migration, adoption
-
-**Raw-data guard**:
-The hook that lets agents add new raw files but requires a person's approval to change or delete an existing one, and reports raw files changed some other way after the fact. It is a best-effort safeguard, not a security boundary.
-_Avoid_: lock, firewall, protection
-_Codename_: AT Field (the barrier around raw data; strong, but not absolute)
-
-**Raw snapshot**:
-The raw-data guard's saved record of each raw file's size and modification time. Comparing raw data with it shows which raw files are new, modified, or removed since the last check.
-_Avoid_: manifest, checksum list, index, baseline

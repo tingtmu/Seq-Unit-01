@@ -7,7 +7,7 @@
 
 ## Hard rules
 
-1. Never modify raw data in place. `data/raw/` is immutable; corrections are a workflow step that writes to `data/processed/`. When adding raw files, record source and checksum in `data/README.md`.
+1. Never delete, move, overwrite, or edit files in `data/raw/`; deliveries there are read-only. Fixes are workflow steps that write to `data/processed/`. When adding a delivery, record its source and checksum in `data/README.md`.
 2. Never commit secrets, credentials, or protected/controlled-access data.
 3. The reference genome build and annotation version are pinned in one place: `config/config.yaml`. Never hardcode them elsewhere.
 4. Results come from `config/` + `workflow/` + `envs/` only; no untracked manual steps.

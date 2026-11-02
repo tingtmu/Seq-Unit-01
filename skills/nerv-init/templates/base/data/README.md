@@ -6,7 +6,7 @@ Input data. `raw/` holds data exactly as received (immutable). `reference/` hold
 
 ## Conventions
 
-- Never edit, overwrite, move, or delete files in `raw/`. Fixes are workflow steps that write to `processed/`. A hook asks for approval before any change to an existing raw file it can see, and reports other raw changes after the fact.
+- Never edit, overwrite, move, or delete files in `raw/`. Fixes are workflow steps that write to `processed/`.
 - Each delivery (raw files received together) gets its own folder, `raw/<delivery>/`, with the files as received: no unzipping or renaming.
 - Checksum files that came with a delivery (`*.md5`, `md5sum.txt`) are verified before the files go into `raw/`.
 - Every raw file is listed in the provenance table below with its source and SHA-256 checksum, computed with any tool the shell offers.
@@ -27,12 +27,12 @@ Commands, run from the project root. To make a delivery read-only:
 - `chmod -R a-w data/raw/<delivery>` (macOS, Linux, Git Bash on Windows)
 - `attrib +R /S data\raw\<delivery>\*` (Windows cmd or PowerShell)
 
+On Windows, read-only files still block overwrites, but Git Bash `rm` can delete them, so the hard rule in `AGENTS.md` is the protection there.
+
 To make it writable again, only to replace a broken file, and read-only again after recording the new file:
 
 - `chmod -R u+w data/raw/<delivery>` (macOS, Linux, Git Bash on Windows)
 - `attrib -R /S data\raw\<delivery>\*` (Windows cmd or PowerShell)
-
-In Codex, the raw-data guard denies replacing a raw file, so the user runs the replacement.
 
 ### Provenance
 

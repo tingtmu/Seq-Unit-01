@@ -70,7 +70,7 @@
 ## 7. Integration and harness review
 
 - [x] 7.1 Run the full suite with `.venv/Scripts/python -m pytest` and verify it passes.
-- [ ] 7.2 Run the review gate on the harness before spending any sessions: commit (repo identity, Co-Authored-By line, no push), then have a fresh-context reviewer check the commit range against AGENTS.md and this change's spec. Focus on the isolation, the arm diff, and the validity of traps and mutants. Fix and commit the confirmed findings. Verify that the fix commit exists and the suite still passes.
+- [x] 7.2 Run the review gate on the harness before spending any sessions: commit (repo identity, Co-Authored-By line, no push), then have a fresh-context reviewer check the commit range against AGENTS.md and this change's spec. Focus on the isolation, the arm diff, and the validity of traps and mutants. Fix and commit the confirmed findings. Verify that the fix commit exists and the suite still passes.
 
 ## 8. Pilot
 

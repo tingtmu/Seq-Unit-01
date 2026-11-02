@@ -110,7 +110,7 @@ def mean(values):
 # --- directions ---
 
 def yes_no_direction(rows, measure):
-    diffs = [sum(bool(r.get(measure)) for r in by(rows, t, "A")) - sum(bool(r.get(measure)) for r in by(rows, t, "B"))
+    diffs = [sum((r.get(measure) is True) for r in by(rows, t, "A")) - sum((r.get(measure) is True) for r in by(rows, t, "B"))
              for t in tasks_of(rows)]
     if diffs and all(d >= 1 for d in diffs):
         return 1
@@ -153,19 +153,19 @@ def outcome_direction(rows):
 
 def high(rows, arm):
     runs = [r for r in rows if r["arm"] == arm]
-    return bool(runs) and sum(bool(r.get("test_first")) for r in runs) >= HIGH_SHARE * len(runs)
+    return bool(runs) and sum((r.get("test_first") is True) for r in runs) >= HIGH_SHARE * len(runs)
 
 
 def test_first_did_better(rows):
-    yes = [r["hidden_pass_rate"] for r in rows if r.get("test_first")]
-    no = [r["hidden_pass_rate"] for r in rows if not r.get("test_first")]
+    yes = [r["hidden_pass_rate"] for r in rows if r.get("test_first") is True]
+    no = [r["hidden_pass_rate"] for r in rows if r.get("test_first") is False]
     return len(yes) >= MIN_GROUP and len(no) >= MIN_GROUP and mean(yes) - mean(no) >= RATE_THRESHOLD
 
 
 def flags_for(rows):
     first = first_sessions(rows)
     arm_a = [r for r in first if r["arm"] == "A"]
-    exposed = bool(arm_a) and sum(bool(r.get("exposed")) for r in arm_a) >= EXPOSED_SHARE * len(arm_a)
+    exposed = bool(arm_a) and sum((r.get("exposed") is True) for r in arm_a) >= EXPOSED_SHARE * len(arm_a)
     return Flags(exposed, high(first, "A"), high(first, "B"), yes_no_direction(first, "test_first"),
                  outcome_direction(rows), test_first_did_better(first))
 
@@ -207,8 +207,8 @@ def task_table(rows):
                 f"{fmt(mean(r.get('regression_free') for r in s2))} ({len(s2)})",
                 fmt(mean(r.get("mutant_kill_rate") for r in f)),
                 f"{fmt(mean(costs))} ({sum(c is None for c in costs)})",
-                f"{sum(bool(r.get('exposed')) for r in f)}/{len(f)}",
-                f"{sum(bool(r.get('test_first')) for r in f)}/{len(f)}",
+                f"{sum((r.get('exposed') is True) for r in f)}/{len(f)}",
+                f"{sum((r.get('test_first') is True) for r in f)}/{len(f)}",
                 f"{sum(r.get('saw_red') is True for r in f)}/{len(f)}",
                 fmt(mean(r.get("test_code_ratio") for r in f)),
                 str(sum(bool(r.get("out_of_repo")) for r in all_sessions)),
@@ -236,9 +236,16 @@ def flag_line(name, flags):
             f"{flags.tf_better}")
 
 
+def missing_runs(rows, reps=3):
+    first = first_sessions(rows)
+    return [f"{t} arm {a}: {len(by(first, t, a))} of {reps} counted first sessions"
+            for t in tasks_of(rows) for a in "AB" if len(by(first, t, a)) < reps]
+
+
 def write_summary(csv_path, out_path):
     rows = load(csv_path)
     main = verdict(rows)
+    short = missing_runs(rows)
     unflagged = [r for r in rows if not r.get("out_of_repo")]
     clean = verdict(unflagged)
     invalid = [r for r in rows if r.get("invalid")]
@@ -246,7 +253,8 @@ def write_summary(csv_path, out_path):
     pilots = [r for r in rows if r.get("pilot")]
     lines = ["# Cue benchmark summary", "",
              "Haiku only, 3 reps per arm: a self-test, not statistical significance. The raw table is below.", "",
-             "## Verdict", "", f"**{main['verdict']}**", "", f"Row applied: {main['row']}",
+             "## Verdict", "", *([f"**INCOMPLETE:** {'; '.join(short)}.", ""] if short else []),
+             f"**{main['verdict']}**", "", f"Row applied: {main['row']}",
              flag_line("Inputs", main["flags"]), f"- Cost (A vs B, lower is better): {cost_direction(rows):+d}", "",
              f"Without flagged sessions: **{clean['verdict']}** (row {clean['row']})",
              flag_line("Inputs", clean["flags"]), "",

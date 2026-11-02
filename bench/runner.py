@@ -268,8 +268,16 @@ def do_run(run, cap, results, pilot=False):
     score.append_row(results, score.score_session(task, repo, logs, 2))
 
 
-def results_file():
-    return build.BENCH / "results" / datetime.date.today().isoformat() / "runs.csv"
+def results_file(logs=None):
+    """The runs.csv of this benchmark, fixed at its first pilot or grid step, so a grid restarted
+    on a later date keeps writing to the same file."""
+    marker = Path(logs or LOGS) / "results-path.txt"
+    if marker.is_file():
+        return Path(marker.read_text(encoding="utf-8").strip())
+    path = build.BENCH / "results" / datetime.date.today().isoformat() / "runs.csv"
+    marker.parent.mkdir(parents=True, exist_ok=True)
+    marker.write_text(str(path), encoding="utf-8")
+    return path
 
 
 def main(argv=None):

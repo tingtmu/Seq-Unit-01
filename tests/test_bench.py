@@ -580,3 +580,82 @@ def test_summary_states_rule_and_row(tmp_path):
     assert "0.10" in text and "25%" in text and "6 of 9" in text
     assert "Without flagged sessions" in text and "t1-A-r1" in text
     assert "pass^3" in text and (tmp_path / "summary.md").read_text(encoding="utf-8") == text
+
+
+# --- review fixes (7.2) ---
+
+def write_stream(path, calls, done=True):
+    events = [{"type": "system", "subtype": "init", "cwd": str(FIXTURE_REPO)}]
+    for i, (name, inp) in enumerate(calls):
+        events.append({"type": "assistant", "message": {"content": [
+            {"type": "tool_use", "id": f"t{i}", "name": name, "input": inp}]}})
+        events.append({"type": "user", "message": {"content": [
+            {"type": "tool_result", "tool_use_id": f"t{i}", "content": "ok"}]}})
+    if done:
+        events.append({"type": "result", "subtype": "success", "total_cost_usd": 0.01})
+    path.write_text("".join(json.dumps(e) + "\n" for e in events), encoding="utf-8")
+    return path
+
+
+@pytest.mark.parametrize("command", [
+    "cat > scripts/qc_filter.py << 'EOF'\ndef f(): ...\nEOF",
+    "python - <<'EOF'\nopen('scripts/qc_filter.py', 'w').write('x')\nEOF",
+    "echo x | tee scripts/qc_filter.py",
+    "python -c \"from pathlib import Path; Path('scripts/qc_filter.py').write_text('x')\""])
+def test_bash_module_write_counts(tmp_path, command):
+    s = write_stream(tmp_path / "s.jsonl", [("Bash", {"command": command}),
+                                            ("Read", {"file_path": "docs/principles.md"}),
+                                            ("Write", {"file_path": "tests/test_qc.py", "content": "x"})])
+    p = score.parse_stream(s, FIXTURE_REPO, "scripts/qc_filter.py", module_exists=True)
+    assert p["test_first"] is False and p["exposed"] is False
+
+
+def test_bash_redirect_of_stderr_is_not_a_write():
+    assert score.bash_write_targets("pytest tests/ 2>&1 | cat") == []
+
+
+def test_unseen_module_write_is_unknown(tmp_path):
+    s = write_stream(tmp_path / "s.jsonl", [("Read", {"file_path": "docs/principles.md"}),
+                                            ("Write", {"file_path": "tests/test_qc.py", "content": "x"})])
+    p = score.parse_stream(s, FIXTURE_REPO, "scripts/qc_filter.py", module_exists=True)
+    assert p["test_first"] == "unknown" and p["exposed"] == "unknown"
+    p = score.parse_stream(s, FIXTURE_REPO, "scripts/qc_filter.py", module_exists=False)
+    assert p["test_first"] is True and p["exposed"] is True
+
+
+def test_glob_pattern_outside_repo_flagged():
+    repo = FIXTURE_REPO
+    assert score.out_of_repo_paths({"pattern": "C:/Users/**/*.md"}, repo, "Glob")
+    assert score.out_of_repo_paths({"pattern": "../../Seq-Unit-01/bench/tasks/**/*.py"}, repo, "Glob")
+    assert score.out_of_repo_paths({"pattern": "def test_", "glob": "../other/**/*.py"}, repo, "Grep")
+    assert score.out_of_repo_paths({"pattern": "scripts/**/*.py"}, repo, "Glob") == []
+    assert score.out_of_repo_paths({"pattern": "/a/b"}, repo, "Grep") == []
+
+
+def test_hidden_run_leaves_run_repo_untouched(toy_task, tmp_path):
+    writer = TOY_REFERENCE + ("\nfrom pathlib import Path\n(Path(__file__).resolve().parents[1] / 'leak.txt')"
+                              ".write_text('hidden input')\n")
+    repo = toy_repo(tmp_path, writer)
+    logs = tmp_path / "logs"
+    logs.mkdir()
+    (logs / "session1.jsonl").write_bytes(stream("stream_limit.jsonl").read_bytes())
+    (logs / "session1.meta.json").write_text(json.dumps({"run": "toy-A-r1", "task": "toy", "arm": "A", "rep": 1,
+                                                         "session": 1, "invalid": []}))
+    row = score.score_session(toy_task, repo, logs, 1, python=sys.executable)
+    assert row["hidden_pass_rate"] == 1.0
+    assert not (repo / "leak.txt").exists()
+
+
+def test_results_file_fixed_at_first_step(tmp_path):
+    first = runner.results_file(tmp_path)
+    (tmp_path / "results-path.txt").write_text(str(tmp_path / "2026-01-01" / "runs.csv"))
+    assert runner.results_file(tmp_path) == tmp_path / "2026-01-01" / "runs.csv" != first
+
+
+def test_summary_flags_incomplete_grid(tmp_path):
+    rows = [r for r in synthetic_rows(tf([3, 3, 3], [1, 1, 1])) if r["run"] != "t2-B-r3"]
+    csv_path = tmp_path / "runs.csv"
+    for row in rows:
+        score.append_row(csv_path, row)
+    text = summarize.write_summary(csv_path, tmp_path / "summary.md")
+    assert "INCOMPLETE" in text and "t2 arm B: 2 of 3" in text

@@ -1,0 +1,140 @@
+{
+  "module": "scripts/check_design.py",
+  "first": {
+    "all_problems_reported": {
+      "tests": [
+        "test_task.py::test_all_problems_reported"
+      ],
+      "mutants": [
+        "first_error_only"
+      ]
+    },
+    "duplicate_after_strip": {
+      "tests": [
+        "test_task.py::test_duplicate_after_stripping_whitespace"
+      ],
+      "mutants": [
+        "duplicates_raw"
+      ]
+    },
+    "paired_needs_fastq_2": {
+      "tests": [
+        "test_task.py::test_paired_row_without_fastq_2"
+      ],
+      "mutants": [
+        "fastq_1_only"
+      ]
+    },
+    "fastq_exists": {
+      "tests": [
+        "test_task.py::test_missing_fastq_file"
+      ],
+      "mutants": [
+        "files_unchecked"
+      ]
+    },
+    "level_names_stripped": {
+      "tests": [
+        "test_task.py::test_level_names_stripped"
+      ],
+      "mutants": [
+        "levels_unstripped"
+      ]
+    },
+    "level_case_conflict": {
+      "tests": [
+        "test_task.py::test_levels_differing_only_by_case"
+      ],
+      "mutants": [
+        "case_folded"
+      ]
+    },
+    "confounded_design": {
+      "tests": [
+        "test_task.py::test_batch_confounded_with_condition"
+      ],
+      "mutants": [
+        "rank_unchecked"
+      ]
+    },
+    "named_level_absent": {
+      "tests": [
+        "test_task.py::test_reference_level_absent",
+        "test_task.py::test_contrast_level_absent"
+      ],
+      "mutants": [
+        "named_levels_unchecked"
+      ]
+    },
+    "single_replicate_warning": {
+      "tests": [
+        "test_task.py::test_single_replicate_is_a_warning"
+      ],
+      "mutants": [
+        "single_replicate_error",
+        "single_replicate_ignored"
+      ]
+    },
+    "bom_header": {
+      "tests": [
+        "test_task.py::test_bom_header"
+      ],
+      "mutants": [
+        "bom_unhandled"
+      ]
+    }
+  },
+  "followup": {
+    "pe_rows_paired": {
+      "tests": [
+        "test_followup.py::test_mixed_layout_is_clean",
+        "test_followup.py::test_pe_row_without_fastq_2"
+      ],
+      "mutants": [
+        "layout_ignored"
+      ]
+    },
+    "se_rows_single": {
+      "tests": [
+        "test_followup.py::test_se_row_with_fastq_2"
+      ],
+      "mutants": [
+        "se_fastq_2_allowed"
+      ]
+    },
+    "layout_values": {
+      "tests": [
+        "test_followup.py::test_unknown_layout"
+      ],
+      "mutants": [
+        "layout_unknown_accepted"
+      ]
+    },
+    "batch_optional": {
+      "tests": [
+        "test_followup.py::test_batch_absent_means_condition_only"
+      ],
+      "mutants": [
+        "batch_absent_error"
+      ]
+    },
+    "confounding_regression": {
+      "tests": [
+        "test_task.py::test_batch_confounded_with_condition",
+        "test_followup.py::test_confounding_checked_with_layout"
+      ],
+      "mutants": [
+        "rank_dropped"
+      ]
+    },
+    "duplicate_regression": {
+      "tests": [
+        "test_task.py::test_duplicate_after_stripping_whitespace",
+        "test_followup.py::test_duplicates_checked_with_layout"
+      ],
+      "mutants": [
+        "duplicates_dropped"
+      ]
+    }
+  }
+}

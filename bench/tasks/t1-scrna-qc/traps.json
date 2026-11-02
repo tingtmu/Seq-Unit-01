@@ -1,0 +1,121 @@
+{
+  "module": "scripts/qc_filter.py",
+  "first": {
+    "per_sample_thresholds": {
+      "tests": [
+        "test_task.py::test_per_sample_thresholds"
+      ],
+      "mutants": [
+        "pooled"
+      ]
+    },
+    "log_scale": {
+      "tests": [
+        "test_task.py::test_mad_on_log_scale"
+      ],
+      "mutants": [
+        "raw_scale"
+      ]
+    },
+    "normal_scaled_mad": {
+      "tests": [
+        "test_task.py::test_mad_is_normal_scaled"
+      ],
+      "mutants": [
+        "unscaled_mad"
+      ]
+    },
+    "mad_zero": {
+      "tests": [
+        "test_task.py::test_mad_zero_sample"
+      ],
+      "mutants": [
+        "mad_zero_drops"
+      ]
+    },
+    "low_tail_only": {
+      "tests": [
+        "test_task.py::test_low_tail_only"
+      ],
+      "mutants": [
+        "two_sided"
+      ]
+    },
+    "mito_prefix_on_symbol": {
+      "tests": [
+        "test_task.py::test_mito_prefix_matched_on_symbol"
+      ],
+      "mutants": [
+        "mito_hardcoded",
+        "mito_gene_id"
+      ]
+    },
+    "blank_means_mad": {
+      "tests": [
+        "test_task.py::test_blank_threshold_means_mad"
+      ],
+      "mutants": [
+        "blank_as_zero"
+      ]
+    },
+    "zero_count_cell": {
+      "tests": [
+        "test_task.py::test_zero_count_cell"
+      ],
+      "mutants": [
+        "zero_division"
+      ]
+    },
+    "barcode_collision": {
+      "tests": [
+        "test_task.py::test_cell_ids_unique_across_samples"
+      ],
+      "mutants": [
+        "barcode_collision"
+      ]
+    }
+  },
+  "followup": {
+    "one_sided_helper_kept": {
+      "tests": [
+        "test_task.py::test_low_tail_only"
+      ],
+      "mutants": [
+        "two_sided_helper"
+      ]
+    },
+    "doublet_strict": {
+      "tests": [
+        "test_followup.py::test_doublet_score_strictly_above"
+      ],
+      "mutants": [
+        "doublet_inclusive"
+      ]
+    },
+    "missing_barcode_error": {
+      "tests": [
+        "test_followup.py::test_missing_barcode_is_an_error"
+      ],
+      "mutants": [
+        "missing_barcode_ignored"
+      ]
+    },
+    "mito_mad_raw_upper": {
+      "tests": [
+        "test_followup.py::test_blank_mito_on_raw_percent",
+        "test_followup.py::test_blank_mito_uses_mad_upper_tail"
+      ],
+      "mutants": [
+        "mito_mad_log"
+      ]
+    },
+    "mito_mad_zero": {
+      "tests": [
+        "test_followup.py::test_blank_mito_mad_zero"
+      ],
+      "mutants": [
+        "mito_mad_zero_drops"
+      ]
+    }
+  }
+}

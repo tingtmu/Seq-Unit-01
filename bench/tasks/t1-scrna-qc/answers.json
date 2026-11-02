@@ -1,0 +1,11 @@
+{
+  "project_name": "ko-qc",
+  "assay": "scrnaseq",
+  "engine": "scripts",
+  "languages": ["python"],
+  "compute": "local",
+  "sensitive": false,
+  "date": "2026-11-03",
+  "project_question": "Does knocking out the gene change which cell populations survive in mouse lung? Four 10x Genomics samples (two wildtype, two knockout), filtered by Cell Ranger.",
+  "reference": {"organism": "Mus musculus", "genome_build": "GRCm39", "annotation": "GENCODE vM33"}
+}

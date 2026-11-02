@@ -1,0 +1,19 @@
+{
+  "module": "scripts/annotate_de.py",
+  "first": {
+    "version_stripped": {"tests": ["test_task.py::test_versions_stripped_on_annotation"], "mutants": ["raw_ids"]},
+    "par_y_not_duplicated": {"tests": ["test_task.py::test_par_y_rows_do_not_duplicate"], "mutants": ["par_y_duplicated"]},
+    "left_join": {"tests": ["test_task.py::test_left_join_keeps_unmatched"], "mutants": ["inner_join"]},
+    "na_padj": {"tests": ["test_task.py::test_na_padj_kept_and_not_significant"], "mutants": ["na_padj_significant", "na_padj_dropped"]},
+    "padj_boundary": {"tests": ["test_task.py::test_padj_equal_to_alpha_not_significant"], "mutants": ["boundary_inclusive"]},
+    "duplicate_symbols": {"tests": ["test_task.py::test_duplicate_symbols_keyed_on_id"], "mutants": ["dedup_by_symbol"]},
+    "sort_order": {"tests": ["test_task.py::test_sort_order"], "mutants": ["na_first", "ties_unbroken"]}
+  },
+  "followup": {
+    "no_post_hoc_lfc_filter": {"tests": ["test_followup.py::test_no_post_hoc_lfc_filter"], "mutants": ["post_hoc_lfc_filter"]},
+    "ties_by_shrunk": {"tests": ["test_followup.py::test_ties_ranked_by_shrunk"], "mutants": ["ties_by_unshrunk"]},
+    "shrunk_reported": {"tests": ["test_followup.py::test_shrunk_column_reported"], "mutants": ["shrunk_not_reported"]},
+    "na_regression": {"tests": ["test_task.py::test_na_padj_kept_and_not_significant"], "mutants": ["na_regression"]},
+    "boundary_regression": {"tests": ["test_task.py::test_padj_equal_to_alpha_not_significant"], "mutants": ["boundary_regression"]}
+  }
+}

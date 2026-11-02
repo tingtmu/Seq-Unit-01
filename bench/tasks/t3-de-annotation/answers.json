@@ -1,0 +1,11 @@
+{
+  "project_name": "trt-de",
+  "assay": "bulk-rnaseq",
+  "engine": "scripts",
+  "languages": ["python"],
+  "compute": "local",
+  "sensitive": false,
+  "date": "2026-11-03",
+  "project_question": "Which genes change at least two-fold with the drug treatment in human cell lines? DESeq2 was run with a log2 fold-change threshold of 1, and the result needs annotating for the report.",
+  "reference": {"organism": "Homo sapiens", "genome_build": "GRCh38", "annotation": "GENCODE v43"}
+}

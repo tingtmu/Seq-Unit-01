@@ -119,6 +119,40 @@ _Avoid_: blocker, showstopper, critical issue
 A change to a committed analysis plan, added as a dated entry in its Deviations section giving what changed, why, and whether it was made before or after seeing results. The original plan text is never edited.
 _Avoid_: amendment, revision, plan update
 
+### Benchmarking the cues
+
+**Cue**:
+A line of template prose in the skeleton that nudges an agent toward a practice, such as writing a failing test first. A cue is advice an agent may or may not read, not a hard rule.
+_Avoid_: hint, nudge, instruction
+
+**Arm**:
+One of the two versions of a generated project compared in the benchmark: A as shipped, B with the cues under test removed and nothing else changed.
+_Avoid_: variant, treatment, condition (this glossary uses "condition" only in the statistical sense)
+
+**Run repo**:
+A generated project built for one benchmark run of one task in one arm, in which the agent works. It lives outside this repository and is thrown away afterwards.
+_Avoid_: sandbox, workspace, test project
+
+**Trap**:
+A detail of a task where a careless but plausible implementation gives wrong results, such as computing a threshold over all samples pooled instead of per sample.
+_Avoid_: gotcha, pitfall, edge case
+
+**Hidden test**:
+A test the agent never sees that checks its finished module, one or more per trap. Hidden tests decide the outcome of a session.
+_Avoid_: oracle, grader, eval test
+
+**Mutant**:
+A copy of a task's correct implementation with exactly one trap fallen into. Mutants check that the hidden tests catch each trap, and measure how many traps the agent's own tests would catch.
+_Avoid_: buggy version, fault injection, bad copy
+
+**Silent-wrong result**:
+A module that runs without error and returns output of the documented shape, but with wrong values. A crash is not silent-wrong.
+_Avoid_: false pass, quiet failure
+
+**Follow-up session**:
+A second, separate conversation on the same run repo, with a request that extends the first task and tempts the agent to break what it built.
+_Avoid_: second turn, continuation, round two
+
 ### Protecting data
 
 **Raw data**:

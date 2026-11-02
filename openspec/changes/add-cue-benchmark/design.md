@@ -39,19 +39,22 @@ Seq-Unit-01/bench/                      versioned, not shipped by npx skills
   README.md                             how to run each step
   arms.py                               CUE_LINES: (file, exact line) removed for arm B
   build.py                              scaffold + project question + data + baseline commit [+ arm B patch]
+  taskdef.py                            task folder layout, mutant sources, prompt wording check
   runner.py                             plan (interleaved), session command, follow-up
   score.py                              hidden tests, mutants, event stream, raw checksum -> one row
   summarize.py                          tables + decision rule -> summary.md
+  bench-venv.txt                        the pinned package set of bench-venv
   tasks/<task>/
-    answers.json  prompt.md  followup.md  generate.py (seeded data)
+    answers.json  allowed_phrases.txt  prompt.md  followup.md  generate.py (seeded data)
     reference.py  reference_followup.py
     hidden/test_task.py  hidden/test_followup.py  hidden/conftest.py (loads the module by path)
-    mutants/<trap>.py                   one per trap
-    traps.json                          trap -> hidden test ids + mutant ids
+    mutants.json                        per stage: mutant id -> exact [old, new] replacements on that
+                                        stage's reference, so a mutant can't drift from it
+    traps.json                          module path; per stage: trap -> hidden test ids + mutant ids
   results/<date>/runs.csv  summary.md   committed
 
 personal_proj/nerv_all_runs/
-  bench-venv/                           pinned pandas, numpy, scipy, pytest for sessions and scoring
+  bench-venv/                           pinned pandas, numpy, scipy, pytest, PyYAML (T2 reads design.yaml)
   bench-runs/<task>-<arm>-r<n>/         one run repo per run (two sessions each), not committed
   bench-logs/<task>-<arm>-r<n>/         session1.jsonl, session2.jsonl, checksums, package sets
 ```
@@ -80,13 +83,14 @@ claude -p "<prompt.md>" --model claude-haiku-5-5 --setting-sources project
        --permission-mode acceptEdits
        --allowedTools "Bash(python:*)" "Bash(pytest:*)" "Bash(git:*)" "Bash(ls:*)" "Bash(cat:*)"
        --disallowedTools WebSearch WebFetch "Bash(pip:*)" "Bash(python -m pip:*)"
-       --max-budget-usd <cap> --no-session-persistence  [+ the auto-memory switch found in the spike]
-cwd = run repo; stdout -> bench-logs/<run>/sessionN.jsonl
-env: PATH starts with bench-venv; PYTHONDONTWRITEBYTECODE=1; PIP_NO_INDEX=1; timeout 30 min
+       --max-budget-usd <cap> --no-session-persistence
+cwd = run repo; stdin closed; stdout -> bench-logs/<run>/sessionN.jsonl
+env: PATH starts with bench-venv; PYTHONDONTWRITEBYTECODE=1; PIP_NO_INDEX=1;
+     CLAUDE_CODE_DISABLE_AUTO_MEMORY=1 (the spike's auto-memory switch); timeout 30 min
 ```
 
 - **Settings, MCP, skills.** `--setting-sources project` keeps user settings out. `--strict-mcp-config` with no config means no MCP servers. `--disable-slash-commands` turns off skills and commands; generated projects install none, so neither arm loses anything. The runner reads the stream's `init` event. If any skill, command, MCP server, or user rule appears there, the session is invalid and is not scored. The spike (task 1.4) confirms the command gives a clean `init`.
-- **Auto-memory.** Auto-memory would let session 2 read notes from session 1. The spike finds the switch that turns it off in `-p` mode and adds it to the command. Independently, after every session the runner checks the agent memory folder for the run repo's path; any file there makes the run invalid (spec "Hidden material out of reach").
+- **Auto-memory.** Auto-memory would let session 2 read notes from session 1. The spike found no CLI flag for it, but the environment variable `CLAUDE_CODE_DISABLE_AUTO_MEMORY=1` turns it off in `-p` mode (bench/README.md, Spike). Independently, after every session the runner checks the agent memory folder for the run repo's path; any file there makes the run invalid (spec "Hidden material out of reach").
 - **Permissions.** `acceptEdits` with a short Bash allowlist lets the agent edit and test, while edits outside the run repo still need a permission that headless mode cannot grant. Rejected: `bypassPermissions`, which would let a session write anywhere.
 - **Package changes.** Pip is denied, and with `PIP_NO_INDEX=1` it can't fetch anything. The runner records `pip freeze` of `bench-venv` before and after each session. Any change makes the run invalid, and the runner restores the environment from the pinned list before the next session.
 - **Reading outside the repo.** `python:*` and `cat:*` can still read outside the repo. That can't be blocked without losing realism, so the scorer flags any tool input that names an absolute path outside the run repo or climbs out with `..`. The summary lists the flagged sessions.
@@ -97,7 +101,7 @@ env: PATH starts with bench-venv; PYTHONDONTWRITEBYTECODE=1; PIP_NO_INDEX=1; tim
 
 `stage_followup(run)` runs in this order, and only then starts session 2:
 1. Copy the task's follow-up inputs from `generate.py` into the run repo. New raw files go to a new delivery `data/raw/delivery-02/`, with a provenance line appended to `data/README.md`, made read-only. Derived inputs (doublet scores, a re-run DE table) go under `data/processed/`.
-2. Record the base for session 2's diff: the tree hash of a temp copy with every file staged (`git add -A` in the copy). Nothing is committed in the run repo.
+2. Record the base for session 2's diff: the tree hash of the working tree with every file staged into a temporary index file outside the repo (`GIT_INDEX_FILE`, `git add -A`, `git write-tree`). The tree's objects stay in the run repo's object store, so the scorer's copy can diff against it, while the repo's own index, branch, and status are untouched. Nothing is committed in the run repo.
 3. Take the `data/raw/` checksum and the package set.
 
 ### Tasks and traps
@@ -123,9 +127,9 @@ The prompt also states the reason codes.
 | 0-count cell: pct_mito defined as 0, cell dropped by the counts filter | division by zero, NaN kept |
 | same barcode in two samples: cell id is `sample_id:barcode` | barcodes collide in the output |
 
-Follow-up: "`qc_thresholds.tsv` gains a `doublet_score_max` column, and `max_pct_mito` may now be blank. When it is blank, use a per-sample MAD upper tail on pct_mito. Also drop cells whose score in `data/processed/doublets/<sample>.tsv` is strictly above `doublet_score_max`. A barcode missing from the scores file is an error, raised with the sample and barcode." The staged thresholds file adds the column and blanks `max_pct_mito` for two samples. The bait is that reusing the one-sided MAD helper for an upper tail tempts making it two-sided, which breaks the counts filter. `hidden/test_followup.py` checks the new behavior. Regression is the original `test_task.py`, rerun against the inputs extended with doublet scores (passing on the follow-up reference).
+Follow-up: "`qc_thresholds.tsv` gains a `doublet_score_max` column, and `max_pct_mito` may now be blank. When it is blank, use a per-sample MAD upper tail on pct_mito. Also drop cells whose score in `data/processed/doublets/<sample>.tsv` (a new `doublet_dir` argument) is strictly above `doublet_score_max`. A barcode missing from the scores file is an error, raised with the sample and barcode." The staged thresholds file adds the column and blanks `max_pct_mito` for two samples. The bait is that reusing the one-sided MAD helper for an upper tail tempts making it two-sided, which breaks the counts filter. `hidden/test_followup.py` checks the new behavior. Regression is the original `test_task.py`, rerun against the inputs extended with doublet scores (passing on the follow-up reference).
 
-**T2 `t2-design-check`** (assay `bulk-rnaseq`, human). `scripts/check_design.py: check_design(samples_path, design_path, raw_dir) -> list[Problem]` with `Problem(severity, sample_id, message)`. It collects every problem and raises on none. The inputs are a core-delivered `config/samples.tsv` with a BOM header, and `config/design.yaml` with formula `~ batch + condition`, a reference level, and contrasts.
+**T2 `t2-design-check`** (assay `bulk-rnaseq`, human). `scripts/check_design.py: check_design(samples_path, design_path, raw_dir) -> list[Problem]` with `Problem(severity, code, sample_id, message)`. The prompt lists the fixed codes, so hidden tests never depend on message wording. It collects every problem and raises on none. The inputs are a core-delivered `config/samples.tsv` with a BOM header, and `config/design.yaml` with formula `~ batch + condition`, a reference level, and contrasts.
 
 | Trap | Careless version (mutant) |
 |---|---|
@@ -137,7 +141,7 @@ Follow-up: "`qc_thresholds.tsv` gains a `doublet_score_max` column, and `max_pct
 | batch fully confounded with condition (design matrix not full rank) is an error | checks only that the columns exist |
 | reference level or contrast level absent from the data is an error | not checked |
 | a condition level with one replicate is a warning, not an error | error, or ignored |
-| UTF-8 BOM in the header | `﻿sample_id` reported as a missing column |
+| UTF-8 BOM in the header | read with the `csv` module as `utf-8` (pandas strips a BOM itself), so `﻿sample_id` is reported as a missing column |
 
 Follow-up: "the core now sends mixed single- and paired-end runs with a `layout` column (`SE`/`PE`), and `batch` may be absent (then the formula is `~ condition`)." Regression: the confounding and duplicate checks must still fire, and the paired check must apply to `PE` rows.
 

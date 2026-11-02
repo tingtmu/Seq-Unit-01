@@ -1,0 +1,108 @@
+{
+  "first": {
+    "pooled": [
+      [
+        "MAD_SCALE = 1.4826\n",
+        "MAD_SCALE = 1.4826\nPOOLED = {}\n\n\ndef mad_low_pooled(values, pooled, nmads):\n    x = np.log1p(np.asarray(pooled, dtype=float))\n    med = np.median(x)\n    mad = MAD_SCALE * np.median(np.abs(x - med))\n    return None if mad == 0 else np.log1p(values) < med - nmads * mad\n"
+      ],
+      [
+        "    rows = read_thresholds(thresholds)\n",
+        "    rows = read_thresholds(thresholds)\n    POOLED.clear()\n    for folder in matrix_dirs.values():\n        m, _, f = read_mex(folder)\n        c, g, _ = metrics(m, f, mito_prefix)\n        POOLED.setdefault(\"n_counts\", []).extend(c)\n        POOLED.setdefault(\"n_genes\", []).extend(g)\n"
+      ],
+      [
+        "    low = mad_low_outliers(values, nmads)\n",
+        "    low = mad_low_pooled(values, POOLED[metric], nmads)\n"
+      ]
+    ],
+    "raw_scale": [
+      [
+        "    x = np.log1p(values)\n",
+        "    x = np.asarray(values, dtype=float)\n"
+      ]
+    ],
+    "unscaled_mad": [
+      [
+        "MAD_SCALE = 1.4826",
+        "MAD_SCALE = 1.0"
+      ]
+    ],
+    "mad_zero_drops": [
+      [
+        "    if mad == 0:\n        return None\n    return x < med",
+        "    return x < med"
+      ]
+    ],
+    "two_sided": [
+      [
+        "    return x < med - nmads * mad",
+        "    return (x < med - nmads * mad) | (x > med + nmads * mad)"
+      ]
+    ],
+    "mito_hardcoded": [
+      [
+        "feats[\"symbol\"].str.startswith(mito_prefix)",
+        "feats[\"symbol\"].str.startswith(\"MT-\")"
+      ]
+    ],
+    "mito_gene_id": [
+      [
+        "feats[\"symbol\"].str.startswith(mito_prefix)",
+        "feats[\"gene_id\"].str.startswith(mito_prefix)"
+      ]
+    ],
+    "blank_as_zero": [
+      [
+        "return None if text == \"\" else float(text)",
+        "return 0.0 if text == \"\" else float(text)"
+      ]
+    ],
+    "zero_division": [
+      [
+        "np.divide(100.0 * mito, n_counts, out=np.zeros_like(n_counts), where=n_counts > 0)",
+        "100.0 * mito / n_counts"
+      ]
+    ],
+    "barcode_collision": [
+      [
+        "\"cell_id\": [f\"{sample_id}:{b}\" for b in barcodes]",
+        "\"cell_id\": barcodes"
+      ]
+    ]
+  },
+  "followup": {
+    "two_sided_helper": [
+      [
+        "    if tail == \"low\":\n        return x < med - nmads * mad\n    return x > med + nmads * mad",
+        "    return (x < med - nmads * mad) | (x > med + nmads * mad)"
+      ]
+    ],
+    "doublet_inclusive": [
+      [
+        "> value(row, \"doublet_score_max\")",
+        ">= value(row, \"doublet_score_max\")"
+      ]
+    ],
+    "missing_barcode_ignored": [
+      [
+        "    if missing:\n        raise",
+        "    if False:\n        raise"
+      ],
+      [
+        "np.array([scores[b] for b in barcodes])",
+        "np.array([scores.get(b, 0.0) for b in barcodes])"
+      ]
+    ],
+    "mito_mad_log": [
+      [
+        "high = mad_outliers(pct_mito, nmads, \"high\", log=False)",
+        "high = mad_outliers(pct_mito, nmads, \"high\", log=True)"
+      ]
+    ],
+    "mito_mad_zero_drops": [
+      [
+        "    if high is None:\n        notes.append(\"mad_zero:pct_mito\")\n        return np.zeros(len(pct_mito), dtype=bool)\n    return high",
+        "    if high is None:\n        return pct_mito > np.median(pct_mito)\n    return high"
+      ]
+    ]
+  }
+}

@@ -1,0 +1,108 @@
+{
+  "first": {
+    "first_error_only": [
+      [
+        "    problems += check_replicates(sheet, design)\n    return problems",
+        "    problems += check_replicates(sheet, design)\n    errors = [p for p in problems if p.severity == \"error\"]\n    return errors[:1] or problems"
+      ]
+    ],
+    "duplicates_raw": [
+      [
+        "return sheet.apply(lambda column: column.str.strip())",
+        "return sheet.apply(lambda column: column if column.name == \"sample_id\" else column.str.strip())"
+      ]
+    ],
+    "fastq_1_only": [
+      [
+        "for r in rows.itertuples() if r.fastq_2 == \"\"]",
+        "for r in rows.itertuples() if r.fastq_1 == \"\"]"
+      ]
+    ],
+    "files_unchecked": [
+      [
+        "elif name and not (Path(raw_dir) / name).is_file():",
+        "elif False:"
+      ]
+    ],
+    "levels_unstripped": [
+      [
+        "return sheet.apply(lambda column: column.str.strip())",
+        "return sheet.apply(lambda column: column.str.strip() if column.name == \"sample_id\" else column)"
+      ]
+    ],
+    "case_folded": [
+      [
+        "            if len(forms) > 1:",
+        "            if False:"
+      ]
+    ],
+    "rank_unchecked": [
+      [
+        "if np.linalg.matrix_rank(matrix) < matrix.shape[1]:",
+        "if False:"
+      ]
+    ],
+    "named_levels_unchecked": [
+      [
+        "if factor in sheet.columns and str(level).strip() not in set(sheet[factor]):",
+        "if False:"
+      ]
+    ],
+    "single_replicate_error": [
+      [
+        "Problem(\"warning\", \"single_replicate\"",
+        "Problem(\"error\", \"single_replicate\""
+      ]
+    ],
+    "single_replicate_ignored": [
+      [
+        "            if n == 1:",
+        "            if n == 0:"
+      ]
+    ],
+    "bom_unhandled": [
+      [
+        "sheet = pd.read_csv(path, sep=\"\\t\", dtype=str, keep_default_na=False, encoding=\"utf-8-sig\")",
+        "sheet = pd.DataFrame(list(__import__(\"csv\").DictReader(open(path, encoding=\"utf-8\", newline=\"\"), delimiter=\"\\t\")))"
+      ]
+    ]
+  },
+  "followup": {
+    "layout_ignored": [
+      [
+        "    if \"layout\" not in sheet.columns:\n        rows = paired_rows(sheet)",
+        "    if True:\n        rows = paired_rows(sheet)"
+      ]
+    ],
+    "se_fastq_2_allowed": [
+      [
+        "elif r.layout == \"SE\" and fastq_2 != \"\":",
+        "elif False:"
+      ]
+    ],
+    "layout_unknown_accepted": [
+      [
+        "if r.layout not in (\"SE\", \"PE\"):",
+        "if False:"
+      ]
+    ],
+    "batch_absent_error": [
+      [
+        "    if \"batch\" in factors and \"batch\" not in sheet.columns:\n        factors = [f for f in factors if f != \"batch\"]\n",
+        ""
+      ]
+    ],
+    "rank_dropped": [
+      [
+        "        problems += check_rank(sheet, factors)",
+        "        pass"
+      ]
+    ],
+    "duplicates_dropped": [
+      [
+        "    problems += check_duplicates(sheet)\n",
+        ""
+      ]
+    ]
+  }
+}

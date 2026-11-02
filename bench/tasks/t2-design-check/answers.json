@@ -1,0 +1,11 @@
+{
+  "project_name": "trt-bulk",
+  "assay": "bulk-rnaseq",
+  "engine": "scripts",
+  "languages": ["python"],
+  "compute": "local",
+  "sensitive": false,
+  "date": "2026-11-03",
+  "project_question": "Which genes respond to the drug treatment and to the knockout in human cell lines? Paired-end bulk RNA-seq from the sequencing core, analysed with DESeq2.",
+  "reference": {"organism": "Homo sapiens", "genome_build": "GRCh38", "annotation": "GENCODE v43"}
+}

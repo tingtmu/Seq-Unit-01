@@ -30,20 +30,19 @@
 |--------------------------------------------------------------------------------------|
 | NERV BUILDS THE BASE                 | THE PILOT FLIES  you + your agent              |
 |                                      | Bring your own methods, tools, and skills.     |
-| +==============+    +==============+ |  + - - - - - - - - +        + - - - - - - +    |
-| |<> nerv-init  | -> |<> yashima-   | -->  BUILD / RUN /     ----->    PUBLISH        |
-| | Set up +     |    |   blueprint  | |    EXPLORE                    figures, paper, |
-| | take in data |    | Plan the     | |    code, methods,             data deposit    |
-| +==============+    | analysis     | |    compute, skills                            |
-|   ^ new delivery    +==============+ |    e.g. DESeq2 / Scanpy,                      |
-|   +-------------+     ^ deviation    |    SLURM, TDD                                 |
-|                 |     +--------------|------+    |                                   |
-|                 +--------------------|-----------+  (dashed, from the loop)          |
+| +==============+  +=================+|  + - - - - - - - - +        + - - - - - - +    |
+| |<> nerv-init  |->|<> yashima-blueprint|->  BUILD / RUN /   ----->    PUBLISH        |
+| | Set up +     |  | Plan the        ||    EXPLORE                    figures, paper, |
+| | take in data |  | analysis        ||    code, methods,             data deposit    |
+| +==============+  +=================+|    compute, skills                            |
+|                       ^ deviation    |    e.g. DESeq2 / Scanpy,                      |
+|                       +--------------|------+  SLURM, TDD                            |
+|                                      |      |  (dashed, from the loop)               |
 |                                      |    ^                    |                     |
 |                                      |    +--[<> magi-review]--+   gates on the loop |
 |                                      |       [<> sync-ratio ]                        |
 |--------------------------------------------------------------------------------------|
-| == ALWAYS ON: A few hard rules protect raw data and reproducibility.                 |
+| == ALWAYS ON: A few hard rules protect raw data, secrets, and reproducibility.       |
 |               Folder READMEs keep your agent oriented. ===========================   |
 | NERV sets up the base and checks the gates. How you build is up to you and your agent.|
 +--------------------------------------------------------------------------------------+
@@ -51,7 +50,9 @@
 
 - NERV phases are filled with a dark tint of the skill colour plus a solid stroke and a lit hex lamp. The user's phases have a dashed white outline, no fill, and an unlit lamp. This tells "covered" from "yours" in greyscale too.
 - `magi-review` and `sync-ratio` are small gate chips on the loop's return arrow, not phases: they check what the user built and don't build it.
-- The "new delivery" and "deviation" arrows are thin and dashed. They show that intake repeats per delivery and that a plan changes through dated Deviations, not by being frozen.
+- The "deviation" arrow is thin and dashed. It shows that a plan changes through dated Deviations, not by being frozen.
+- There is no "new delivery" arrow back to `nerv-init`. That skill sets up a new project only; later deliveries follow the generated `data/README.md` ("Adding a delivery") under hard rule 1, which the always-on band already covers. Drawing the arrow would overclaim (found in the proposal review).
+- Each skill name is one line of drawn text in its own box or chip (for example `yashima-blueprint` is never split), so the picture shows every name whole, and the test can find it.
 - Alternatives considered: a two-lane swimlane (most explicit, but table-like and text-heavy), a ring (most EVA, but wrongly implies setup repeats, and curved text is hard to read), and a vertical timeline (good on phones, but pushes Quick start far down). The user chose launch and loop.
 
 ### Text
@@ -63,7 +64,7 @@
 | Right subheader | Bring your own methods, tools, and skills. |
 | Build box | BUILD / RUN / EXPLORE · your code, methods, compute, and other agent skills · e.g. DESeq2 / Scanpy, SLURM, TDD |
 | Publish box | PUBLISH · figures, paper, data deposit |
-| Band | ALWAYS ON · A few hard rules protect raw data and reproducibility. Folder READMEs keep your agent oriented. |
+| Band | ALWAYS ON · A few hard rules protect raw data, secrets, and reproducibility. Folder READMEs keep your agent oriented. |
 | Caption | NERV sets up the base and checks the gates. How you build is up to you and your agent. |
 
 The two headers are the only EVA wording, and they echo the briefing just above. Everything else uses plain words and the skill names. Examples in "yours" boxes avoid anything the skill set has deferred (nf-core, other Nextflow layouts). Wording can be tightened during apply if a line doesn't fit, as long as the spec's honesty requirement still holds.
@@ -84,7 +85,7 @@ Alternative: copy the constants with a keep-in-sync comment. Rejected: two copie
 
 New `tests/test_readme_art.py`, standard library plus pytest:
 1. The generator's output equals the committed `assets/lifecycle.svg` after normalising line endings (`\r\n` → `\n`).
-2. Every skill folder under `skills/` appears by name in the SVG.
+2. Every skill folder under `skills/` appears by its full name inside a single `<text>` element of the SVG. Text in `<title>` and `<desc>` doesn't count, so the description can't hide a skill that isn't drawn.
 3. `README.md` has an image of `assets/lifecycle.svg` with non-empty alt text, placed after the "NERV briefing" blockquote and before `## Quick start`.
 
 The honesty requirement is checked at review, not by grepping wording.
@@ -95,7 +96,7 @@ The SVG carries `role="img"`, a `<title>`, and a `<desc>` that states the whole 
 
 ## Risks / Trade-offs
 
-- [The banner script changes, but its output can't be regenerated here without fontTools and the font file] → The `make_banner.py` diff is limited to replacing constant definitions with an import of identical values. The apply step checks that each imported value equals the old literal, and the review gate checks the diff.
+- [The banner script changes, but its output can't be regenerated here without fontTools and the font file] → The `make_banner.py` diff is limited to replacing constant definitions with an import of identical values. The apply step compiles the script, checks that every imported name exists in `palette.py`, and checks that each value equals the old literal in `git show 07c9bf5:assets/make_banner.py`. The review gate checks the diff.
 - [Text overflows a box in some viewer's fallback font] → Use monospace for labels (predictable widths), leave at least 10% padding, and render with both Chrome and Edge during apply.
 - [Small text on phones] → Accepted, as for the banner. The alt text and the README's own skill table carry the content.
 - [The picture goes stale when a skill is added] → Test 2 fails until the new skill is placed in the picture.

@@ -7,7 +7,7 @@ The repo README SHALL show, directly under the NERV briefing, a picture of a seq
 
 #### Scenario: Every skill is placed
 - **WHEN** the skill set contains a skill
-- **THEN** that skill's name appears in the lifecycle picture
+- **THEN** that skill's full name appears as drawn text in the lifecycle picture, not only in its title or description
 
 #### Scenario: Placed under the briefing
 - **WHEN** a reader opens the README
@@ -19,6 +19,10 @@ The lifecycle picture SHALL say that a few hard rules and the folder READMEs app
 #### Scenario: Rules stated, not hidden
 - **WHEN** a reader looks at the user's phases in the picture
 - **THEN** the picture also shows that the hard rules and folder READMEs apply there, and the caption describes NERV as setting up the base and checking the gates
+
+#### Scenario: A skill is shown only where it acts
+- **WHEN** a phase recurs in a generated project without the skill (such as a later delivery, which follows the project's `data/README.md`)
+- **THEN** the picture does not route that recurrence back through the skill
 
 #### Scenario: No deferred layout as an example
 - **WHEN** the skill set has deferred support for a layout (such as nf-core)

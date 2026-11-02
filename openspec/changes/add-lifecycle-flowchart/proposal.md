@@ -11,7 +11,7 @@ The README lists what each skill does, but not where the skills sit in a project
   - NERV phases, filled in their skill colours: "Set up + take in data" (`nerv-init`) and "Plan the analysis" (`yashima-blueprint`).
   - The user's phases, as dashed outlines: "Build / run / explore" and "Publish", each with plain categories and one small line of examples.
   - `magi-review` and `sync-ratio` as gates on the loop's return arrow.
-  - Return arrows for "new delivery" (back to intake) and "deviation" (back to the plan).
+  - A return arrow labelled "deviation" (back to the plan).
   - An always-on band for the hard rules and folder READMEs, and the caption "NERV sets up the base and checks the gates. How you build is up to you and your agent."
 - The text stays honest: it names the few hard rules NERV keeps and never claims NERV imposes nothing.
 - Add `assets/make_lifecycle.py`, a standard-library generator that writes the SVG from a small phase table, so the art stays consistent and easy to update when a skill is added.

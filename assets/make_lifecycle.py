@@ -10,67 +10,67 @@ import sys
 from pathlib import Path
 from xml.sax.saxutils import escape
 
-from palette import BG, GREEN, ORANGE, PURPLE_METER, PURPLE_TEXT, RED_TEXT, WHITE
+from palette import BG, CYAN, GREEN, HAZARD, ORANGE, PURPLE_METER, PURPLE_TEXT, RED_TEXT, WHITE
 
 MONO = "Consolas, Menlo, 'DejaVu Sans Mono', monospace"
-SANS = "Helvetica, Arial, 'Liberation Sans', sans-serif"
 
-# NERV phases: skill name, description lines, stroke and lamp colour, text colour.
-NERV_PHASES = [
-    ("nerv-init", ["Set up +", "take in data"], PURPLE_METER, PURPLE_TEXT),
-    ("yashima-blueprint", ["Plan the", "analysis"], RED_TEXT, RED_TEXT),
+# Casing: labels in CAPS, skill names and fragments in lowercase, sentences in sentence case.
+# Phases, left to right: title, the skill that runs it (None: you + your agent), description,
+# frame colour, text colour. NERV's phases come first.
+PHASES = [
+    ("SET UP", "nerv-init", ["set up the project,", "take in raw data"], PURPLE_METER, PURPLE_TEXT),
+    ("PLAN", "yashima-blueprint", ["plan the analysis", "before any results"], RED_TEXT, RED_TEXT),
+    ("ANALYZE", None, ["build, run, explore", "your tools + skills"], CYAN, CYAN),
+    ("PUBLISH", None, ["figures, paper,", "data deposit"], CYAN, CYAN),
 ]
-# The user's phases: title, description lines, example line (or None).
-USER_PHASES = [
-    ("BUILD / RUN / EXPLORE", ["your code, methods, compute,", "and other agent skills"],
-     "e.g. DESeq2 / Scanpy, SLURM, TDD"),
-    ("PUBLISH", ["figures, paper,", "data deposit"], None),
-]
-# Gates on the loop's return arrow, top to bottom (the return arrow runs upward).
-GATES = [("magi-review", ORANGE), ("sync-ratio", GREEN)]
+PILOT = "you + your agent"
+LOOP = 2  # the phase the gates loop on; a deviation returns to the phase before it
+GATES = [("magi-review", ORANGE), ("sync-ratio", GREEN)]  # in loop order, top to bottom
 
-HEADER_LEFT = "NERV // SEQ-UNIT-01 OPERATIONS"
-HEADER_RIGHT = "LIFECYCLE OF A PROJECT"
-NERV_HEAD = "NERV BUILDS THE BASE"
-PILOT_HEAD, PILOT_WHO = "THE PILOT FLIES", "you + your agent"
-PILOT_SUB = "Bring your own methods, tools, and skills."
-GATES_LABEL = "GATES ON THE LOOP"
-DEVIATION = "deviation"
+HEADER_LEFT, HEADER_RIGHT = "NERV // SEQ-UNIT-01 OPERATIONS", "LIFECYCLE OF A PROJECT"
+NERV_HEAD, PILOT_HEAD = "NERV BUILDS THE BASE", "THE PILOT FLIES"
+GATES_LABEL, DEVIATION = "GATES ON THE LOOP", "DEVIATION"
 BAND_TAG = "ALWAYS ON"
 BAND_LINES = ["A few hard rules protect raw data, secrets, and reproducibility.",
               "Folder READMEs keep your agent oriented."]
-CAPTION = "NERV sets up the base and checks the gates. How you build is up to you and your agent."
+# The caption, one sentence under each half.
+CAPTION = ("NERV sets up the base and checks the gates.", "How you build is up to you and your agent.")
 TITLE = "Lifecycle of a sequencing project with NERV skills"
 DESC = ("NERV skills cover two phases: nerv-init sets up the project and takes in the raw data, "
-        "and yashima-blueprint plans the analysis. Building, running, exploring, and publishing are "
-        "yours and your agent's, with your own methods, tools, and skills. On the build loop, "
-        "magi-review and sync-ratio are the gates, and a deviation goes back to the plan. In every "
-        "phase, a few hard rules protect raw data, secrets, and reproducibility, and folder READMEs "
-        "keep your agent oriented.")
+        "and yashima-blueprint plans the analysis before any results exist. Analysis (building, running, "
+        "exploring) and publishing are yours and your agent's, with your own tools and skills. On the "
+        "analysis loop, magi-review and sync-ratio are the gates, and a deviation goes back to the plan. "
+        "In every phase, a few hard rules protect raw data, secrets, and reproducibility, and folder "
+        "READMEs keep your agent oriented.")
 
-# Layout, in viewBox pixels. Text is sized from estimated advance widths.
-W, H = 1200, 640
+# Layout, in viewBox pixels. All text is one monospace size, so widths are predictable.
+W = 1200
 LEFT, RIGHT = 60, 1140
-SIZE = 18  # smallest text; about 13px when GitHub scales the picture to 880px
-MONO_EM, SANS_EM = 0.6, 0.55  # advance width per character, in em (sans is a generous average)
-TRACK = 1  # letter-spacing of box titles and chips
-PAD, LAMP_SPACE = 16, 26  # box padding; room for the hex lamp before a box title
-ARROW_GAP, REGION_GAP = 36, 50
-REGION_HEAD_Y, PILOT_SUB_Y = 104, 132
-BOX_TOP, BOX_H, LINE_STEP = 152, 140, 26
-ARROW_Y = BOX_TOP + BOX_H // 2
-LOOP_INSET = 40  # where the loop leaves the build box, from its right edge
-CHIP_H, CHIP_STEP, LOOP_BOTTOM = 36, 52, 440
-BAND_TOP, BAND_H = 470, 84
-CAPTION_Y = 600
+SIZE, EM = 18, 0.6  # about 13px when GitHub scales the picture to 880px; advance per character
+PAD, LAMP_SPACE = 16, 22  # box padding; room for a hex lamp before its text
+GAP = 40  # between phase boxes, which share one width
+BOX_W = (RIGHT - LEFT - (len(PHASES) - 1) * GAP) // len(PHASES)
+RHYTHM = 24  # vertical space between rows
+REGION_Y = 100
+BOX_TOP, STRIP_H, BOX_H = 124, 36, 144
+CHIP_H, CHIP_GAP, CHIP_PAD = 36, 12, 12
+CHIP_TOP = BOX_TOP + BOX_H + RHYTHM
+LOOP_Y = CHIP_TOP + len(GATES) * (CHIP_H + CHIP_GAP) - CHIP_GAP + RHYTHM
+LABEL_Y = LOOP_Y + 32
+BAND_TOP, BAND_H, HAZARD_W = LABEL_Y + RHYTHM, 84, 24
+H = BAND_TOP + BAND_H + RHYTHM + 60  # the footer mirrors the header
+N_NERV = sum(1 for p in PHASES if p[1])
 
 
-def mono_w(text, track=TRACK):
-    return math.ceil(len(text) * (MONO_EM * SIZE + track))
+def text_w(s, track=0):
+    return math.ceil(len(s) * (EM * SIZE + track))
 
 
-def sans_w(text):
-    return math.ceil(len(text) * SANS_EM * SIZE)
+def col_x(i):
+    return LEFT + i * (BOX_W + GAP)
+
+
+DIVIDER = col_x(N_NERV) - GAP // 2
 
 
 def hexagon(cx, cy, r):
@@ -89,6 +89,10 @@ def text(x, y, cls, content, extra=""):
     return f'<text class="{cls}" x="{x}" y="{y}"{extra}>{escape(content)}</text>'
 
 
+def rect(x, y, w, h, extra):
+    return f'<rect x="{x}" y="{y}" width="{w}" height="{h}" {extra}/>'
+
+
 def arrow(points, dashed=False, cls="flow"):
     """Polyline through points, with an arrowhead at the last one."""
     (x0, y0), (x1, y1) = points[-2], points[-1]
@@ -103,91 +107,80 @@ def arrow(points, dashed=False, cls="flow"):
     return f'<polyline class="{cls}" points="{d}"{dash}/>\n  <polygon class="{cls}-head" points="{tip}"/>'
 
 
-def layout():
-    """Box positions: NERV boxes chain from LEFT, PUBLISH ends at RIGHT, BUILD fills the rest."""
-    boxes, x = [], LEFT
-    for name, lines, col, text_col in NERV_PHASES:
-        w = 2 * PAD + max([LAMP_SPACE + mono_w(name)] + [sans_w(s) for s in lines])
-        boxes.append(dict(x=x, w=w, title=name, lines=lines, example=None, col=col, text_col=text_col, nerv=True))
-        x += w + ARROW_GAP
-    divider = x - ARROW_GAP + REGION_GAP // 2
-    (b_title, b_lines, b_ex), (p_title, p_lines, p_ex) = USER_PHASES
-    p_w = 2 * PAD + max([LAMP_SPACE + mono_w(p_title)] + [sans_w(s) for s in p_lines])
-    build_x = divider + REGION_GAP // 2
-    build_w = RIGHT - p_w - ARROW_GAP - build_x
-    need = 2 * PAD + max([LAMP_SPACE + mono_w(b_title), sans_w(b_ex)] + [sans_w(s) for s in b_lines])
-    assert build_w >= need, f"build box too narrow: {build_w} < {need}"
-    boxes.append(dict(x=build_x, w=build_w, title=b_title, lines=b_lines, example=b_ex, col=WHITE, text_col=WHITE, nerv=False))
-    boxes.append(dict(x=RIGHT - p_w, w=p_w, title=p_title, lines=p_lines, example=p_ex, col=WHITE, text_col=WHITE, nerv=False))
-    return boxes, divider
-
-
-def box(b):
-    x, w = b["x"], b["w"]
-    if b["nerv"]:
-        frame = (f'<rect x="{x}" y="{BOX_TOP}" width="{w}" height="{BOX_H}" fill="{b["col"]}" fill-opacity="0.16" '
-                 f'stroke="{b["col"]}" stroke-width="2"/>')
+def box(i):
+    """A phase: a title strip, who runs it, and what it covers. NERV's are solid, yours are dashed."""
+    title, skill, lines, col, text_col = PHASES[i]
+    x, nerv, number = col_x(i), skill is not None, f"{i + 1:02d}"
+    need = max([text_w(f"{number} {title}", 2), LAMP_SPACE + text_w(skill or PILOT)] + [text_w(s) for s in lines])
+    assert need <= BOX_W - 2 * PAD, f"phase {title} is too wide: {need} > {BOX_W - 2 * PAD}"
+    if nerv:
+        out = [rect(x, BOX_TOP, BOX_W, BOX_H, f'fill="{col}" fill-opacity="0.16"'),
+               rect(x, BOX_TOP, BOX_W, STRIP_H, f'fill="{col}"'),
+               rect(x, BOX_TOP, BOX_W, BOX_H, f'fill="none" stroke="{col}" stroke-width="2"')]
     else:
-        frame = f'<rect class="yours" x="{x}" y="{BOX_TOP}" width="{w}" height="{BOX_H}"/>'
-    out = [frame, lamp(x + PAD + 7, BOX_TOP + 30, b["col"], b["nerv"]),
-           text(x + PAD + LAMP_SPACE, BOX_TOP + 36, "title", b["title"], f' fill="{b["text_col"]}"')]
-    y = BOX_TOP + 36 + 32
-    for line in b["lines"]:
-        out.append(text(x + PAD, y, "body", line))
-        y += LINE_STEP
-    if b["example"]:
-        out.append(text(x + PAD, y, "dim", b["example"]))
+        out = [rect(x, BOX_TOP, BOX_W, STRIP_H, f'fill="{col}" fill-opacity="0.16"'),
+               rect(x, BOX_TOP, BOX_W, BOX_H, f'class="yours" stroke="{col}"')]
+    out.append(f'<text class="head" x="{x + PAD}" y="{BOX_TOP + 24}" fill="{BG if nerv else col}">'
+               f'<tspan opacity="0.6">{number}</tspan> {escape(title)}</text>')
+    op_y = BOX_TOP + STRIP_H + 32
+    out += [lamp(x + PAD + 7, op_y - 6, col, nerv), text(x + PAD + LAMP_SPACE, op_y, "op", skill or PILOT, f' fill="{text_col}"')]
+    out += [text(x + PAD, op_y + 30 + k * 26, "body", line) for k, line in enumerate(lines)]
     return "\n  ".join(out)
 
 
-def chip_w(name):
-    return PAD + 24 + mono_w(name) + PAD
-
-
-def gate(cx, cy, w, name, col):
+def gate(cx, top, w, name, col):
     """A gate chip centred on the loop line; the BG fill hides the line behind it."""
-    x, y = cx - w // 2, cy - CHIP_H // 2
+    x = cx - w // 2
     return "\n  ".join([
-        f'<rect x="{x}" y="{y}" width="{w}" height="{CHIP_H}" fill="{BG}"/>',
-        f'<rect x="{x}" y="{y}" width="{w}" height="{CHIP_H}" fill="{col}" fill-opacity="0.16" stroke="{col}" stroke-width="2"/>',
-        lamp(x + PAD + 7, cy, col, True),
-        text(x + PAD + 24, cy + 6, "title", name, f' fill="{col}"'),
+        rect(x, top, w, CHIP_H, f'fill="{BG}"'),
+        rect(x, top, w, CHIP_H, f'fill="{col}" fill-opacity="0.16" stroke="{col}" stroke-width="2"'),
+        lamp(x + CHIP_PAD + 7, top + CHIP_H // 2, col, True),
+        text(x + CHIP_PAD + LAMP_SPACE, top + CHIP_H // 2 + 6, "op", name, f' fill="{col}"'),
     ])
 
 
-def flows(boxes):
-    """Phase arrows, the build loop with its gates, and the deviation arrow back to the plan."""
-    out = []
-    for a, b in zip(boxes, boxes[1:]):
-        out.append(arrow([(a["x"] + a["w"], ARROW_Y), (b["x"], ARROW_Y)]))
-    plan, build = boxes[1], boxes[2]
+def flows():
+    """Phase arrows; the loop down through the gates and back up; the deviation back to the plan."""
+    mid = BOX_TOP + (STRIP_H + BOX_H) // 2
+    out = [arrow([(col_x(i) + BOX_W, mid), (col_x(i + 1), mid)]) for i in range(len(PHASES) - 1)]
     bottom = BOX_TOP + BOX_H
-    widest = max(chip_w(n) for n, _ in GATES)
-    gate_x = build["x"] + 20 + widest // 2
-    out_x = build["x"] + build["w"] - LOOP_INSET
-    out.append(f'<polyline class="flow" points="{out_x},{bottom} {out_x},{LOOP_BOTTOM} {gate_x},{LOOP_BOTTOM}"/>')
-    out.append(arrow([(gate_x, LOOP_BOTTOM), (gate_x, bottom)]))
-    first_gate_y = LOOP_BOTTOM - 20 - CHIP_H // 2 - (len(GATES) - 1) * CHIP_STEP
-    for i, (name, col) in enumerate(GATES):
-        out.append(gate(gate_x, first_gate_y + i * CHIP_STEP, widest, name, col))
-    out.append(text(out_x + 16, first_gate_y + 6, "key", GATES_LABEL))
-    plan_x = plan["x"] + plan["w"] // 2
-    out.append(arrow([(gate_x, LOOP_BOTTOM), (plan_x, LOOP_BOTTOM), (plan_x, bottom)], dashed=True, cls="dev"))
-    out.append(text(plan_x + 14, bottom + 44, "devlabel", DEVIATION))
+    cx, back_x = col_x(LOOP) + BOX_W // 2, col_x(LOOP) + BOX_W - PAD
+    plan_x = col_x(LOOP - 1) + BOX_W // 2
+    chip_w = 2 * CHIP_PAD + LAMP_SPACE + max(text_w(n) for n, _ in GATES)
+    assert cx + chip_w // 2 + PAD <= back_x, "gate chips crowd the loop's return line"
+    out.append(f'<line class="flow" x1="{cx}" y1="{bottom}" x2="{cx}" y2="{LOOP_Y}"/>')
+    out.append(arrow([(cx, LOOP_Y), (back_x, LOOP_Y), (back_x, bottom)]))
+    out.append(arrow([(cx, LOOP_Y), (plan_x, LOOP_Y), (plan_x, bottom)], dashed=True, cls="dev"))
+    out += [gate(cx, CHIP_TOP + k * (CHIP_H + CHIP_GAP), chip_w, n, c) for k, (n, c) in enumerate(GATES)]
+    out.append(text(cx, LABEL_Y, "key", GATES_LABEL, f' text-anchor="middle" fill="{WHITE}" opacity="0.7"'))
+    out.append(text(plan_x, LABEL_Y, "key", DEVIATION, f' text-anchor="middle" fill="{RED_TEXT}"'))
+    return "\n  ".join(out)
+
+
+def regions():
+    """The two halves: a head and a rule each, split by a dashed divider."""
+    out = []
+    for x, end, label, col in [(LEFT, DIVIDER - GAP // 2, NERV_HEAD, ORANGE), (col_x(N_NERV), RIGHT, PILOT_HEAD, CYAN)]:
+        rule_x = x + text_w(label, 2) + PAD
+        out += [text(x, REGION_Y, "head", label, f' fill="{col}"'),
+                f'<line class="hair" x1="{rule_x}" y1="{REGION_Y - 6}.5" x2="{end}" y2="{REGION_Y - 6}.5"/>']
+    out.append(f'<line class="hair" x1="{DIVIDER}.5" y1="80" x2="{DIVIDER}.5" y2="{LABEL_Y + 8}" stroke-dasharray="4 6"/>')
     return "\n  ".join(out)
 
 
 def band():
-    tag_x, text_x = LEFT + 20, LEFT + 20 + 26 + mono_w(BAND_TAG, 2) + 30
-    first = BAND_TOP + 34
-    out = [
-        f'<rect x="{LEFT}" y="{BAND_TOP}" width="{RIGHT - LEFT}" height="{BAND_H}" fill="{ORANGE}" fill-opacity="0.08" '
-        f'stroke="{ORANGE}" stroke-width="1.5" stroke-opacity="0.7"/>',
-        lamp(tag_x + 7, first - 6, ORANGE, True),
-        text(tag_x + 26, first, "tag", BAND_TAG),
-    ]
-    for i, line in enumerate(BAND_LINES):
-        out.append(text(text_x, first + i * 28, "body", line))
+    """Always on: hazard stripes at both ends, a caution tag, and the rules on the second column's edge."""
+    mid = BAND_TOP + BAND_H // 2
+    text_x = col_x(1)
+    tag_x = text_x - 2 * PAD - LAMP_SPACE - text_w(BAND_TAG, 2)
+    assert tag_x >= LEFT + HAZARD_W + PAD, "band tag runs into the stripes"
+    assert text_x + max(text_w(s) for s in BAND_LINES) + PAD <= RIGHT - HAZARD_W, "band text runs into the stripes"
+    out = [rect(LEFT, BAND_TOP, HAZARD_W, BAND_H, 'fill="url(#hazard)"'),
+           rect(RIGHT - HAZARD_W, BAND_TOP, HAZARD_W, BAND_H, 'fill="url(#hazard)"'),
+           rect(LEFT, BAND_TOP, RIGHT - LEFT, BAND_H, f'fill="none" stroke="{HAZARD}" stroke-width="1.5" stroke-opacity="0.7"'),
+           lamp(tag_x + 7, mid - 8 - 6, HAZARD, True),
+           text(tag_x + LAMP_SPACE, mid - 8, "head", BAND_TAG, f' fill="{HAZARD}"')]
+    out += [text(text_x, mid - 8 + k * 28, "body", line) for k, line in enumerate(BAND_LINES)]
     return "\n  ".join(out)
 
 
@@ -200,14 +193,12 @@ def header():
     ])
 
 
-def regions(divider):
-    pilot_x = divider + REGION_GAP // 2
+def footer():
+    """The caption, mirroring the header: a rule, then one sentence flush with each margin."""
     return "\n  ".join([
-        text(LEFT, REGION_HEAD_Y, "head", NERV_HEAD, f' fill="{ORANGE}"'),
-        f'<text class="head" x="{pilot_x}" y="{REGION_HEAD_Y}" fill="{WHITE}">{escape(PILOT_HEAD)}'
-        f'<tspan class="who" dx="14">· {escape(PILOT_WHO)}</tspan></text>',
-        text(pilot_x, PILOT_SUB_Y, "body", PILOT_SUB),
-        f'<line class="hair" x1="{divider}.5" y1="80" x2="{divider}.5" y2="{LOOP_BOTTOM + 10}" stroke-dasharray="4 6"/>',
+        f'<line class="hair" x1="{LEFT}" y1="{H - 59}.5" x2="{RIGHT}" y2="{H - 59}.5"/>',
+        text(LEFT, H - 29, "body", CAPTION[0]),
+        text(RIGHT, H - 29, "body", CAPTION[1], ' text-anchor="end"'),
     ])
 
 
@@ -219,47 +210,48 @@ def corners():
 
 
 def lifecycle():
-    boxes, divider = layout()
-    phase_boxes = "\n  ".join(box(b) for b in boxes)
+    assert all(p[1] for p in PHASES[:N_NERV]), "NERV's phases must come first"
+    phase_boxes = "\n  ".join(box(i) for i in range(len(PHASES)))
     return f"""<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 {W} {H}" width="{W}" height="{H}" role="img" aria-labelledby="title desc">
   <title id="title">{escape(TITLE)}</title>
   <desc id="desc">{escape(DESC)}</desc>
   <!-- Generated by assets/make_lifecycle.py; edit that, not this file. -->
   <style>
-    .head {{ font-family: {MONO}; font-size: {SIZE}px; font-weight: 700; letter-spacing: 2px; }}
-    .who {{ font-family: {SANS}; font-weight: 400; letter-spacing: 0; opacity: 0.8; }}
-    .title {{ font-family: {MONO}; font-size: {SIZE}px; font-weight: 700; letter-spacing: {TRACK}px; }}
-    .tag {{ font-family: {MONO}; font-size: {SIZE}px; font-weight: 700; letter-spacing: 2px; fill: {ORANGE}; }}
-    .key {{ font-family: {MONO}; font-size: {SIZE}px; fill: {WHITE}; opacity: 0.75; letter-spacing: 1px; }}
-    .body {{ font-family: {SANS}; font-size: {SIZE}px; fill: {WHITE}; opacity: 0.9; }}
-    .dim {{ font-family: {SANS}; font-size: {SIZE}px; font-style: italic; fill: {WHITE}; opacity: 0.65; }}
-    .caption {{ font-family: {SANS}; font-size: 20px; fill: {WHITE}; }}
-    .devlabel {{ font-family: {MONO}; font-size: {SIZE}px; fill: {RED_TEXT}; letter-spacing: 1px; }}
-    .yours {{ fill: none; stroke: {WHITE}; stroke-width: 2; stroke-dasharray: 8 6; opacity: 0.75; }}
+    text {{ font-family: {MONO}; font-size: {SIZE}px; }}
+    .head {{ font-weight: 700; letter-spacing: 2px; }}
+    .op {{ font-weight: 700; }}
+    .body {{ fill: {WHITE}; opacity: 0.85; }}
+    .key {{ letter-spacing: 2px; }}
+    .yours {{ fill: none; stroke-width: 2; stroke-dasharray: 8 6; opacity: 0.8; }}
     .flow {{ fill: none; stroke: {WHITE}; stroke-width: 2; opacity: 0.8; }}
     .flow-head {{ fill: {WHITE}; opacity: 0.8; }}
     .dev {{ fill: none; stroke: {RED_TEXT}; stroke-width: 1.5; }}
     .dev-head {{ fill: {RED_TEXT}; }}
     .hair {{ stroke: {WHITE}; stroke-width: 0.5; opacity: 0.4; }}
   </style>
+  <defs>
+    <pattern id="hazard" width="16" height="16" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
+      <rect width="8" height="16" fill="{HAZARD}"/>
+    </pattern>
+  </defs>
 
   <rect width="{W}" height="{H}" fill="{BG}"/>
   {corners()}
   {header()}
 
   <!-- Regions: what NERV provides, and what is yours -->
-  {regions(divider)}
+  {regions()}
 
   <!-- Phases -->
   {phase_boxes}
 
-  <!-- Arrows, build loop and gates, deviation back to the plan -->
-  {flows(boxes)}
+  <!-- Arrows, the analysis loop and its gates, deviation back to the plan -->
+  {flows()}
 
   <!-- Always on: hard rules and folder READMEs -->
   {band()}
 
-  <text class="caption" x="{W // 2}" y="{CAPTION_Y}" text-anchor="middle">{escape(CAPTION)}</text>
+  {footer()}
 </svg>
 """
 

@@ -660,3 +660,12 @@ def test_summary_flags_incomplete_grid(tmp_path):
         score.append_row(csv_path, row)
     text = summarize.write_summary(csv_path, tmp_path / "summary.md")
     assert "INCOMPLETE" in text and "t2 arm B: 2 of 3" in text
+
+
+def test_summary_includes_pilot_notes(tmp_path):
+    csv_path = tmp_path / "runs.csv"
+    for row in synthetic_rows(tf([3, 3, 3], [1, 1, 1])):
+        score.append_row(csv_path, row)
+    (tmp_path / "pilot-notes.md").write_text("Cap: $0.07 (3 x $0.0225).\n", encoding="utf-8")
+    text = summarize.write_summary(csv_path, tmp_path / "summary.md")
+    assert "## Pilot" in text and "Cap: $0.07 (3 x $0.0225)." in text.split("## Pilot")[1]

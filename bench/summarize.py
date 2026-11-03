@@ -251,6 +251,8 @@ def write_summary(csv_path, out_path):
     invalid = [r for r in rows if r.get("invalid")]
     flagged = [r for r in rows if r.get("out_of_repo")]
     pilots = [r for r in rows if r.get("pilot")]
+    notes = Path(csv_path).with_name("pilot-notes.md")
+    pilot_notes = [notes.read_text(encoding="utf-8").rstrip(), ""] if notes.is_file() else []
     lines = ["# Cue benchmark summary", "",
              "Haiku only, 3 reps per arm: a self-test, not statistical significance. The raw table is below.", "",
              "## Verdict", "", *([f"**INCOMPLETE:** {'; '.join(short)}.", ""] if short else []),
@@ -266,7 +268,7 @@ def write_summary(csv_path, out_path):
                                           for r in invalid] or ["None."]), "",
              "## Flagged sessions (out-of-repo access)", "",
              *([f"- {r['run']} session {r['session']}: {', '.join(r['out_of_repo'])}" for r in flagged] or ["None."]),
-             "", "## Pilot", "", *([f"- {r['run']}: pass rate {fmt(r.get('hidden_pass_rate'))}, cost "
+             "", "## Pilot", "", *pilot_notes, *([f"- {r['run']}: pass rate {fmt(r.get('hidden_pass_rate'))}, cost "
                                     f"{fmt(r.get('cost_usd'))}" for r in pilots] or ["None."]), "",
              "## Raw table", "", *raw_table([r for r in rows if not r.get("pilot")]), ""]
     text = "\n".join(lines)

@@ -84,9 +84,9 @@
 
 ## 9. Grid and verdict
 
-- [ ] 9.1 Run `python bench/runner.py grid` (18 first sessions, each followed by its scored follow-up session, 36 in all), in the background. Verify that `runs.csv` holds 36 non-pilot rows, and that any session stopped by a limit is marked and not rerun silently.
-- [ ] 9.2 Run `python bench/summarize.py` and read `summary.md`. Spot-check one test-first and one not-test-first verdict against their stream files by hand. Verify that the verdict names the rule row it came from.
-- [ ] 9.3 Update the `ROADMAP.md` row with the verdict, the key numbers, and the caveats (Haiku only, 3 reps), set its status to `done`, and add a new row for the follow-up cue edit (keep, drop, or strengthen) if the verdict calls for one. Commit the results under `bench/results/` (ROADMAP is local and stays uncommitted). Verify by reading the row and `git log`.
+- [x] 9.1 Run `python bench/runner.py grid` (18 first sessions, each followed by its scored follow-up session, 36 in all), in the background. Verify that `runs.csv` holds 36 non-pilot rows, and that any session stopped by a limit is marked and not rerun silently.
+- [x] 9.2 Run `python bench/summarize.py` and read `summary.md`. Spot-check one test-first and one not-test-first verdict against their stream files by hand. Verify that the verdict names the rule row it came from.
+- [x] 9.3 Update the `ROADMAP.md` row with the verdict, the key numbers, and the caveats (Haiku only, 3 reps), set its status to `done`, and add a new row for the follow-up cue edit (keep, drop, or strengthen) if the verdict calls for one. Commit the results under `bench/results/` (ROADMAP is local and stays uncommitted). Verify by reading the row and `git log`.
 
 ## Workflow follow-up
 

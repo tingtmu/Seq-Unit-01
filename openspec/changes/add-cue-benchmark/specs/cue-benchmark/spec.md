@@ -118,14 +118,14 @@ The scorer SHALL record per session: the hidden-test pass rate overall and per t
 - **THEN** that test is not eligible, so its failures against mutants do not count as kills
 
 ### Requirement: One cost metric
-The scorer SHALL record the session's total cost in US dollars as reported by the session itself. Each session SHALL have a cost cap and a time limit. A session that hits either limit SHALL be recorded as not completed, and it SHALL NOT be rerun without a note in the results.
+The scorer SHALL record the session's total cost in US dollars as reported by the session itself. Each session SHALL have a time limit, and MAY have a cost cap. The grid runs without one, so a cap does not cut off sessions that spend more on writing tests. A session that hits a limit SHALL be recorded as not completed, and it SHALL NOT be rerun without a note in the results.
 
 #### Scenario: Cost recorded
 - **WHEN** a session ends normally
 - **THEN** its record holds the reported total cost in US dollars
 
 #### Scenario: Limit hit
-- **WHEN** a session hits its cost cap or time limit
+- **WHEN** a session hits its time limit, or its cost cap when it has one
 - **THEN** its record marks it not completed with the limit that stopped it, records its cost as unknown if the session reported none, and the session is still scored on the files it left
 
 ### Requirement: Process measured from the session record

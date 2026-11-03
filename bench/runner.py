@@ -3,7 +3,7 @@
 Usage:
   runner.py plan                       print the planned runs and sessions; starts nothing
   runner.py pilot [--cap USD]          one arm B session per task (not counted)
-  runner.py grid --cap USD [--tasks T ...]
+  runner.py grid [--cap USD] [--tasks T ...]  (no cap by default)
                                        every planned run: build, session 1, score, stage the
                                        follow-up, session 2, score
 """
@@ -76,7 +76,7 @@ def session_command(repo, prompt, stream, cap):
     argv = ["claude", "-p", prompt, "--model", MODEL, "--effort", EFFORT, "--setting-sources", "project",
             "--strict-mcp-config", "--disable-slash-commands", "--output-format", "stream-json", "--verbose",
             "--permission-mode", "acceptEdits", "--allowedTools", *ALLOWED, "--disallowedTools", *DENIED,
-            "--max-budget-usd", f"{cap:g}", "--no-session-persistence"]
+            *(["--max-budget-usd", f"{cap:g}"] if cap is not None else []), "--no-session-persistence"]
     env = {**os.environ, "PATH": os.pathsep.join([str(build.BENCH_PYTHON.parent), os.environ.get("PATH", "")]),
            "PYTHONDONTWRITEBYTECODE": "1", "PIP_NO_INDEX": "1", "CLAUDE_CODE_DISABLE_AUTO_MEMORY": "1"}
     for name in ("VIRTUAL_ENV", "PYTHONPATH", "PYTEST_ADDOPTS"):
@@ -284,7 +284,7 @@ def results_file(logs=None):
 def main(argv=None):
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     parser.add_argument("step", choices=["plan", "pilot", "grid"])
-    parser.add_argument("--cap", type=float, help="cost cap per session in USD (required for grid)")
+    parser.add_argument("--cap", type=float, help="cost cap per session in USD (grid default: none)")
     parser.add_argument("--tasks", nargs="*", help="task names (default: all)")
     args = parser.parse_args(argv)
     tasks = args.tasks or [t.name for t in taskdef.task_dirs()]
@@ -294,8 +294,6 @@ def main(argv=None):
             print(f"{run.name}\tsession {n}")
         print(f"{len(runs)} runs, {len(sessions(runs))} sessions")
         return 0
-    if args.step == "grid" and args.cap is None:
-        parser.error("grid needs --cap (three times the highest pilot cost)")
     results = results_file()
     try:
         if args.step == "pilot":

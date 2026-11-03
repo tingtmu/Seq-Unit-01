@@ -669,3 +669,8 @@ def test_summary_includes_pilot_notes(tmp_path):
     (tmp_path / "pilot-notes.md").write_text("Cap: $0.07 (3 x $0.0225).\n", encoding="utf-8")
     text = summarize.write_summary(csv_path, tmp_path / "summary.md")
     assert "## Pilot" in text and "Cap: $0.07 (3 x $0.0225)." in text.split("## Pilot")[1]
+
+
+def test_session_command_without_cap(tmp_path):
+    cmd = runner.session_command(tmp_path / "repo", "Do the task.", tmp_path / "s.jsonl", cap=None)
+    assert "--max-budget-usd" not in cmd.argv and "--no-session-persistence" in cmd.argv

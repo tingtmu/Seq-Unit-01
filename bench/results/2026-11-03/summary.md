@@ -64,7 +64,7 @@ None.
 - None was test-first, and all three read a cue file (`scripts/README.md`).
 - Out-of-repo flags: real ones (scratch files in `/tmp` and in `bench-runs/`), and also false positives from awk syntax (`~`, `/_PAR_Y/`, a bare `/`).
 
-**Cap:** $0.07 per session, three times the highest pilot 2 cost ($0.0225).
+**No more trap rounds, and no cost cap** (user's decision after pilot 2). T1 and T3 passed every hidden test twice, so the difference between the arms is expected in the process measures (test-first, mutant kill rate) and in follow-up regressions, not in first-session pass rates. A cap at three times the pilot cost ($0.07) could cut off arm A sessions that write tests first, so the grid runs uncapped; the 30-minute limit stays.
 
 - t1-scrna-qc-B-pilot: pass rate 1.00, cost 0.01
 - t2-design-check-B-pilot: pass rate 0.96, cost 0.02

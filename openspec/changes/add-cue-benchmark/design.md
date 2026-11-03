@@ -83,7 +83,7 @@ claude -p "<prompt.md>" --model claude-haiku-5-5 --effort low --setting-sources 
        --permission-mode acceptEdits
        --allowedTools "Bash(python:*)" "Bash(pytest:*)" "Bash(git:*)" "Bash(ls:*)" "Bash(cat:*)"
        --disallowedTools WebSearch WebFetch "Bash(pip:*)" "Bash(python -m pip:*)"
-       --max-budget-usd <cap> --no-session-persistence
+       [--max-budget-usd <cap>] --no-session-persistence     (grid: no cap)
 cwd = run repo; stdin closed; stdout -> bench-logs/<run>/sessionN.jsonl
 env: PATH starts with bench-venv; PYTHONDONTWRITEBYTECODE=1; PIP_NO_INDEX=1;
      CLAUDE_CODE_DISABLE_AUTO_MEMORY=1 (the spike's auto-memory switch); timeout 30 min
@@ -95,7 +95,7 @@ env: PATH starts with bench-venv; PYTHONDONTWRITEBYTECODE=1; PIP_NO_INDEX=1;
 - **Package changes.** Pip is denied, and with `PIP_NO_INDEX=1` it can't fetch anything. The runner records `pip freeze` of `bench-venv` before and after each session. Any change makes the run invalid, and the runner restores the environment from the pinned list before the next session.
 - **Reading outside the repo.** `python:*` and `cat:*` can still read outside the repo. That can't be blocked without losing realism, so the scorer flags any tool input that names an absolute path outside the run repo or climbs out with `..`. The summary lists the flagged sessions.
 - **Web tools** are off because the hidden tests are public in this repo.
-- **Model, cap, follow-up.** The model id is pinned, and the scorer records the model the `init` event reports. The cost cap is set after the pilot, to three times the highest pilot cost. The follow-up is the same command with `followup.md`, after the first session is scored and the follow-up inputs are staged. `--no-session-persistence` and a new process make it a new conversation.
+- **Model, cap, follow-up.** The model id is pinned, and the scorer records the model the `init` event reports. The grid runs without a cost cap (the user's choice after pilot 2): a cap near pilot cost could cut off test-first sessions, which cost more, and bias the result. The 30-minute limit still stops runaways. The follow-up is the same command with `followup.md`, after the first session is scored and the follow-up inputs are staged. `--no-session-persistence` and a new process make it a new conversation.
 
 ### Staging a follow-up
 
@@ -250,7 +250,7 @@ If several outcome measures disagree (for example, A has a better pass rate but 
 ## Risks / Trade-offs
 
 - [Three reps can't separate small effects.] → Thresholds need agreement in all three tasks. The summary states the limit and keeps the raw table.
-- [Haiku may wander into `conda env create` from the generated README and burn its budget.] → `bench-venv` is first on PATH, so `pytest tests/` works directly. The cost cap stops runaways, and such sessions are recorded as not completed rather than rerun.
+- [Haiku may wander into `conda env create` from the generated README and burn its budget.] → `bench-venv` is first on PATH, so `pytest tests/` works directly. The 30-minute limit stops runaways, and such sessions are recorded as not completed rather than rerun.
 - [User rules, skills, or plugins leak in despite the flags.] → Spike 1.4 confirms a clean `init` event. In the grid, any session whose `init` lists one is invalid and not scored, because a user skill such as `diagnosing-bugs` carries its own test-first steps.
 - [The cues sit one link away from `AGENTS.md`, so Haiku may never read them.] → Exposure is measured, and verdict row 1 ("cues not reached") stops a null result from being read as "cues don't help".
 - [Some agent tests target private helpers, which skews the kill rate.] → Eligibility is judged on the reference module, and import failures are excluded (spec "Mutant kill rate").
@@ -265,4 +265,4 @@ None. This is new dev tooling, and rollback is deleting `bench/`. Run repos and 
 
 ## Open Questions
 
-- The exact per-session cost cap. It is set from the pilot (three times the highest pilot cost) and recorded in the results.
+- The per-session cost cap: none for the grid, decided after pilot 2 and recorded in the results.

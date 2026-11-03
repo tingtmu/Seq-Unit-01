@@ -15,7 +15,7 @@ Run from the repo root with the repo venv.
 - Build one run repo: `.venv/Scripts/python bench/build.py bench/tasks/t1-scrna-qc A ../nerv_all_runs/bench-runs/t1-scrna-qc-A-r1`
 - Plan (prints the 36 sessions, starts nothing): `.venv/Scripts/python bench/runner.py plan`
 - Pilot, one arm B session per task: `.venv/Scripts/python bench/runner.py pilot`
-- Grid, every planned run with its follow-up session: `.venv/Scripts/python bench/runner.py grid --cap USD`, with USD three times the highest pilot cost
+- Grid, every planned run with its follow-up session: `.venv/Scripts/python bench/runner.py grid` (no cost cap; `--cap USD` adds one)
 - Score one session again: `.venv/Scripts/python bench/score.py t1-scrna-qc-A-r1 1`
 - Summarize: `.venv/Scripts/python bench/summarize.py` (default: the newest `bench/results/<date>/runs.csv`)
 

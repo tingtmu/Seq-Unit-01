@@ -75,7 +75,7 @@
 ## 8. Pilot
 
 - [x] 8.1 Run `python bench/runner.py pilot` (3 arm B sessions, no cost cap beyond a generous safety cap noted in the results). Score them. Verify that each pilot has a `runs.csv` row marked `pilot`.
-- [ ] 8.2 Act on the pilot:
+- [x] 8.2 Act on the pilot (done: one redesign round, then no more rounds and no cost cap, by the user's decision; see `pilot-notes.md`):
   - for any task whose pilot passed every hidden test, add at least one harder trap with its hidden test and mutant, and rerun the 3.1 checks;
   - for any pilot that failed from a misunderstood interface, sharpen that prompt;
   - set the cost cap to three times the highest pilot cost.

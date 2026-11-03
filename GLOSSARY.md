@@ -122,7 +122,7 @@ _Avoid_: amendment, revision, plan update
 ### Benchmarking the cues
 
 **Cue**:
-A line of template prose in the skeleton that nudges an agent toward a practice, such as writing a failing test first. A cue is advice an agent may or may not read, not a hard rule.
+A line of template prose in the skeleton that nudges an agent toward a practice, such as testing boundary cases. A cue is advice an agent may or may not read, not a hard rule.
 _Avoid_: hint, nudge, instruction
 
 **Arm**:

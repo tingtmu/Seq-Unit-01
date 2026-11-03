@@ -10,7 +10,7 @@
 ## 2. Integration and review
 
 - [x] 2.1 Run `.venv/Scripts/python -m pytest` and `openspec validate replace-test-first-cues --strict`; confirm both pass. Do not run a benchmark pilot, grid, rescoring, or task redesign, and do not require a future benchmark as an acceptance gate.
-- [ ] 2.2 Follow the repository's apply review gate: commit only this change's paths with the repo-local identity and a Co-Authored-By line, request a fresh-context reviewer for that commit range and applicable rules/specs, verify important findings, and commit any confirmed fixes. Verify the resulting review has no unresolved important findings; preserve unrelated user files and do not push.
+- [x] 2.2 Follow the repository's apply review gate: commit only this change's paths with the repo-local identity and a Co-Authored-By line, request a fresh-context reviewer for that commit range and applicable rules/specs, verify important findings, and commit any confirmed fixes. Verify the resulting review has no unresolved important findings; preserve unrelated user files and do not push.
 
 ## Workflow follow-up
 

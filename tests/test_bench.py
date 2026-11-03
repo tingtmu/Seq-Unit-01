@@ -1,5 +1,6 @@
 """Cue benchmark harness (openspec/changes/add-cue-benchmark): arms, tasks, runner, scorer, summary."""
 import filecmp
+import importlib.util
 import re
 import json
 import sys
@@ -12,6 +13,11 @@ from conftest import REPO
 BENCH = REPO / "bench"
 sys.path.insert(0, str(BENCH))
 FIXTURES = Path(__file__).resolve().parent / "fixtures" / "bench"
+
+# The bench needs Python 3.12+ and its data stack (numpy, pandas, pyyaml). Elsewhere, such as
+# the CI matrix, these tests skip; they run where the bench venv is set up.
+BENCH_READY = sys.version_info >= (3, 12) and all(importlib.util.find_spec(m) for m in ("numpy", "pandas", "yaml"))
+needs_bench = pytest.mark.skipif(not BENCH_READY, reason="bench needs Python 3.12+ with numpy, pandas, pyyaml")
 
 import arms  # noqa: E402
 import build  # noqa: E402
@@ -56,6 +62,7 @@ def tree(root):
 
 # --- 2.1 arms and run repo build ---
 
+@needs_bench
 def test_arms_differ_only_by_cue_lines(fake_task, tmp_path):
     a = build.build_run_repo(fake_task, "A", tmp_path / "A", python=sys.executable)
     b = build.build_run_repo(fake_task, "B", tmp_path / "B", python=sys.executable)
@@ -69,6 +76,7 @@ def test_arms_differ_only_by_cue_lines(fake_task, tmp_path):
         assert [x for x in lines_a if x != line] == lines_b
 
 
+@needs_bench
 def test_run_repo_has_inputs_and_baseline(fake_task, tmp_path):
     repo = build.build_run_repo(fake_task, "B", tmp_path / "B", python=sys.executable)
     agents = (repo / "AGENTS.md").read_text(encoding="utf-8")
@@ -86,6 +94,7 @@ def test_run_repo_has_inputs_and_baseline(fake_task, tmp_path):
     assert not (repo / ".pytest_cache").exists()
 
 
+@needs_bench
 def test_cue_drift_stops_build(fake_task, tmp_path, monkeypatch):
     monkeypatch.setattr(arms, "CUE_LINES", [*arms.CUE_LINES[:2], ("tests/README.md", "- Not in the template.")])
     with pytest.raises(build.BenchError, match=r"tests/README\.md.*Not in the template"):
@@ -98,6 +107,7 @@ def test_cue_lines_match_templates():
         assert line in (base / rel).read_text(encoding="utf-8").splitlines(), rel
 
 
+@needs_bench
 def test_arm_b_test_command_passes(fake_task, tmp_path):
     repo = build.build_run_repo(fake_task, "B", tmp_path / "B", python=sys.executable)
     assert build.run_test_command(repo, sys.executable).returncode == 0
@@ -110,6 +120,7 @@ def task_dirs():
 
 @pytest.mark.parametrize("task", ["fake", *task_dirs()], ids=lambda t: getattr(t, "name", t))
 @pytest.mark.parametrize("stage", ["first", "followup"])
+@needs_bench
 def test_generate_is_deterministic(task, stage, fake_task, tmp_path):
     task = fake_task if task == "fake" else task
     gen = build.load_module(task / "generate.py")
@@ -139,12 +150,14 @@ def test_three_tasks_exist():
 
 
 @pytest.mark.parametrize("task,stage", STAGED, ids=staged_id)
+@needs_bench
 def test_reference_passes_hidden_tests(task, stage):
     result = taskdef.run_hidden(task, stage, task / taskdef.REFERENCE[stage])
     assert result.returncode == 0, result.stdout[-3000:] + result.stderr[-2000:]
 
 
 @pytest.mark.parametrize("task,stage,mutant", MUTANTS, ids=staged_id)
+@needs_bench
 def test_each_mutant_fails_a_hidden_test(task, stage, mutant, tmp_path):
     module = tmp_path / Path(taskdef.module_path(task)).name
     module.write_text(taskdef.mutant_source(task, stage, mutant), encoding="utf-8")
@@ -283,6 +296,7 @@ def test_memory_folder_marks_invalid(tmp_path):
     assert runner.followup_allowed(meta)
 
 
+@needs_bench
 def test_stage_followup_order(fake_task, tmp_path):
     repo = build.build_run_repo(fake_task, "B", tmp_path / "B", python=sys.executable)
     before = build.git(repo, "rev-parse", "baseline^{tree}").strip()
@@ -427,6 +441,7 @@ def test_regression_scored_separately(toy_task, tmp_path):
     assert o["hidden_pass_rate"] == 1.0 and o["regression_free"] is False
 
 
+@needs_bench
 def test_mutant_kill_rate(toy_task, tmp_path):
     repo = toy_repo(tmp_path, TOY_REFERENCE, AGENT_TESTS)
     rate, note = score.mutant_kills(toy_task, "first", repo, sys.executable)
@@ -434,17 +449,20 @@ def test_mutant_kill_rate(toy_task, tmp_path):
     assert build.git(repo, "status", "--porcelain").count("??") == 3
 
 
+@needs_bench
 def test_mutant_kill_rate_without_tests(toy_task, tmp_path):
     repo = toy_repo(tmp_path, TOY_REFERENCE)
     assert score.mutant_kills(toy_task, "first", repo, sys.executable) == (0.0, "no eligible tests")
 
 
+@needs_bench
 def test_untracked_files_counted_in_ratio(tmp_path):
     repo = toy_repo(tmp_path, "a = 1\nb = 2\n", {"test_a.py": "def test_a():\n    assert True\n\n# end\n"})
     assert score.diff_lines(repo, "baseline") == (4, 2)
     assert build.git(repo, "status", "--porcelain").count("??") == 2
 
 
+@needs_bench
 def test_score_session_row(toy_task, tmp_path):
     repo = toy_repo(tmp_path, TOY_REFERENCE, AGENT_TESTS)
     logs = tmp_path / "logs"
@@ -568,6 +586,7 @@ def test_every_case_has_one_row(exposed, a_high, b_high, a_vs_b, outcome, tf_bet
         assert row == 1
 
 
+@needs_bench
 def test_summary_states_rule_and_row(tmp_path):
     rows = synthetic_rows(tf([3, 3, 3], [1, 1, 1]), passed={"A": 1.0, "B": 0.7})
     rows[0]["out_of_repo"] = ["../other"]
@@ -633,6 +652,7 @@ def test_glob_pattern_outside_repo_flagged():
     assert score.out_of_repo_paths({"pattern": "/a/b"}, repo, "Grep") == []
 
 
+@needs_bench
 def test_hidden_run_leaves_run_repo_untouched(toy_task, tmp_path):
     writer = TOY_REFERENCE + ("\nfrom pathlib import Path\n(Path(__file__).resolve().parents[1] / 'leak.txt')"
                               ".write_text('hidden input')\n")
@@ -653,6 +673,7 @@ def test_results_file_fixed_at_first_step(tmp_path):
     assert runner.results_file(tmp_path) == tmp_path / "2026-01-01" / "runs.csv" != first
 
 
+@needs_bench
 def test_summary_flags_incomplete_grid(tmp_path):
     rows = [r for r in synthetic_rows(tf([3, 3, 3], [1, 1, 1])) if r["run"] != "t2-B-r3"]
     csv_path = tmp_path / "runs.csv"
@@ -662,6 +683,7 @@ def test_summary_flags_incomplete_grid(tmp_path):
     assert "INCOMPLETE" in text and "t2 arm B: 2 of 3" in text
 
 
+@needs_bench
 def test_summary_includes_pilot_notes(tmp_path):
     csv_path = tmp_path / "runs.csv"
     for row in synthetic_rows(tf([3, 3, 3], [1, 1, 1])):

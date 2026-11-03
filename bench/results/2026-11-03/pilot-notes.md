@@ -14,3 +14,5 @@
 - Out-of-repo flags: real ones (scratch files in `/tmp` and in `bench-runs/`), and also false positives from awk syntax (`~`, `/_PAR_Y/`, a bare `/`).
 
 **No more trap rounds, and no cost cap** (user's decision after pilot 2). T1 and T3 passed every hidden test twice, so the difference between the arms is expected in the process measures (test-first, mutant kill rate) and in follow-up regressions, not in first-session pass rates. A cap at three times the pilot cost ($0.07) could cut off arm A sessions that write tests first, so the grid runs uncapped; the 30-minute limit stays.
+
+**Ceiling:** T1 and T3 pass-rate outcomes sit at the ceiling (1.00 in both arms in the pilots and the grid), so they cannot show a difference between the arms. A DROP verdict from row 4 partly reflects that ceiling: it says the cues changed behavior without a measurable outcome gain on these tasks, not that they cannot pay on harder ones.

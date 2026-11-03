@@ -156,11 +156,15 @@ The scorer SHALL derive these from the event stream and the repo: cue exposure, 
 - **THEN** the session is recorded with a hard-rule violation
 
 ### Requirement: Pilot before the grid
-Before the full set of sessions, the benchmark SHALL run one arm B session per task as a pilot. If a pilot session passes every hidden test, that task's traps SHALL be made harder and its validity checks rerun before the full set starts. Pilot sessions SHALL NOT count in the results.
+Before the full set of sessions, the benchmark SHALL run one arm B session per task as a pilot. If a pilot session passes every hidden test, that task's traps SHALL be made harder and its validity checks rerun before the full set starts, unless the user stops redesigning after at least one round. Pilot sessions SHALL NOT count in the results.
 
 #### Scenario: Traps too easy
-- **WHEN** a pilot session passes every hidden test of its task
+- **WHEN** a pilot session passes every hidden test of its task, and the user has not decided to stop redesigning
 - **THEN** that task gets at least one harder trap, with its hidden test and mutant, before the full set starts
+
+#### Scenario: Redesign stopped by the user
+- **WHEN** a pilot session passes every hidden test after a redesign round, and the user decides to run the grid as is
+- **THEN** the pilot notes record the decision, and the summary says those tasks' pass-rate outcomes are at the ceiling
 
 ### Requirement: Results summary with a decision
 The benchmark SHALL write a summary: one table per task and arm (outcome, cost, process, pass^3 = all reps pass every hidden test), the raw per-session table, and a verdict of keep, drop, strengthen, cues not reached, or inconclusive from a stated decision rule. A difference SHALL count only when it points the same way in every task and meets the threshold the summary states for that measure.

@@ -68,7 +68,7 @@ def test_arms_differ_only_by_cue_lines(fake_task, tmp_path):
     b = build.build_run_repo(fake_task, "B", tmp_path / "B", python=sys.executable)
     assert tree(a) == tree(b)
     differing = [rel for rel in tree(a) if not filecmp.cmp(a / rel, b / rel, shallow=False)]
-    assert sorted(differing) == sorted(f for f, _ in arms.CUE_LINES)
+    assert differing == ["tests/README.md"]
     for rel, line in arms.CUE_LINES:
         lines_a = (a / rel).read_text(encoding="utf-8").splitlines()
         lines_b = (b / rel).read_text(encoding="utf-8").splitlines()
@@ -96,7 +96,7 @@ def test_run_repo_has_inputs_and_baseline(fake_task, tmp_path):
 
 @needs_bench
 def test_cue_drift_stops_build(fake_task, tmp_path, monkeypatch):
-    monkeypatch.setattr(arms, "CUE_LINES", [*arms.CUE_LINES[:2], ("tests/README.md", "- Not in the template.")])
+    monkeypatch.setattr(arms, "CUE_LINES", [("tests/README.md", "- Not in the template.")])
     with pytest.raises(build.BenchError, match=r"tests/README\.md.*Not in the template"):
         build.build_run_repo(fake_task, "B", tmp_path / "B", python=sys.executable)
 
@@ -385,7 +385,7 @@ def stream(name):
 
 def test_stream_test_first_exposed_saw_red():
     p = score.parse_stream(stream("stream_test_first.jsonl"), FIXTURE_REPO, "scripts/qc_filter.py")
-    assert p["exposed"] and p["cue_files"] == ["docs/principles.md"]
+    assert p["exposed"] and p["cue_files"] == ["tests/README.md"]
     assert p["test_first"] and p["saw_red"] is True
     assert p["completed"] and p["cost_usd"] == 0.1234 and p["out_of_repo"] == []
 
@@ -617,6 +617,16 @@ def write_stream(path, calls, done=True):
     return path
 
 
+@pytest.mark.parametrize("former_file", ["docs/principles.md", "scripts/README.md"])
+def test_former_cue_read_is_not_current_exposure(tmp_path, former_file):
+    s = write_stream(tmp_path / "s.jsonl", [
+        ("Read", {"file_path": former_file}),
+        ("Write", {"file_path": "scripts/qc_filter.py", "content": "x"}),
+    ])
+    p = score.parse_stream(s, FIXTURE_REPO, "scripts/qc_filter.py")
+    assert p["exposed"] is False and p["cue_files"] == []
+
+
 @pytest.mark.parametrize("command", [
     "cat > scripts/qc_filter.py << 'EOF'\ndef f(): ...\nEOF",
     "python - <<'EOF'\nopen('scripts/qc_filter.py', 'w').write('x')\nEOF",
@@ -624,7 +634,7 @@ def write_stream(path, calls, done=True):
     "python -c \"from pathlib import Path; Path('scripts/qc_filter.py').write_text('x')\""])
 def test_bash_module_write_counts(tmp_path, command):
     s = write_stream(tmp_path / "s.jsonl", [("Bash", {"command": command}),
-                                            ("Read", {"file_path": "docs/principles.md"}),
+                                            ("Read", {"file_path": "tests/README.md"}),
                                             ("Write", {"file_path": "tests/test_qc.py", "content": "x"})])
     p = score.parse_stream(s, FIXTURE_REPO, "scripts/qc_filter.py", module_exists=True)
     assert p["test_first"] is False and p["exposed"] is False
@@ -635,7 +645,7 @@ def test_bash_redirect_of_stderr_is_not_a_write():
 
 
 def test_unseen_module_write_is_unknown(tmp_path):
-    s = write_stream(tmp_path / "s.jsonl", [("Read", {"file_path": "docs/principles.md"}),
+    s = write_stream(tmp_path / "s.jsonl", [("Read", {"file_path": "tests/README.md"}),
                                             ("Write", {"file_path": "tests/test_qc.py", "content": "x"})])
     p = score.parse_stream(s, FIXTURE_REPO, "scripts/qc_filter.py", module_exists=True)
     assert p["test_first"] == "unknown" and p["exposed"] == "unknown"

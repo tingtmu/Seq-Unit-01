@@ -1,0 +1,8 @@
+# Implementation notes
+
+## 2026-11-03
+
+- Read the updated root and benchmark READMEs against the historical-documentation scenario: they distinguish current guidance from the original bundle, identify the original cues and source revision, link the saved results, and state the replacement is unbenchmarked. `git diff --name-only -- bench/results/2026-11-03 openspec/changes/archive` was empty.
+- Before changing the cue definition, the focused checks failed on the old three-file arm difference and on exposure from each former cue file (3 failed, 8 passed). After replacement, all 16 focused checks passed, including drift rejection, arm-B smoke testing, and unchanged process measures.
+- Generated a disposable bulk RNA-seq / scripts / Python project with `scaffold.scaffold`, read its principles, scripts folder README, and tests folder README, then removed the disposable directory. The tests folder README contained the exact replacement once; all three original cues were absent. Explicit expected outputs and negative-or-boundary advice distinguish a plausible wrong implementation without prescribing test order, coverage, or mutation tooling. The adjacent synthetic-input/privacy convention and Goal-driven, Zero-trust, and Fail-fast principles remain. This checks both project-bootstrap delta scenarios' document content; it does not establish agent compliance or measured improvement. Existing scaffold tests cover supported selections.
+- Full suite: `.venv/Scripts/python -m pytest -p no:cacheprovider --tb=short` passed (410 tests, 175.12 seconds), using the normal temporary directory outside this repository. Strict OpenSpec validation passed. No pilot, grid, rescoring, or task redesign was run.

@@ -4,9 +4,21 @@ Dev tooling for the `add-cue-benchmark` change. It is not a skill, and `npx skil
 
 ## What it measures
 
-It asks whether the three test-first cues in generated projects (`arms.py`, `CUE_LINES`) change what Haiku does, and how correct its code is. Arm A is the project as shipped. Arm B is the same project with the three cue lines removed. Each of three tasks (`tasks/t1-scrna-qc`, `tasks/t2-design-check`, `tasks/t3-de-annotation`) runs 3 reps per arm, and each run has two sessions: the task, then a follow-up session that tempts a regression. Per session, `score.py` records outcome (hidden-test pass rate per trap, silent-wrong result, mutant kill rate of the agent's own tests, regression-free), cost (`total_cost_usd`), and process (cue exposure, test-first, saw red, out-of-repo access, test-to-code ratio, raw data changed). `summarize.py` applies the decision rule from the change's design.md and gives a verdict: keep, drop, strengthen, cues not reached, or inconclusive.
+It compares generated projects with and without the cues defined in `arms.py`, `CUE_LINES`. Current arm A is the project as shipped. Current arm B removes only the single result-logic testing cue in `tests/README.md`; only a read of that file before the first module write counts as current cue exposure. The builder stops if the exact cue line has drifted. The current replacement cue has not been benchmarked, and no new benchmark sessions or rescoring are part of its introduction.
+
+Each of three tasks (`tasks/t1-scrna-qc`, `tasks/t2-design-check`, `tasks/t3-de-annotation`) has 3 reps per arm, and each run has two sessions: the task, then a follow-up session that tempts a regression. Per session, `score.py` records outcome (hidden-test pass rate per trap, silent-wrong result, mutant kill rate of the agent's own tests, regression-free), cost (`total_cost_usd`), and process (cue exposure, test-first, saw red, out-of-repo access, test-to-code ratio, raw data changed). `summarize.py` applies the decision rule from the [original design](../openspec/changes/archive/2026-11-03-add-cue-benchmark/design.md) and gives a verdict: keep, drop, strengthen, cues not reached, or inconclusive.
 
 Each task folder is described in `taskdef.py`. A mutant is the reference with exact text replacements (`mutants.json`), so it can't drift from the reference.
+
+## Historical baseline (2026-11-03)
+
+The saved [summary and DROP verdict](results/2026-11-03/summary.md) and [session results](results/2026-11-03/runs.csv) measured the original three-cue bundle on Haiku, not the replacement. Historical arm A contained these lines; historical arm B removed all three:
+
+- `docs/principles.md`: “**Test-driven (red-green-refactor).** Write a failing test on tiny synthetic data, make it pass, then clean up.”
+- `scripts/README.md`: “Before writing code that decides results (filters, thresholds, joins, sample-sheet checks), write a failing test first; see `tests/README.md`. Exploratory notebooks are exempt until their code moves here.”
+- `tests/README.md`: “Test the logic that decides results: filters, thresholds, statistics.”
+
+That skeleton and harness are available at source revision `b16b90df1254cc3ec877de97a2b6011a1a202075`. Historical reproduction uses that revision: the current cue definition and exposure semantics cannot rescore those sessions accurately. The saved results and archived change remain unchanged. The replacement asks for explicit expected outputs and discriminating negative or boundary cases, with no prescribed test order; its effect on agent behavior and correctness is unmeasured.
 
 ## Commands
 

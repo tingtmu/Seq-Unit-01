@@ -8,7 +8,7 @@ Tests for analysis scripts and the workflow.
 
 - Run with: `{{TEST_COMMAND}}`
 - Use tiny synthetic inputs, built inline or checked into `tests/data/`; never real patient data.
-- Test the logic that decides results: filters, thresholds, statistics.
+- For logic that decides results, use tiny synthetic inputs with explicit expected outputs. Include negative or boundary cases that distinguish the intended rule from a plausible wrong implementation.
 - Don't test styling (colours, labels, themes); test the data a plot or report draws.
 
 ## Current state

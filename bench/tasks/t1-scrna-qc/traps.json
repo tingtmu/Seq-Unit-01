@@ -58,12 +58,13 @@
         "blank_as_zero"
       ]
     },
-    "zero_count_cell": {
+    "empty_cell": {
       "tests": [
         "test_task.py::test_zero_count_cell"
       ],
       "mutants": [
-        "zero_division"
+        "zero_division",
+        "empty_as_filtered"
       ]
     },
     "barcode_collision": {
@@ -72,6 +73,31 @@
       ],
       "mutants": [
         "barcode_collision"
+      ]
+    },
+    "gene_expression_only": {
+      "tests": [
+        "test_task.py::test_antibody_counts_are_not_genes"
+      ],
+      "mutants": [
+        "antibodies_counted",
+        "antibodies_in_total"
+      ]
+    },
+    "empty_left_out_of_mad": {
+      "tests": [
+        "test_task.py::test_empty_cells_left_out_of_mad"
+      ],
+      "mutants": [
+        "empty_in_mad"
+      ]
+    },
+    "independent_bounds": {
+      "tests": [
+        "test_task.py::test_bounds_computed_independently"
+      ],
+      "mutants": [
+        "sequential_bounds"
       ]
     }
   },
@@ -115,6 +141,30 @@
       ],
       "mutants": [
         "mito_mad_zero_drops"
+      ]
+    },
+    "mito_mad_without_empty": {
+      "tests": [
+        "test_followup.py::test_blank_mito_ignores_empty_cells"
+      ],
+      "mutants": [
+        "mito_mad_with_empty"
+      ]
+    },
+    "cell_ranger_2": {
+      "tests": [
+        "test_followup.py::test_cell_ranger_2_folder"
+      ],
+      "mutants": [
+        "cell_ranger_2_unread"
+      ]
+    },
+    "feature_type_kept": {
+      "tests": [
+        "test_task.py::test_antibody_counts_are_not_genes"
+      ],
+      "mutants": [
+        "reader_drops_feature_type"
       ]
     }
   }

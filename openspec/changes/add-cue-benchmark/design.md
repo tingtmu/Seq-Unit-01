@@ -11,7 +11,7 @@
 - `scaffold.py --answers FILE --target DIR` builds a generated project with no interview. It is deterministic given a fixed `date`. Engine `scripts` with language `python` gives the Test command `pytest tests/` and no snakemake dependency.
 - None of the parent folders of `personal_proj/nerv_all_runs/` holds a `CLAUDE.md` or `AGENTS.md` (checked 2026-11-03).
 - None of the cues is in the generated `AGENTS.md`. `CLAUDE.md` is only `@AGENTS.md`, which links to the three cue files without quoting them. An agent reaches a cue only if it opens one of those files. That is how real users meet the cues too, so the benchmark keeps it and measures exposure rather than moving the cues.
-- `claude --help` (2.1.316) offers `-p`, `--model`, `--output-format stream-json`, `--setting-sources`, `--strict-mcp-config`, `--disable-slash-commands` ("Disable all skills and commands"), `--max-budget-usd`, `--permission-mode`, `--allowedTools`, `--disallowedTools`, and `--no-session-persistence`. `--bare` is not used: it turns off CLAUDE.md auto-discovery (the path a real session takes to `AGENTS.md`) and accepts only API-key auth.
+- `claude --help` (2.1.316) offers `-p`, `--model`, `--output-format stream-json`, `--setting-sources`, `--strict-mcp-config`, `--disable-slash-commands` ("Disable all skills and commands"), `--effort` (low to max), `--max-budget-usd`, `--permission-mode`, `--allowedTools`, `--disallowedTools`, and `--no-session-persistence`. `--bare` is not used: it turns off CLAUDE.md auto-discovery (the path a real session takes to `AGENTS.md`) and accepts only API-key auth.
 - The user rules in `~/.claude/rules/` contain no test-first text (grep, 2026-11-03). User skills do: `~/.claude/skills/diagnosing-bugs` has "failing test" steps, and `~/.claude/skills/tdd` is a symlink that loads again if its target is reinstalled. So skills are disabled, not merely tolerated.
 - `../nerv_all_runs/` already holds earlier runs, including `nerv-tdd-run` (a Sonnet TDD run), and an agent with Bash can read any path. Isolation is therefore enforced where the CLI allows it and detected where it doesn't.
 - `ROADMAP.md` and `SCOPE.md` are gitignored (local), so they are edited but never committed.
@@ -78,7 +78,7 @@ The arm patch comes last, so the A/B diff is exactly the cue lines. `test_bench.
 ### Session command
 
 ```
-claude -p "<prompt.md>" --model claude-haiku-5-5 --setting-sources project
+claude -p "<prompt.md>" --model claude-haiku-5-5 --effort low --setting-sources project
        --strict-mcp-config --disable-slash-commands --output-format stream-json --verbose
        --permission-mode acceptEdits
        --allowedTools "Bash(python:*)" "Bash(pytest:*)" "Bash(git:*)" "Bash(ls:*)" "Bash(cat:*)"
@@ -108,6 +108,14 @@ env: PATH starts with bench-venv; PYTHONDONTWRITEBYTECODE=1; PIP_NO_INDEX=1;
 
 Every prompt names the module path, the function signature, the inputs, and the output columns, and states each rule exactly (inclusive or strict, NA handling). Traps test carelessness, not guessing. Prompts never mention tests.
 
+**Pilot redesign (task 8.2, difficulty raised).** Haiku passed every hidden test of the first task versions. The tasks were then made harder in four ways, without making any rule ambiguous:
+- traps that only matter on realistic data: CITE-seq antibody features and antibody-only barcodes (T1), R `make.names` collisions and a FASTQ named twice (T2), Cook's outliers (T3);
+- rules that interact: every MAD bound from the same non-empty cells (T1), interaction terms in the rank check (T2);
+- rules stated through the domain rather than as a recipe: for example "RNA metrics count gene expression features only", R's `make.names`, "the way DESeq2 marks each case", and the BOM and stray-space hints removed from T2;
+- follow-ups that change a shared helper (the MEX reader, the formula terms), so a regression shows only through a session-1 check.
+
+Sessions also run at `--effort low`, so Haiku plans less before it writes code.
+
 **T1 `t1-scrna-qc`** (assay `scrnaseq`, mouse). `scripts/qc_filter.py: filter_cells(matrix_dirs, thresholds, mito_prefix, nmads=3.0) -> (cells, summary)`. The inputs are four samples in 10x MEX format (`matrix.mtx.gz`, `barcodes.tsv.gz`, `features.tsv.gz` with gene id, symbol, type) and `config/qc_thresholds.tsv`, which uses the template columns. The prompt states the meaning of each column:
 - `min_counts` and `min_genes`: a value is a fixed lower bound (inclusive keep, `>=`). A blank means a per-sample MAD lower bound on log1p of the metric: drop if below median − nmads × MAD.
 - `max_genes`: a value is a fixed upper bound (inclusive keep, `<=`). A blank means no upper filter.
@@ -124,10 +132,13 @@ The prompt also states the reason codes.
 | one-sided (low) tails for counts and genes | two-sided, dropping high-count cells |
 | mito prefix from the argument (`mt-`), matched on the symbol column | hardcoded `MT-`, or matched on gene id |
 | blank threshold cell is "use MAD", not 0 | blank read as 0 (filter off) |
-| 0-count cell: pct_mito defined as 0, cell dropped by the counts filter | division by zero, NaN kept |
+| 0-UMI cell: reason `empty` alone, pct_mito 0 | division by zero (NaN), or ordinary filter reasons |
+| RNA metrics count Gene Expression features only (CITE-seq samples) | antibody UMIs in `n_counts`, `n_genes`, or the mito denominator |
+| empty cells left out of the MAD bounds | median and MAD over all barcodes |
+| bounds independent of each other | counts bound computed after the genes filter |
 | same barcode in two samples: cell id is `sample_id:barcode` | barcodes collide in the output |
 
-Follow-up: "`qc_thresholds.tsv` gains a `doublet_score_max` column, and `max_pct_mito` may now be blank. When it is blank, use a per-sample MAD upper tail on pct_mito. Also drop cells whose score in `data/processed/doublets/<sample>.tsv` (a new `doublet_dir` argument) is strictly above `doublet_score_max`. A barcode missing from the scores file is an error, raised with the sample and barcode." The staged thresholds file adds the column and blanks `max_pct_mito` for two samples. The bait is that reusing the one-sided MAD helper for an upper tail tempts making it two-sided, which breaks the counts filter. `hidden/test_followup.py` checks the new behavior. Regression is the original `test_task.py`, rerun against the inputs extended with doublet scores (passing on the follow-up reference).
+Follow-up: the second delivery holds two Cell Ranger 2 samples (plain `matrix.mtx`, `genes.tsv` with no type column), so the reader must handle both layouts; a reader that drops the feature type breaks the session-1 antibody check. Also "`qc_thresholds.tsv` gains a `doublet_score_max` column, and `max_pct_mito` may now be blank. When it is blank, use a per-sample MAD upper tail on pct_mito. Also drop cells whose score in `data/processed/doublets/<sample>.tsv` (a new `doublet_dir` argument) is strictly above `doublet_score_max`. A barcode missing from the scores file is an error, raised with the sample and barcode." The staged thresholds file adds the column and blanks `max_pct_mito` for two samples. The bait is that reusing the one-sided MAD helper for an upper tail tempts making it two-sided, which breaks the counts filter. `hidden/test_followup.py` checks the new behavior. Regression is the original `test_task.py`, rerun against the inputs extended with doublet scores (passing on the follow-up reference).
 
 **T2 `t2-design-check`** (assay `bulk-rnaseq`, human). `scripts/check_design.py: check_design(samples_path, design_path, raw_dir) -> list[Problem]` with `Problem(severity, code, sample_id, message)`. The prompt lists the fixed codes, so hidden tests never depend on message wording. It collects every problem and raises on none. The inputs are a core-delivered `config/samples.tsv` with a BOM header, and `config/design.yaml` with formula `~ batch + condition`, a reference level, and contrasts.
 
@@ -141,13 +152,17 @@ Follow-up: "`qc_thresholds.tsv` gains a `doublet_score_max` column, and `max_pct
 | batch fully confounded with condition (design matrix not full rank) is an error | checks only that the columns exist |
 | reference level or contrast level absent from the data is an error | not checked |
 | a condition level with one replicate is a warning, not an error | error, or ignored |
-| UTF-8 BOM in the header | read with the `csv` module as `utf-8` (pandas strips a BOM itself), so `﻿sample_id` is reported as a missing column |
+| two ids that R's `make.names` maps to one name (`T-4`, `T.4`; `4T`, `X4T`) | not checked, no `X` prefix, or `_` replaced |
+| one FASTQ named twice, also when written differently (`./a.fastq.gz`) | not checked, or raw strings compared |
+| interaction terms `a:b` in the rank check (an empty genotype × condition group) | main effects only, or `a:b` read as one column |
+| a contrast on a factor not in the formula | not checked |
+| UTF-8 BOM in the header (no longer stated in the prompt) | read with the `csv` module as `utf-8` (pandas strips a BOM itself), so `﻿sample_id` is reported as a missing column |
 
-Follow-up: "the core now sends mixed single- and paired-end runs with a `layout` column (`SE`/`PE`), and `batch` may be absent (then the formula is `~ condition`)." Regression: the confounding and duplicate checks must still fire, and the paired check must apply to `PE` rows.
+Follow-up: "the core now sends mixed single- and paired-end runs with a `layout` column (`SE`/`PE`), and `batch` may be absent (then every term that involves batch is dropped, interactions included)." Regression: the confounding and duplicate checks must still fire, and the paired check must apply to `PE` rows.
 
 **T3 `t3-de-annotation`** (assay `bulk-rnaseq`, human). `scripts/annotate_de.py: annotate_de(de_path, annotation_path, alpha) -> (table, unmatched)`. The inputs are:
 - a DESeq2 result made with `lfcThreshold=1, altHypothesis="greaterAbs"`: versionless `gene_id`, `baseMean`, `log2FoldChange`, `lfcSE`, `stat`, `pvalue`, `padj`;
-- a GENCODE-derived annotation: versioned `gene_id`, `gene_name`, `gene_type`, `chrom`, including `_PAR_Y` rows.
+- the GENCODE v43 comprehensive GTF (gzipped): gene, transcript, and exon rows, versioned gene ids, including `_PAR_Y` genes.
 
 The generator keeps the DE table consistent with that test. A gene with |LFC| ≤ 1 has `pvalue` 1, so every significant gene has |LFC| > 1.
 
@@ -164,6 +179,8 @@ Significance is `padj < alpha`. The table is sorted by padj ascending with NA la
 | boundary: padj equal to alpha is not significant | `<=` |
 | duplicate gene symbols keyed on id | deduplicated by `gene_name` |
 | sort order with NA last and ties broken | NA first, or unstable ties |
+| gene rows only from the GTF | transcript and exon rows join too |
+| `na_reason` from DESeq2's marks: baseMean 0, pvalue NA (Cook's outlier), only padj NA (low mean) | outliers called low mean, a baseMean cutoff, or all-zero genes called outliers |
 
 Follow-up: "the DE table is re-delivered with a `log2FoldChange_shrunk` column (apeglm). Report it, use it for `direction` and for ranking ties, and keep significance from padj alone, because the threshold was already tested in DESeq2." Shrinkage pulls some significant genes below |LFC| 1, so the trap "no post-hoc LFC filter" is real here (mutant: drops significant genes whose shrunken |LFC| < 1). It is therefore a follow-up trap, not a session-1 trap: on an `lfcThreshold=1` result, that filter can't change anything. Regression: NA and boundary handling unchanged.
 

@@ -1,49 +1,136 @@
 {
   "first": {
     "raw_ids": [
-      ["    ann[\"gene_id\"] = ann[\"gene_id\"].str.split(\".\").str[0]\n", ""]
+      [
+        "    ann[\"gene_id\"] = ann[\"gene_id\"].str.split(\".\").str[0]\n",
+        ""
+      ]
     ],
     "par_y_duplicated": [
-      ["    ann = ann[~ann[\"gene_id\"].str.endswith(\"_PAR_Y\")].copy()\n", "    ann = ann.copy()\n"],
-      [", validate=\"many_to_one\")", ")"]
+      [
+        "    ann = ann[~ann[\"gene_id\"].str.endswith(\"_PAR_Y\")].copy()\n",
+        "    ann = ann.copy()\n"
+      ],
+      [
+        ", validate=\"many_to_one\")",
+        ")"
+      ]
     ],
     "inner_join": [
-      ["how=\"left\"", "how=\"inner\""]
+      [
+        "how=\"left\"",
+        "how=\"inner\""
+      ]
     ],
     "na_padj_significant": [
-      ["(table[\"padj\"] < alpha).fillna(False)", "(table[\"padj\"].fillna(0) < alpha)"]
+      [
+        "(table[\"padj\"] < alpha).fillna(False)",
+        "(table[\"padj\"].fillna(0) < alpha)"
+      ]
     ],
     "na_padj_dropped": [
-      ["    table = rank(table)\n", "    table = rank(table.dropna(subset=[\"padj\"]))\n"]
+      [
+        "    table = rank(table)\n",
+        "    table = rank(table.dropna(subset=[\"padj\"]))\n"
+      ]
     ],
     "boundary_inclusive": [
-      ["table[\"padj\"] < alpha", "table[\"padj\"] <= alpha"]
+      [
+        "table[\"padj\"] < alpha",
+        "table[\"padj\"] <= alpha"
+      ]
     ],
     "dedup_by_symbol": [
-      ["    table = rank(table)\n", "    table = rank(table.drop_duplicates(\"gene_name\"))\n"]
+      [
+        "    table = rank(table)\n",
+        "    table = rank(table.drop_duplicates(\"gene_name\"))\n"
+      ]
     ],
     "na_first": [
-      ["order.sort_values([\"_na\", \"padj\", \"_abs\", \"gene_id\"], kind=\"mergesort\")", "order.sort_values([\"padj\", \"_abs\", \"gene_id\"], na_position=\"first\", kind=\"mergesort\")"]
+      [
+        "order.sort_values([\"_na\", \"padj\", \"_abs\", \"gene_id\"], kind=\"mergesort\")",
+        "order.sort_values([\"padj\", \"_abs\", \"gene_id\"], na_position=\"first\", kind=\"mergesort\")"
+      ]
     ],
     "ties_unbroken": [
-      ["order.sort_values([\"_na\", \"padj\", \"_abs\", \"gene_id\"], kind=\"mergesort\")", "order.sort_values([\"_na\", \"padj\"], kind=\"mergesort\")"]
+      [
+        "order.sort_values([\"_na\", \"padj\", \"_abs\", \"gene_id\"], kind=\"mergesort\")",
+        "order.sort_values([\"_na\", \"padj\"], kind=\"mergesort\")"
+      ]
+    ],
+    "all_gtf_features": [
+      [
+        "    genes = gtf[gtf[\"feature\"] == \"gene\"]\n",
+        "    genes = gtf\n"
+      ]
+    ],
+    "outlier_as_low_mean": [
+      [
+        "    outlier = ~zero & table[\"pvalue\"].isna()\n",
+        "    outlier = zero & False\n"
+      ],
+      [
+        "    low_mean = ~zero & table[\"pvalue\"].notna() & table[\"padj\"].isna()\n",
+        "    low_mean = ~zero & table[\"padj\"].isna()\n"
+      ]
+    ],
+    "na_reason_by_base_mean": [
+      [
+        "    outlier = ~zero & table[\"pvalue\"].isna()\n",
+        "    outlier = ~zero & table[\"padj\"].isna() & (table[\"baseMean\"] >= 10)\n"
+      ],
+      [
+        "    low_mean = ~zero & table[\"pvalue\"].notna() & table[\"padj\"].isna()\n",
+        "    low_mean = ~zero & table[\"padj\"].isna() & (table[\"baseMean\"] < 10)\n"
+      ]
+    ],
+    "zero_as_outlier": [
+      [
+        "    zero = table[\"baseMean\"] == 0\n",
+        "    zero = table[\"baseMean\"] < 0\n"
+      ]
     ]
   },
   "followup": {
     "post_hoc_lfc_filter": [
-      ["    table = rank(table)\n", "    table = rank(table[~table[\"significant\"] | (table[\"log2FoldChange_shrunk\"].abs() >= 1)])\n"]
+      [
+        "    table = rank(table)\n",
+        "    table = rank(table[~table[\"significant\"] | (table[\"log2FoldChange_shrunk\"].abs() >= 1)])\n"
+      ]
     ],
     "ties_by_unshrunk": [
-      ["_abs=-table[\"log2FoldChange_shrunk\"].abs()", "_abs=-table[\"log2FoldChange\"].abs()"]
+      [
+        "_abs=-table[\"log2FoldChange_shrunk\"].abs()",
+        "_abs=-table[\"log2FoldChange\"].abs()"
+      ]
     ],
     "shrunk_not_reported": [
-      ["DE_COLUMNS = [\"baseMean\", \"log2FoldChange\", \"log2FoldChange_shrunk\", ", "DE_COLUMNS = [\"baseMean\", \"log2FoldChange\", "]
+      [
+        "DE_COLUMNS = [\"baseMean\", \"log2FoldChange\", \"log2FoldChange_shrunk\", ",
+        "DE_COLUMNS = [\"baseMean\", \"log2FoldChange\", "
+      ]
     ],
     "na_regression": [
-      ["(table[\"padj\"] < alpha).fillna(False)", "(table[\"padj\"].fillna(0) < alpha)"]
+      [
+        "(table[\"padj\"] < alpha).fillna(False)",
+        "(table[\"padj\"].fillna(0) < alpha)"
+      ]
     ],
     "boundary_regression": [
-      ["table[\"padj\"] < alpha", "table[\"padj\"] <= alpha"]
+      [
+        "table[\"padj\"] < alpha",
+        "table[\"padj\"] <= alpha"
+      ]
+    ],
+    "na_reason_regression": [
+      [
+        "    outlier = ~zero & table[\"pvalue\"].isna()\n",
+        "    outlier = zero & False\n"
+      ],
+      [
+        "    low_mean = ~zero & table[\"pvalue\"].notna() & table[\"padj\"].isna()\n",
+        "    low_mean = ~zero & table[\"padj\"].isna()\n"
+      ]
     ]
   }
 }

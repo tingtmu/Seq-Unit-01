@@ -82,6 +82,52 @@
       "mutants": [
         "bom_unhandled"
       ]
+    },
+    "interaction_rank": {
+      "tests": [
+        "test_task.py::test_interaction_with_an_empty_group"
+      ],
+      "mutants": [
+        "interaction_ignored"
+      ]
+    },
+    "interaction_terms_parsed": {
+      "tests": [
+        "test_task.py::test_interaction_estimable"
+      ],
+      "mutants": [
+        "interaction_as_one_factor"
+      ]
+    },
+    "r_name_collision": {
+      "tests": [
+        "test_task.py::test_ids_that_collide_in_r",
+        "test_task.py::test_leading_digit_collides_with_x_prefix",
+        "test_task.py::test_underscore_and_dot_ids_are_distinct"
+      ],
+      "mutants": [
+        "names_unchecked",
+        "no_x_prefix",
+        "underscore_replaced"
+      ]
+    },
+    "shared_fastq": {
+      "tests": [
+        "test_task.py::test_one_file_named_twice",
+        "test_task.py::test_same_file_written_differently"
+      ],
+      "mutants": [
+        "shared_unchecked",
+        "paths_compared_raw"
+      ]
+    },
+    "contrast_factor_in_formula": {
+      "tests": [
+        "test_task.py::test_contrast_factor_not_in_formula"
+      ],
+      "mutants": [
+        "contrast_factor_unchecked"
+      ]
     }
   },
   "followup": {
@@ -134,6 +180,22 @@
       ],
       "mutants": [
         "duplicates_dropped"
+      ]
+    },
+    "batch_terms_dropped": {
+      "tests": [
+        "test_followup.py::test_batch_absent_drops_its_interaction"
+      ],
+      "mutants": [
+        "batch_interaction_kept"
+      ]
+    },
+    "interaction_regression": {
+      "tests": [
+        "test_task.py::test_interaction_with_an_empty_group"
+      ],
+      "mutants": [
+        "interaction_dropped"
       ]
     }
   }

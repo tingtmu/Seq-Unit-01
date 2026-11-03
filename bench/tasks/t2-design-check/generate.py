@@ -30,7 +30,9 @@ FIRST = [
     ("TRT_2", "d1/TRT_2_R1.fastq.gz", "", "treated", "run2"),                          # no fastq_2
     ("TRT_3", "d1/TRT_3_R1.fastq.gz", "d1/TRT_3_R2.fastq.gz", "treated", "run2"),
     ("TRT_3 ", "d1/TRT_3b_R1.fastq.gz", "d1/TRT_3b_R2.fastq.gz", "treated", "run1"),   # duplicate id
-    ("KO_1", "d1/KO_1_R1.fastq.gz", "d1/KO_1_R2.fastq.gz", "knockout", "run3"),         # one replicate
+    ("KO_1", "d1/KO_1_R1.fastq.gz", "d1/KO_1_R2.fastq.gz", "knockout", "run3"),
+    ("KO-2", "d1/KO-2_R1.fastq.gz", "d1/KO-2_R2.fastq.gz", "knockout", "run3"),         # KO.2 in R
+    ("KO.2", "d1/KO.2_R1.fastq.gz", "d1/KO-2_R2.fastq.gz", "knockout", "run1"),         # R2 pasted from KO-2
 ]
 MISSING = {"d1/TRT_1_R2.fastq.gz"}                                                     # not delivered
 FOLLOWUP_NEW = [

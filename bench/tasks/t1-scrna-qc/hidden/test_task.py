@@ -83,11 +83,37 @@ def test_blank_threshold_means_mad(qc):
 
 
 def test_zero_count_cell(qc):
-    cells, _ = qc({"S1": SPREAD + [(0, 0, 0)]}, {"S1": FIXED_GENES})
+    cells, _ = qc({"S1": SPREAD + [(0, 0, 0, 400)]}, {"S1": FIXED_GENES})
     empty = by_barcode(cells, "S1", 15)
     assert empty["n_counts"] == 0 and empty["pct_mito"] == 0
-    assert not empty["keep"] and "low_counts" in empty["reason"].split(";")
+    assert not empty["keep"] and empty["reason"] == "empty"
     assert cells["pct_mito"].notna().all()
+
+
+def test_antibody_counts_are_not_genes(qc):
+    sample = [(1000, 50, 100, 6000), (500, 40, 0, 4000), (1000, 50, 0, 0)]
+    cells, _ = qc({"S1": sample}, {"S1": {"min_counts": "800", "min_genes": "45", "max_genes": "60"}})
+    first, second = by_barcode(cells, "S1", 0), by_barcode(cells, "S1", 1)
+    assert (first["n_counts"], first["n_genes"]) == (1000, 50) and np.isclose(first["pct_mito"], 10.0)
+    assert first["keep"]
+    assert second["reason"] == "low_counts;low_genes"
+
+
+def test_empty_cells_left_out_of_mad(qc):
+    sample = SPREAD + [(700, 50, 0)] + [(0, 0, 0, 900)] * 8
+    cells, summary = qc({"S1": sample}, {"S1": FIXED_GENES})
+    assert by_barcode(cells, "S1", 15)["reason"] == "low_counts"
+    assert (cells["reason"].iloc[16:] == "empty").all()
+    assert cells["keep"].sum() == 15
+    assert summary.set_index("sample_id").loc["S1", "n_kept"] == 15
+
+
+def test_bounds_computed_independently(qc):
+    sample = SPREAD + [(500, 30, 0)] * 6 + [(750, 50, 0)]
+    cells, _ = qc({"S1": sample}, {"S1": {"min_genes": "40"}})
+    assert by_barcode(cells, "S1", 21)["keep"]
+    assert (cells["reason"].iloc[15:21] == "low_counts;low_genes").all()
+    assert cells["keep"].sum() == 16
 
 
 def test_cell_ids_unique_across_samples(qc):

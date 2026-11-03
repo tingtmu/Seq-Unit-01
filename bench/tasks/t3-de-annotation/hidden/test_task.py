@@ -13,7 +13,7 @@ def row(table, n):
 def test_shape(annotate):
     table, unmatched = annotate([de_row(1, 2.0, 0.01), de_row(2, 0.5, 0.9)], ANN)
     for column in ("gene_id", "gene_name", "gene_type", "chrom", "baseMean", "log2FoldChange", "lfcSE",
-                   "stat", "pvalue", "padj", "significant", "direction"):
+                   "stat", "pvalue", "padj", "significant", "direction", "na_reason"):
         assert column in table.columns, column
     assert len(table) == 2 and list(unmatched) == []
 
@@ -70,3 +70,17 @@ def test_sort_order(annotate):
     table, _ = annotate(rows, ANN)
     assert list(table["gene_id"]) == [gene(2), gene(3), gene(1), gene(4), gene(5)]
     assert list(table.index) == list(range(5))
+
+
+def test_na_reason_follows_deseq2(annotate):
+    rows = [de_row(1, 2.0, 0.01), de_row(2, 0.0, "NA", base=0.0), de_row(3, 2.5, "NA", base=2400.0, outlier=True),
+            de_row(4, 2.0, "NA", base=3.0), de_row(5, 1.8, "NA", base=4.0, outlier=True)]
+    table, _ = annotate(rows, ANN)
+    assert [row(table, n)["na_reason"] for n in (1, 2, 3, 4, 5)] == ["", "zero_counts", "outlier", "low_mean", "outlier"]
+    assert not table.loc[table["na_reason"] != "", "significant"].any()
+
+
+def test_one_row_per_gene_from_gtf(annotate):
+    table, unmatched = annotate([de_row(n, 2.0, 0.01 * n) for n in (1, 2, 3)], ANN)
+    assert len(table) == 3 and table["gene_id"].is_unique and unmatched == []
+    assert row(table, 3)["gene_name"] == "GAPDH" and row(table, 3)["gene_type"] == "protein_coding"

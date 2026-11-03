@@ -24,6 +24,7 @@ import build
 import taskdef
 
 MODEL = "claude-haiku-5-5"
+EFFORT = "low"
 REPS = 3
 TIME_LIMIT = 30 * 60
 PILOT_CAP = 5.0
@@ -72,7 +73,7 @@ def sessions(runs):
 
 
 def session_command(repo, prompt, stream, cap):
-    argv = ["claude", "-p", prompt, "--model", MODEL, "--setting-sources", "project",
+    argv = ["claude", "-p", prompt, "--model", MODEL, "--effort", EFFORT, "--setting-sources", "project",
             "--strict-mcp-config", "--disable-slash-commands", "--output-format", "stream-json", "--verbose",
             "--permission-mode", "acceptEdits", "--allowedTools", *ALLOWED, "--disallowedTools", *DENIED,
             "--max-budget-usd", f"{cap:g}", "--no-session-persistence"]

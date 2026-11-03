@@ -12,6 +12,7 @@ import mex  # noqa: E402
 
 STAGE = os.environ.get("BENCH_STAGE", "first")
 N_NUCLEAR = 80
+N_ADT = 3
 COLUMNS = ["sample_id", "min_genes", "max_genes", "min_counts", "max_pct_mito", "doublet_method", "notes"]
 
 
@@ -50,20 +51,31 @@ def write_doublets(folder, sample_id, barcodes, scores):
     (folder / f"{sample_id}.tsv").write_text("\n".join(lines) + "\n", encoding="utf-8")
 
 
+def make_cell(spec, n_adt):
+    """spec: (total gene UMIs, detected genes, mito UMIs[, antibody UMIs])."""
+    total, n_genes, mito, *adt = spec
+    return mex.cell(total, n_genes, mito, n_nuclear=N_NUCLEAR, adt=adt[0] if adt else 0, n_adt=n_adt)
+
+
+def write_sample(folder, cells, v2=False):
+    n_adt = 0 if v2 else N_ADT
+    mex.write_mex(folder, [barcode(i) for i in range(len(cells))], mex.features(N_NUCLEAR, n_adt),
+                  [make_cell(c, n_adt) for c in cells], v2=v2)
+
+
 @pytest.fixture
 def qc(mod, tmp_path):
-    """qc(samples, rows, **kwargs): samples maps sample id -> list of (total, n_genes, mito) cells.
+    """qc(samples, rows, **kwargs): samples maps sample id -> list of (total, n_genes, mito[, adt]) cells.
 
-    In the follow-up stage, session-1 checks run with a doublet_score_max of 1.0 and all scores 0,
-    so the session-1 behavior is checked unchanged.
+    Every Cell Ranger 3 sample carries N_ADT antibody features. In the follow-up stage, session-1
+    checks run with a doublet_score_max of 1.0 and all scores 0, so the session-1 behavior is
+    checked unchanged; `v2` names samples written in the Cell Ranger 2 layout.
     """
-    def run(samples, rows, mito_prefix="mt-", nmads=3.0, doublets=None, extra_columns=None):
-        feats = mex.features(N_NUCLEAR)
+    def run(samples, rows, mito_prefix="mt-", nmads=3.0, doublets=None, extra_columns=None, v2=()):
         dirs = {}
         for sample_id, cells in samples.items():
             folder = tmp_path / "raw" / sample_id
-            mex.write_mex(folder, [barcode(i) for i in range(len(cells))], feats,
-                          [mex.cell(*c, n_nuclear=N_NUCLEAR) for c in cells])
+            write_sample(folder, cells, v2=sample_id in v2)
             dirs[sample_id] = folder
         path = tmp_path / "qc_thresholds.tsv"
         if STAGE == "followup":

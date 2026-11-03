@@ -55,3 +55,9 @@ def test_confounding_checked_with_layout(check):
 def test_duplicates_checked_with_layout(check):
     rows = mixed() + [single("T2 ", "treated", "b1")]
     assert ("error", "duplicate_sample", "T2") in found(check(rows, columns=LAYOUT))
+
+
+def test_batch_absent_drops_its_interaction(check):
+    design = {**DESIGN, "design": "~ batch + condition + batch:condition"}
+    rows = [{k: v for k, v in r.items() if k != "batch"} for r in mixed()]
+    assert check(rows, design=design, columns=[c for c in LAYOUT if c != "batch"]) == []

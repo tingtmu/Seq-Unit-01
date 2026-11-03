@@ -65,6 +65,54 @@
         "sheet = pd.read_csv(path, sep=\"\\t\", dtype=str, keep_default_na=False, encoding=\"utf-8-sig\")",
         "sheet = pd.DataFrame(list(__import__(\"csv\").DictReader(open(path, encoding=\"utf-8\", newline=\"\"), delimiter=\"\\t\")))"
       ]
+    ],
+    "interaction_ignored": [
+      [
+        "    for term in terms:\n        columns += term_columns(sheet, term)",
+        "    for term in [t for t in terms if len(t) == 1]:\n        columns += term_columns(sheet, term)"
+      ]
+    ],
+    "interaction_as_one_factor": [
+      [
+        "return [tuple(f.strip() for f in t.split(\":\")) for t in terms if t and t != \"1\"]",
+        "return [(t,) for t in terms if t and t != \"1\"]"
+      ]
+    ],
+    "names_unchecked": [
+      [
+        "    problems += check_names(sheet)\n",
+        ""
+      ]
+    ],
+    "no_x_prefix": [
+      [
+        "    if not re.match(r\"[A-Za-z]|\\.(?![0-9])\", name):\n        name = \"X\" + name\n",
+        ""
+      ]
+    ],
+    "underscore_replaced": [
+      [
+        "re.sub(r\"[^A-Za-z0-9._]\", \".\", text)",
+        "re.sub(r\"[^A-Za-z0-9.]\", \".\", text)"
+      ]
+    ],
+    "shared_unchecked": [
+      [
+        "    problems += check_shared_files(sheet)\n",
+        ""
+      ]
+    ],
+    "paths_compared_raw": [
+      [
+        "owners.setdefault(posixpath.normpath(name.replace(\"\\\\\", \"/\")), [])",
+        "owners.setdefault(name, [])"
+      ]
+    ],
+    "contrast_factor_unchecked": [
+      [
+        "    problems += check_contrast_factors(design, factors)\n",
+        ""
+      ]
     ]
   },
   "followup": {
@@ -88,13 +136,13 @@
     ],
     "batch_absent_error": [
       [
-        "    if \"batch\" in factors and \"batch\" not in sheet.columns:\n        factors = [f for f in factors if f != \"batch\"]\n",
+        "    if \"batch\" not in sheet.columns:\n        terms = [t for t in terms if \"batch\" not in t]\n",
         ""
       ]
     ],
     "rank_dropped": [
       [
-        "        problems += check_rank(sheet, factors)",
+        "        problems += check_rank(sheet, terms)",
         "        pass"
       ]
     ],
@@ -102,6 +150,18 @@
       [
         "    problems += check_duplicates(sheet)\n",
         ""
+      ]
+    ],
+    "batch_interaction_kept": [
+      [
+        "terms = [t for t in terms if \"batch\" not in t]",
+        "terms = [t for t in terms if t != (\"batch\",)]"
+      ]
+    ],
+    "interaction_dropped": [
+      [
+        "    for term in terms:\n        columns += term_columns(sheet, term)",
+        "    for term in [t for t in terms if len(t) == 1]:\n        columns += term_columns(sheet, term)"
       ]
     ]
   }

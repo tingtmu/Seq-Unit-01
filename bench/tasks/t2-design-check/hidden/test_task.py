@@ -83,3 +83,55 @@ def test_bom_header(check):
 def test_missing_design_column(check):
     rows = [{k: v for k, v in r.items() if k != "condition"} for r in CLEAN]
     assert ("error", "missing_column", None) in found(check(rows))
+
+
+FACTORIAL = {"design": "~ genotype + condition + genotype:condition", "reference_level": {"condition": "control"},
+             "contrasts": {"treated_vs_control": ["condition", "treated", "control"]}}
+FACTORIAL_COLUMNS = ["sample_id", "fastq_1", "fastq_2", "genotype", "condition"]
+
+
+def factorial(groups):
+    rows = []
+    for genotype, condition, n in groups:
+        rows += [{**paired(f"{genotype}_{condition}_{i}", condition, ""), "genotype": genotype} for i in range(n)]
+    return rows
+
+
+def test_interaction_estimable(check):
+    rows = factorial([("WT", "control", 2), ("WT", "treated", 2), ("KO", "control", 2), ("KO", "treated", 2)])
+    assert check(rows, design=FACTORIAL, columns=FACTORIAL_COLUMNS) == []
+
+
+def test_interaction_with_an_empty_group(check):
+    rows = factorial([("WT", "control", 2), ("WT", "treated", 2), ("KO", "control", 3)])
+    assert found(check(rows, design=FACTORIAL, columns=FACTORIAL_COLUMNS)) == {("error", "confounded", None)}
+
+
+def test_ids_that_collide_in_r(check):
+    rows = CLEAN + [paired("T-4", "treated", "b1"), paired("T.4", "treated", "b2")]
+    assert found(check(rows)) == {("error", "name_collision", None)}
+
+
+def test_leading_digit_collides_with_x_prefix(check):
+    rows = CLEAN + [paired("4T", "treated", "b1"), paired("X4T", "treated", "b2")]
+    assert found(check(rows)) == {("error", "name_collision", None)}
+
+
+def test_underscore_and_dot_ids_are_distinct(check):
+    rows = CLEAN + [paired("T_4", "treated", "b1"), paired("T.4", "treated", "b2")]
+    assert check(rows) == []
+
+
+def test_one_file_named_twice(check):
+    rows = CLEAN[:-1] + [paired("T3", "treated", "b2", fastq_2="T3_R1.fastq.gz")]
+    assert found(check(rows)) == {("error", "shared_fastq", None)}
+
+
+def test_same_file_written_differently(check):
+    rows = CLEAN[:-1] + [paired("T3", "treated", "b2", fastq_1="./C1_R1.fastq.gz")]
+    assert found(check(rows)) == {("error", "shared_fastq", None)}
+
+
+def test_contrast_factor_not_in_formula(check):
+    design = {**DESIGN, "design": "~ condition", "contrasts": {"b2_vs_b1": ["batch", "b2", "b1"]}}
+    assert found(check(CLEAN, design=design)) == {("error", "contrast_not_in_design", None)}

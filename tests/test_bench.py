@@ -206,6 +206,7 @@ def test_session_command(tmp_path):
     assert argv[:3] == ["claude", "-p", "Do the task."]
     pairs = {argv[i]: argv[i + 1] for i in range(len(argv) - 1) if argv[i].startswith("--")}
     assert pairs["--model"] == runner.MODEL == "claude-haiku-5-5"
+    assert pairs["--effort"] == runner.EFFORT == "low"
     assert pairs["--setting-sources"] == "project"
     assert pairs["--output-format"] == "stream-json" and pairs["--permission-mode"] == "acceptEdits"
     assert pairs["--max-budget-usd"] == "1.5"

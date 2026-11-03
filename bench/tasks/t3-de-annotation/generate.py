@@ -1,4 +1,5 @@
-"""Seeded inputs for T3: a DESeq2 result (lfcThreshold=1, greaterAbs) and a GENCODE v43 gene table."""
+"""Seeded inputs for T3: a DESeq2 result (lfcThreshold=1, greaterAbs) and a GENCODE v43 GTF."""
+import gzip
 from pathlib import Path
 
 import numpy as np
@@ -7,11 +8,15 @@ from scipy.stats import norm
 SEED = 20261105
 N_GENES = 1500
 DE_PATH = "data/processed/deseq2/treated_vs_control.tsv"
-ANN_PATH = "data/reference/gencode.v43.genes.tsv"
+ANN_PATH = "data/reference/gencode.v43.primary_assembly.annotation.gtf.gz"
+OUTLIERS = 9                  # Cook's outliers: pvalue and padj NA, at any baseMean
 PAR_GENES = 6                 # genes on the X/Y pseudoautosomal regions, listed twice in GENCODE v43
 SHARED_SYMBOLS = 8            # pairs of distinct gene ids with the same symbol
 DE_ONLY = 12                  # DE ids not in the annotation (retired ids)
 ANN_ONLY = 40                 # annotated genes absent from the DE table
+TAB, NL = chr(9), chr(10)
+GTF_HEADER = ["##description: evidence-based annotation of the human genome (GRCh38), version 43 (Ensembl 109)",
+              "##provider: GENCODE", "##contact: gencode-help@ebi.ac.uk", "##format: gtf", "##date: 2023-02-16"]
 TYPES = ["protein_coding"] * 6 + ["lncRNA"] * 3 + ["processed_pseudogene"]
 
 
@@ -34,11 +39,15 @@ def de_table(rng):
     stat = np.where(np.abs(lfc) > 1, np.sign(lfc) * (np.abs(lfc) - 1) / se, 0.0)
     pvalue = np.where(np.abs(lfc) > 1, 2 * norm.sf(np.abs(stat)), 1.0)
     filtered = base < 8                                        # independent filtering
+    outlier = np.zeros(N_GENES, dtype=bool)
+    outlier[rng.choice(np.arange(15, N_GENES), OUTLIERS, replace=False)] = True
+    pvalue[outlier] = np.nan
+    tested = ~filtered & ~outlier
     padj = np.full(N_GENES, np.nan)
-    padj[~filtered] = bh(pvalue[~filtered])
+    padj[tested] = bh(pvalue[tested])
     for column in (lfc, se, stat, pvalue):                     # DESeq2 gives all-zero genes NA
         column[:15] = np.nan
-    candidates = np.where(~filtered & (np.abs(lfc) > 1.5))[0]
+    candidates = np.where(tested & (np.abs(lfc) > 1.5))[0]
     padj[candidates[0]] = 0.05                                 # exactly at alpha
     return ids, base, lfc, se, stat, pvalue, padj
 
@@ -69,22 +78,34 @@ def write_de(out, rng, shrunk=False):
     return ids
 
 
+def gtf_gene(gene_id, name, kind, chrom, start):
+    """A gene line, then one transcript and its exon, as GENCODE writes them."""
+    tx_id = "ENST" + gene_id[4:]
+    gene_attrs = f'gene_id "{gene_id}"; gene_type "{kind}"; gene_name "{name}"; level 2;'
+    tx_attrs = (f'gene_id "{gene_id}"; transcript_id "{tx_id}"; gene_type "{kind}"; gene_name "{name}"; '
+                f'transcript_type "{kind}"; transcript_name "{name}-201"; level 2; tag "basic";')
+    rows = [("gene", gene_attrs, start + 4000), ("transcript", tx_attrs, start + 4000),
+            ("exon", tx_attrs + " exon_number 1;", start + 600)]
+    return [TAB.join([chrom, "HAVANA", f, str(start), str(end), ".", "+", ".", a]) for f, a, end in rows]
+
+
 def write_annotation(out, rng, ids):
-    rows = []
+    genes = []
     annotated = ids[DE_ONLY:]
     extra = [f"ENSG{n:011d}" for n in range(1000, 1000 + ANN_ONLY)]
     for i, gid in enumerate(annotated + extra):
         version = int(rng.integers(1, 20))
         name = f"GENE{i // 2 if i < 2 * SHARED_SYMBOLS else i}"
         chrom = "chrX" if i < 2 * SHARED_SYMBOLS + PAR_GENES and i >= 2 * SHARED_SYMBOLS else f"chr{1 + i % 22}"
-        rows.append([f"{gid}.{version}", name, TYPES[i % len(TYPES)], chrom])
+        genes.append((f"{gid}.{version}", name, TYPES[i % len(TYPES)], chrom))
         if chrom == "chrX":
-            rows.append([f"{gid}.{version}_PAR_Y", name, TYPES[i % len(TYPES)], "chrY"])
-    order = rng.permutation(len(rows))
-    lines = ["gene_id\tgene_name\tgene_type\tchrom"] + ["\t".join(rows[j]) for j in order]
+            genes.append((f"{gid}.{version}_PAR_Y", name, TYPES[i % len(TYPES)], "chrY"))
+    lines = list(GTF_HEADER)
+    for j in rng.permutation(len(genes)):
+        lines += gtf_gene(*genes[j], start=11869 + 7000 * int(j))
     path = out / ANN_PATH
     path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_text("\n".join(lines) + "\n", encoding="utf-8", newline="\n")
+    path.write_bytes(gzip.compress((NL.join(lines) + NL).encode("utf-8"), mtime=0))
 
 
 def generate(out, stage="first"):

@@ -63,3 +63,24 @@ def test_mixed_given_and_blank_mito(qc):
                   {"GIVEN": {**FIXED, "max_pct_mito": "10"}, "BLANK": {**FIXED, "max_pct_mito": ""}})
     kept = cells.groupby("sample_id")["keep"].sum().to_dict()
     assert kept == {"GIVEN": 16, "BLANK": 15}
+
+
+def test_blank_mito_ignores_empty_cells(qc):
+    sample = [(1000, 50, m) for m in (38, 39, 40, 41, 42)] * 3 + [(1000, 50, 48)] + [(0, 0, 0, 700)] * 8
+    cells, _ = qc({"S1": sample}, {"S1": {**FIXED, "max_pct_mito": ""}})
+    assert cells["reason"].iloc[15] == "high_mito"
+    assert (cells["reason"].iloc[16:] == "empty").all()
+    assert cells["keep"].sum() == 15
+
+
+def test_cell_ranger_2_folder(qc):
+    old = [(1000, 50, 100), (400, 30, 0), (0, 0, 0)]
+    new = [(1000, 50, 100, 5000), (400, 30, 0, 3000), (0, 0, 0, 800)]
+    cells, summary = qc({"OLD": old, "NEW": new}, {s: {"min_counts": "500", "min_genes": "1"} for s in ("OLD", "NEW")},
+                        v2=("OLD",))
+    for sample_id in ("OLD", "NEW"):
+        part = cells[cells["sample_id"] == sample_id]
+        assert part["n_counts"].tolist() == [1000, 400, 0] and part["n_genes"].tolist() == [50, 30, 0]
+        assert part["reason"].tolist() == ["", "low_counts", "empty"]
+        assert part["cell_id"].iloc[0] == f"{sample_id}:{barcode(0)}"
+    assert summary.set_index("sample_id")["n_kept"].to_dict() == {"OLD": 1, "NEW": 1}

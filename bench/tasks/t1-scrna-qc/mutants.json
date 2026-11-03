@@ -7,10 +7,10 @@
       ],
       [
         "    rows = read_thresholds(thresholds)\n",
-        "    rows = read_thresholds(thresholds)\n    POOLED.clear()\n    for folder in matrix_dirs.values():\n        m, _, f = read_mex(folder)\n        c, g, _ = metrics(m, f, mito_prefix)\n        POOLED.setdefault(\"n_counts\", []).extend(c)\n        POOLED.setdefault(\"n_genes\", []).extend(g)\n"
+        "    rows = read_thresholds(thresholds)\n    POOLED.clear()\n    for folder in matrix_dirs.values():\n        m, _, f = read_mex(folder)\n        c, g, _ = metrics(m, f, mito_prefix)\n        POOLED.setdefault(\"n_counts\", []).extend(c[c > 0])\n        POOLED.setdefault(\"n_genes\", []).extend(g[c > 0])\n"
       ],
       [
-        "    low = mad_low_outliers(values, nmads)\n",
+        "    low = mad_low_outliers(values, nmads, among)\n",
         "    low = mad_low_pooled(values, POOLED[metric], nmads)\n"
       ]
     ],
@@ -62,10 +62,40 @@
         "100.0 * mito / n_counts"
       ]
     ],
+    "empty_as_filtered": [
+      [
+        "    if empty[i]:\n        return \"empty\"\n",
+        ""
+      ]
+    ],
     "barcode_collision": [
       [
         "\"cell_id\": [f\"{sample_id}:{b}\" for b in barcodes]",
         "\"cell_id\": barcodes"
+      ]
+    ],
+    "antibodies_counted": [
+      [
+        "    genes = (feats[\"type\"] == GENE_EXPRESSION).to_numpy()\n",
+        "    genes = np.ones(len(feats), dtype=bool)\n"
+      ]
+    ],
+    "antibodies_in_total": [
+      [
+        "    matrix, feats = matrix[genes, :], feats[genes]\n    n_counts = np.asarray(matrix.sum(axis=0)).ravel().astype(float)\n",
+        "    n_counts = np.asarray(matrix.sum(axis=0)).ravel().astype(float)\n    matrix, feats = matrix[genes, :], feats[genes]\n"
+      ]
+    ],
+    "empty_in_mad": [
+      [
+        "    among = ~empty\n",
+        "    among = np.ones(len(empty), dtype=bool)\n"
+      ]
+    ],
+    "sequential_bounds": [
+      [
+        "nmads, \"n_counts\", notes, among)",
+        "nmads, \"n_counts\", notes, among & ~low_genes)"
       ]
     ]
   },
@@ -94,14 +124,32 @@
     ],
     "mito_mad_log": [
       [
-        "high = mad_outliers(pct_mito, nmads, \"high\", log=False)",
-        "high = mad_outliers(pct_mito, nmads, \"high\", log=True)"
+        "high = mad_outliers(pct_mito, nmads, among, \"high\", log=False)",
+        "high = mad_outliers(pct_mito, nmads, among, \"high\", log=True)"
       ]
     ],
     "mito_mad_zero_drops": [
       [
         "    if high is None:\n        notes.append(\"mad_zero:pct_mito\")\n        return np.zeros(len(pct_mito), dtype=bool)\n    return high",
         "    if high is None:\n        return pct_mito > np.median(pct_mito)\n    return high"
+      ]
+    ],
+    "mito_mad_with_empty": [
+      [
+        "high = mad_outliers(pct_mito, nmads, among, \"high\"",
+        "high = mad_outliers(pct_mito, nmads, np.ones(len(pct_mito), dtype=bool), \"high\""
+      ]
+    ],
+    "cell_ranger_2_unread": [
+      [
+        "    if (folder / \"matrix.mtx.gz\").is_file():\n",
+        "    if True:\n"
+      ]
+    ],
+    "reader_drops_feature_type": [
+      [
+        "    genes = (feats[\"type\"] == GENE_EXPRESSION).to_numpy()\n",
+        "    genes = np.ones(len(feats), dtype=bool)\n"
       ]
     ]
   }

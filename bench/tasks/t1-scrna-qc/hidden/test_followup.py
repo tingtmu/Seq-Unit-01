@@ -74,13 +74,13 @@ def test_blank_mito_ignores_empty_cells(qc):
 
 
 def test_cell_ranger_2_folder(qc):
-    old = [(1000, 50, 100), (400, 30, 0), (0, 0, 0)]
+    old = [(1000, 50, 100), (400, 30, 0)]
     new = [(1000, 50, 100, 5000), (400, 30, 0, 3000), (0, 0, 0, 800)]
     cells, summary = qc({"OLD": old, "NEW": new}, {s: {"min_counts": "500", "min_genes": "1"} for s in ("OLD", "NEW")},
                         v2=("OLD",))
-    for sample_id in ("OLD", "NEW"):
+    for sample_id, n in (("OLD", 2), ("NEW", 3)):
         part = cells[cells["sample_id"] == sample_id]
-        assert part["n_counts"].tolist() == [1000, 400, 0] and part["n_genes"].tolist() == [50, 30, 0]
-        assert part["reason"].tolist() == ["", "low_counts", "empty"]
+        assert part["n_counts"].tolist() == [1000, 400, 0][:n] and part["n_genes"].tolist() == [50, 30, 0][:n]
+        assert part["reason"].tolist() == ["", "low_counts", "empty"][:n]
         assert part["cell_id"].iloc[0] == f"{sample_id}:{barcode(0)}"
     assert summary.set_index("sample_id")["n_kept"].to_dict() == {"OLD": 1, "NEW": 1}

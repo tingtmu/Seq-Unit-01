@@ -6,7 +6,7 @@ def filter_cells(matrix_dirs, thresholds, mito_prefix, nmads=3.0):
 ```
 
 Inputs:
-- `matrix_dirs`: a dict from sample id to a Cell Ranger `filtered_feature_bc_matrix` folder (10x MEX: `matrix.mtx.gz`, `barcodes.tsv.gz`, `features.tsv.gz`). The delivery is in `data/raw/delivery-01/`, one folder per sample, listed in `config/samples.tsv`. The knockout samples were run with a CITE-seq antibody panel.
+- `matrix_dirs`: a dict from sample id to a folder of called cells in Cell Ranger's 10x MEX format (`matrix.mtx.gz`, `barcodes.tsv.gz`, `features.tsv.gz`). The delivery is in `data/raw/delivery-01/`, one folder per sample, listed in `config/samples.tsv`. The knockout samples were run with a CITE-seq antibody panel, and the core called their cells on the antibody counts.
 - `thresholds`: the path to a thresholds table in the format of `config/qc_thresholds.tsv`, one row per sample.
 - `mito_prefix`: the prefix that marks mitochondrial genes, matched case-sensitively against the gene symbol. This project is mouse, so it is called with `"mt-"`.
 - `nmads`: the number of MADs for MAD-based bounds.

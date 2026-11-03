@@ -86,7 +86,7 @@
     ],
     "no_x_prefix": [
       [
-        "    if not re.match(r\"[A-Za-z]|\\.(?![0-9])\", name):\n        name = \"X\" + name\n",
+        "    if not re.match(r\"[A-Za-z]|\\.(?![0-9])\", text):\n        text = \"X\" + text\n",
         ""
       ]
     ],

@@ -49,9 +49,9 @@ def check_duplicates(sheet):
 
 def make_name(text):
     """R's make.names for one string (without unique=TRUE)."""
+    if not re.match(r"[A-Za-z]|\.(?![0-9])", text):
+        text = "X" + text
     name = re.sub(r"[^A-Za-z0-9._]", ".", text)
-    if not re.match(r"[A-Za-z]|\.(?![0-9])", name):
-        name = "X" + name
     return name + "." if name in R_RESERVED else name
 
 

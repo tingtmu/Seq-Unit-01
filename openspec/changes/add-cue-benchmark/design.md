@@ -132,7 +132,7 @@ The prompt also states the reason codes.
 | one-sided (low) tails for counts and genes | two-sided, dropping high-count cells |
 | mito prefix from the argument (`mt-`), matched on the symbol column | hardcoded `MT-`, or matched on gene id |
 | blank threshold cell is "use MAD", not 0 | blank read as 0 (filter off) |
-| 0-UMI cell: reason `empty` alone, pct_mito 0 | division by zero (NaN), or ordinary filter reasons |
+| 0-UMI cell (the core called the CITE-seq samples' cells on antibody counts, so a barcode can have no gene UMIs): reason `empty` alone, pct_mito 0 | division by zero (NaN), or ordinary filter reasons |
 | RNA metrics count Gene Expression features only (CITE-seq samples) | antibody UMIs in `n_counts`, `n_genes`, or the mito denominator |
 | empty cells left out of the MAD bounds | median and MAD over all barcodes |
 | bounds independent of each other | counts bound computed after the genes filter |

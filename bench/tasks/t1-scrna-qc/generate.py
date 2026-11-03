@@ -48,14 +48,14 @@ def barcodes(rng, n):
 def sample_cells(rng, n_cells, depth, n_adt):
     """Gene counts per cell: log-normal depth, a mito fraction, multinomial over genes.
 
-    With an antibody panel, every barcode has antibody counts, and a few barcodes were called
-    on antibodies alone (no gene UMIs).
+    With an antibody panel, every barcode has antibody counts. The core called those samples'
+    cells on the antibody counts, so a few barcodes have no gene UMIs.
     """
     probs = rng.dirichlet(np.full(N_NUCLEAR, 0.3))
     cells = []
     for i in range(n_cells):
         total = int(rng.lognormal(np.log(depth), 0.45))
-        if i == 3 or (n_adt and i % 23 == 7):
+        if n_adt and i % 23 == 7:
             total = 0
         mito = int(total * min(0.6, rng.beta(2, 40) + (0.3 if i % 37 == 5 else 0)))
         counts = rng.multinomial(total - mito, probs)
